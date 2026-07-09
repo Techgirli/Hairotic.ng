@@ -17,7 +17,7 @@ backend/dist/
 .env.production.local
 frontend/.env
 backend/.env
-
+backend/README.md
 # Databases
 *.db
 *.db-journal
@@ -34,3 +34,4 @@ backend/.env
 # OS files
 .DS_Store
 Thumbs.db
+
