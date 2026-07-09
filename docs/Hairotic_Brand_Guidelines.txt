@@ -1,0 +1,101 @@
+
+HAIROTIC.NG
+BRAND GUIDELINES
+Version 1.0  •  Prepared by Miracle  •  Status: Draft
+Premium hair, shopped like a fashion drop.
+
+
+1. Brand Mission
+To empower every woman to express her boldest, most confident self through premium hair that turns heads, inspires confidence, and never holds her back.
+2. Vision Statement
+To become Nigeria's most loved premium hair brand, known for bold style, uncompromising quality, and unforgettable customer experiences — starting in Lagos and inspiring confidence nationwide.
+3. Brand Values
+Boldness — every page, product, and post makes a statement; never generic
+Premium quality — high-quality photography, real materials, no shortcuts
+Trust — transparent pricing, real reviews, clear policies
+Human warmth — friendly, helpful, never cold or corporate
+Speed and simplicity — customers reach checkout in a few clicks, never left guessing
+4. Brand Voice & Tone
+Voice
+Confident. Playful. Friendly. Authentic. Supportive.
+Never sound
+Corporate. Cold. Pushy. Overly salesy.
+In practice
+Product copy: "This unit lays flat, holds curl for weeks, and yes — it's as soft as it looks."
+Checkout microcopy: "Your order's safe with us — free swaps within 7 days."
+Social captions: punchy and fun. Website: warm and clear. Customer service: reassuring and expert.
+5. Target Audience
+Trend-driven Nigerian women, 18–35, shopping primarily via phone, who see hair as a style statement and are willing to pay for quality but want to see it justified through strong photography, real reviews, and clear policies. They compare Hairotic against both premium salons and Instagram/WhatsApp hair vendors, so the site must feel more trustworthy and polished than either.
+6. Unique Value Proposition
+Premium hair, shopped like a fashion drop — bold styles, honest pricing, and a checkout experience that never keeps you guessing.
+7. Brand Personality
+Bold  •  Stylish  •  Confident  •  Youthful  •  Creative  •  Honest  •  Premium
+
+8. Color System
+
+--- Table Start ---
+Color | Hex | Usage
+Deep Orange | #E56717 | Primary buttons, links, highlights, icons, active navigation, progress bars
+White | #FFFFFF | Backgrounds, cards, forms, sections
+Charcoal | #222222 | Text, icons, navigation
+Gray | #6B7280 | Secondary text, labels, descriptions
+Light Gray | #F8F8F8 | Cards, section backgrounds
+--- Table End ---
+
+
+Deep orange reads as energetic and confident while staying premium rather than cheap or loud. Paired with white space and charcoal (instead of pure black), the palette feels editorial and fashion-forward — bold and premium at once, which is the hardest balance to strike in hair ecommerce.
+9. Typography
+Display — Rubik Spray Paint
+Use only for: logo, hero statements, campaign headlines, large headings. Never body text.
+Primary — TASA Explorer
+Weights: Regular, Medium, SemiBold, Bold. Carries all headings (H1–H5), body copy, labels, and buttons.
+
+--- Table Start ---
+Style | Size
+H1 | 64px
+H2 | 48px
+H3 | 36px
+H4 | 28px
+H5 | 22px
+Body | 18px
+Small | 14px
+Button (SemiBold) | 16px
+--- Table End ---
+
+
+10. Logo Usage Guidelines
+Appears in
+Top-left navigation
+Footer
+Checkout
+Packaging
+Emails
+Invoices
+Order tracking
+Minimum spacing
+At least the height of the "H" on all sides.
+Never
+Stretch
+Rotate
+Change colors
+Add shadows
+Add outlines
+Small-size use
+For favicons and app icons, use a simplified icon/monogram version rather than the full wordmark — Rubik Spray Paint loses legibility at very small sizes.
+
+11. Design Principles
+
+--- Table Start ---
+Principle | What it means
+Bold | Every page makes a statement. Never generic.
+Premium | Lots of whitespace, high-quality photography, minimal clutter.
+Human | Warm language, helpful guidance, friendly interactions.
+Fast | Users should reach checkout within a few clicks.
+Trustworthy | Transparent pricing, real reviews, clear policies.
+--- Table End ---
+
+
+Every page must answer three questions for the user:
+Where am I?
+What can I do?
+What happens next? — Never leave users guessing.

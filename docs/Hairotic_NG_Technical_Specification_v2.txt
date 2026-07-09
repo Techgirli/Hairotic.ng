@@ -1,0 +1,266 @@
+HAIROTIC.NG
+Technical Specification & Implementation Guide
+Version 2.0 — Full Detailed Edition
+Free-Tier Cloud Architecture (No AWS)
+Companion document to: Hairotic.ng Comprehensive PRD v2.0
+Date: July 2026
+
+Document Control
+
+--- Table Start ---
+Field | Value
+Document Title | Hairotic.ng Technical Specification & Implementation Guide
+Version | 2.0
+Companion Documents | Hairotic.ng Comprehensive PRD v2.0 (feature source of truth); Security Suite (security implementation detail)
+Cloud Policy | No AWS. All infrastructure runs on free/near-free tiers (Section 2 & 3).
+Intended Audience | Engineering team and/or AI coding agents implementing the platform
+--- Table End ---
+
+
+1. Purpose & Scope
+This document is the implementation blueprint for Hairotic.ng: it defines the technology stack, system architecture, data flows, database schema, API surface, folder structure, deployment strategy, and phased implementation plan. It complements the Comprehensive PRD (which defines what to build and why) by defining exactly how to build it.
+Every technology choice below is deliberately free-tier or near-free at MVP scale — AWS is explicitly excluded per project requirements. Each choice documents a clear upgrade path so growth never forces a re-architecture, only a billing tier change.
+2. Technology Stack
+The stack favors managed, serverless-friendly services with generous free tiers, type safety end-to-end (TypeScript + Zod + Prisma), and a small number of moving parts appropriate for a lean engineering team.
+
+--- Table Start ---
+Layer | Choice | Why
+Frontend framework | Next.js 14+ (App Router), TypeScript | SSR/ISR for fast, SEO-friendly storefront pages; file-based routing speeds up delivery of 21 documented screens.
+Styling / UI | Tailwind CSS, shadcn/ui | Utility-first styling matches the bold deep-orange/white brand system quickly; shadcn/ui gives accessible, unstyled primitives to skin with brand tokens.
+Forms & validation | React Hook Form + Zod | Type-safe schema validation shared between client and server reduces duplicate validation logic.
+Client state | Zustand | Lightweight cart/UI state management without Redux boilerplate.
+Backend framework | NestJS, TypeScript | Opinionated, modular architecture (modules/controllers/services) maps 1:1 to the composable commerce modules in the PRD.
+ORM | Prisma | Type-safe queries, migrations, and schema-as-code; strong Postgres support.
+Primary database | PostgreSQL via Neon (serverless, free tier) | Free generous storage/compute; branching enables zero-cost staging databases; connection pooling built in.
+Cache / sessions / rate limiting | Redis via Upstash (free tier) | Guest cart sessions, checkout stock holds, rate-limit counters — serverless-friendly, pay-per-request free tier.
+Media storage | Cloudinary (free tier) | Automatic responsive image delivery (WebP/AVIF), on-the-fly transforms for product/review photos.
+Authentication | JWT (access + refresh tokens) + bcrypt | Stateless auth suited to serverless/edge deployment; refresh rotation limits token replay risk.
+Payments | Paystack (primary) | Dominant Nigerian payment gateway supporting card, bank transfer, and USSD; no PCI-DSS burden on Hairotic.ng servers.
+Transactional email | Resend (free tier) | Simple, reliable delivery for order confirmations and admin alerts; free tier covers early-stage volume.
+Customer messaging | Meta WhatsApp Cloud API | Matches how the target audience already communicates; free monthly conversation allowance covers order updates.
+Frontend hosting | Vercel (Hobby, free tier) | Zero-config Next.js deploys, global CDN, automatic HTTPS, preview URLs per pull request.
+Backend hosting | Render (Free/Starter tier) | Simple Docker/Node web service hosting with free tier sufficient for MVP API traffic.
+DNS / CDN / WAF | Cloudflare (Free plan) | DNS management, edge caching, and baseline DDoS/WAF protection in front of Vercel/Render.
+CI/CD | GitHub Actions (free minutes) | Lint/test/build/deploy pipeline triggered on PR and merge to main.
+Error tracking | Sentry (free Developer tier) | Frontend + backend exception monitoring with alerting.
+Uptime monitoring | UptimeRobot (free tier) | External synthetic checks supporting the 99.9% uptime KPI.
+Analytics | Vercel Analytics (free) + first-party Postgres event log | Web vitals from Vercel; ecommerce funnel events captured directly, avoiding paid analytics infra.
+Containerization (optional/local) | Docker + Docker Compose | Consistent local dev environment; not required in production since Vercel/Render manage builds natively.
+--- Table End ---
+
+3. System Architecture
+The architecture is a straightforward layered web application: an edge/CDN layer, a server-rendered frontend, a REST API, a relational datastore with a cache, media storage, and a set of external services for payments, email, and WhatsApp messaging. No component requires AWS.
+
+Component Responsibilities
+
+--- Table Start ---
+Component | Layer | Responsibility | Talks To
+Cloudflare | Edge / Network | DNS resolution, CDN caching of static assets, WAF rules, basic DDoS mitigation. Free plan. | Vercel, Render
+Vercel (Next.js) | Presentation | Renders the storefront and admin UI; performs SSR/ISR; calls the NestJS API for all dynamic data. | Render (API)
+Render (NestJS API) | Application | Owns all business logic across the 8 composable modules (Catalog, Customer, Checkout, Payments, Notifications, WhatsApp, Analytics, Administration). | Neon, Upstash, Cloudinary, Paystack, Resend, WhatsApp Cloud API
+Neon PostgreSQL | Data — system of record | Stores all durable entities: products, orders, customers, payments, reviews, audit logs. | Render (API)
+Upstash Redis | Data — ephemeral/cache | Guest cart sessions, short-lived stock holds during checkout, rate-limit counters, job queues (optional). | Render (API)
+Cloudinary | Media | Stores and transforms product images, review photos, blog images. | Render (API), Vercel (direct image URLs)
+Paystack | External — payments | Hosted payment pages/inline widget; sends signed webhooks on transaction completion. | Render (API)
+Resend | External — email | Sends transactional emails (confirmations, password resets, admin alerts). | Render (API)
+Meta WhatsApp Cloud API | External — messaging | Sends order confirmation/shipping update messages; powers Contact page click-to-chat. | Render (API)
+Sentry | Observability | Captures and alerts on unhandled exceptions across frontend and backend. | Vercel, Render
+UptimeRobot | Observability | Polls public health-check endpoints to track uptime and alert on downtime. | Vercel, Render
+GitHub Actions | CI/CD | Runs lint/test/build on every PR; deploys to Vercel/Render on merge to main. | GitHub repo, Vercel, Render
+--- Table End ---
+
+4. Module Boundaries (Composable Commerce)
+Matching the PRD's composable architecture, the NestJS backend is organized as one module per business capability. At MVP scale all modules run inside a single deployable service with clear internal boundaries — this keeps operations simple while preserving the option to extract any module into its own service later without a rewrite.
+auth/ — registration, login, refresh tokens, MFA, RBAC guards
+catalog/ — products, variants, categories, collections, search
+cart/ — guest (Redis) and account (Postgres) cart state
+checkout/ — order creation, stock holds, idempotency handling
+payments/ — Paystack init, webhook verification, refunds
+orders/ — order lifecycle, status history, guest tracking lookup
+reviews/ — verified-purchase reviews and photo moderation
+wishlist/ — saved products per customer
+notifications/ — Resend transactional email
+whatsapp/ — Meta WhatsApp Cloud API integration
+analytics/ — event ingestion and funnel/report queries
+admin/ — admin-only endpoints layered with stricter RBAC + audit logging
+5. High-Level Data Flows
+The most business-critical flow — checkout and payment confirmation — is diagrammed below, followed by a written breakdown of every major flow in the system.
+
+Browse / Catalog Read Flow
+Browser requests a page (Landing, Shop, Collection, or Product Page).
+Next.js (Vercel) renders via SSR/ISR, calling GET endpoints on the NestJS API for product/collection data not already cached at the edge.
+NestJS API queries PostgreSQL (via Prisma) for product, variant, and stock data.
+Response is cached at the ISR layer (e.g., 5-minute revalidation for bestsellers) and served to the browser.
+Authentication Flow
+Browser submits email/password (or OAuth, if added later) to POST /auth/login.
+NestJS API verifies the bcrypt password hash against the stored user record in PostgreSQL.
+On success, API issues a short-lived JWT access token and a longer-lived refresh token, both set as httpOnly, Secure, SameSite=Strict cookies.
+Subsequent requests include the access token; when it expires, the frontend silently calls /auth/refresh using the refresh token to obtain a new access token.
+Cart & Checkout Flow
+Guest or logged-in customer adds items to cart; cart state is held in Upstash Redis (guest, keyed by session) or PostgreSQL (logged-in, keyed by customer_id).
+At Checkout submission, the API re-validates stock and price server-side, then creates an Order record in `pending_payment` status inside a database transaction, placing a short-TTL stock hold in Redis.
+The API returns a Paystack transaction initialization response; the browser is redirected to Paystack's hosted checkout.
+Payment Confirmation Flow
+Customer completes payment on Paystack (card, bank transfer, or USSD).
+Paystack sends a signed webhook to a dedicated NestJS endpoint (POST /payments/webhook).
+The API verifies the webhook signature against the Paystack secret, then calls Paystack's verify-transaction API as a second confirmation before trusting the payload.
+On confirmed success, the API updates the Order to `paid` inside a DB transaction with row-level locking on the relevant stock rows (preventing overselling), and clears the Redis stock hold.
+The Notifications module triggers a Resend confirmation email and a WhatsApp Cloud API confirmation message in parallel.
+A scheduled reconciliation job (GitHub Actions cron or Render cron job) re-verifies any order stuck in `pending_payment` for more than 10 minutes as a webhook-failure fallback.
+Order Fulfillment & Tracking Flow
+Admin updates order status (Processing → Shipped → Delivered) via the Admin Orders screen.
+Each transition is written to `order_status_history` and triggers a WhatsApp/email update to the customer.
+The customer-facing Order Tracking screen reads the same `order_status_history` table to render a live timeline, for both logged-in customers and guest lookups (order number + email/phone).
+Media Upload Flow (Admin)
+Admin uploads product/review images via the Admin Product Management screen.
+The frontend requests a signed upload URL/preset from the NestJS API.
+The browser uploads directly to Cloudinary using the signed credentials (bypassing the API for the binary payload).
+Cloudinary returns the resulting URL, which the frontend sends to the API to persist against the relevant `product_images` or `review_photos` record in PostgreSQL.
+6. Database Schema
+PostgreSQL (hosted on Neon), accessed via Prisma. Core entities and their key fields:
+
+--- Table Start ---
+Table | Key Fields
+users | id, email, phone, password_hash, role (customer/staff/admin), mfa_enabled, created_at
+addresses | id, user_id, label, state, lga, street, phone, is_default
+products | id, name, slug, description, category_id, status (draft/published), created_at
+product_variants | id, product_id, sku, attributes (length/color/texture), price, compare_at_price
+product_images | id, product_variant_id, url, position
+categories / collections | id, name, slug, description, banner_url, published
+inventory | id, product_variant_id, quantity, low_stock_threshold, updated_at
+carts / cart_items | id, customer_id or session_id, product_variant_id, quantity
+orders | id, customer_id (nullable for guest), status, subtotal, delivery_fee, total, idempotency_key, created_at
+order_items | id, order_id, product_variant_id, quantity, unit_price
+order_status_history | id, order_id, status, note, changed_by, created_at
+payments | id, order_id, paystack_reference, status, amount, verified_at
+reviews | id, product_id, customer_id, order_id, rating, body, verified_purchase
+review_photos | id, review_id, url
+wishlists | id, customer_id, product_variant_id, created_at
+customer_notes | id, customer_id, admin_id, note, created_at
+audit_logs | id, actor_id, action, entity, entity_id, before, after, created_at
+--- Table End ---
+
+Schema Notes
+All monetary values stored as integers in kobo (smallest currency unit) to avoid floating-point rounding errors.
+order_status_history is append-only and is the single source of truth for both the Admin Orders screen and the customer-facing Order Tracking screen.
+audit_logs captures every admin/security-relevant mutation (actor, action, entity, before/after) per the Security Suite's audit requirements.
+Stock decrement on payment confirmation uses a transaction with `SELECT ... FOR UPDATE` row locking on the relevant product_variants/inventory row to guarantee no overselling under concurrent checkouts.
+7. API Design
+REST API served by NestJS, versioned under /api/v1. All admin routes additionally require RBAC role checks beyond authentication.
+
+--- Table Start ---
+Route Group | Key Endpoints
+/auth | POST /register, POST /login, POST /refresh, POST /logout, POST /mfa/verify
+/users (customer profile) | GET /me, PATCH /me, GET /me/addresses, POST /me/addresses
+/products | GET /products, GET /products/:slug, GET /collections, GET /collections/:slug
+/cart | GET /cart, POST /cart/items, PATCH /cart/items/:id, DELETE /cart/items/:id
+/checkout | POST /checkout (creates pending order + Paystack init)
+/payments | POST /payments/webhook, GET /payments/:reference/verify
+/orders | GET /orders (customer's own), GET /orders/:id, GET /orders/track (guest lookup)
+/reviews | POST /products/:id/reviews, GET /products/:id/reviews
+/wishlist | GET /wishlist, POST /wishlist, DELETE /wishlist/:id
+/contact | POST /contact
+/admin/products | Full CRUD + bulk actions, restricted to Admin/Catalog-Manager role
+/admin/inventory | GET /admin/inventory, PATCH /admin/inventory/:id (with reason code)
+/admin/orders | GET /admin/orders, PATCH /admin/orders/:id/status, POST /admin/orders/:id/refund
+/admin/customers | GET /admin/customers, GET /admin/customers/:id, POST /admin/customers/:id/notes
+/admin/analytics | GET /admin/analytics/summary, GET /admin/analytics/funnel, GET /admin/analytics/export
+--- Table End ---
+
+Conventions
+All list endpoints support cursor-based pagination via `?cursor=` and `?limit=` query params.
+All write endpoints validate request bodies against Zod (frontend) and class-validator (backend) schemas derived from the same shape where practical.
+All mutating endpoints that create financial records (checkout, refunds) require an `Idempotency-Key` header to prevent duplicate processing on retry.
+Errors follow a consistent shape: `{ statusCode, message, error, requestId }` to simplify frontend handling and support tracing via Sentry.
+8. Folder Structure
+hairotic-ng/
+├── frontend/                 # Next.js app (deployed on Vercel)
+│   ├── app/                  # App Router pages (21 screens map here)
+│   ├── components/           # Shared UI components (shadcn/ui + brand-themed)
+│   ├── lib/                  # API client, Zod schemas, utils
+│   ├── store/                # Zustand stores (cart, UI state)
+│   └── public/
+├── backend/                  # NestJS API (deployed on Render)
+│   ├── src/
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── catalog/
+│   │   ├── cart/
+│   │   ├── checkout/
+│   │   ├── payments/
+│   │   ├── orders/
+│   │   ├── reviews/
+│   │   ├── wishlist/
+│   │   ├── notifications/
+│   │   ├── whatsapp/
+│   │   ├── analytics/
+│   │   └── admin/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── migrations/
+│   └── test/
+├── docs/                      # PRD, this Technical Spec, Security Suite
+├── .github/workflows/         # CI/CD pipelines (lint, test, deploy)
+└── docker-compose.yml         # Local dev only (Postgres + Redis containers)
+9. Deployment Strategy & Environments
+
+--- Table Start ---
+Environment | Frontend | Backend | Database
+Local development | next dev (localhost) | NestJS with hot-reload; Docker Compose for local Postgres/Redis | Local Postgres/Redis containers
+Preview (per Pull Request) | Vercel automatic preview deployment | Render preview environment (or a shared staging service) | Neon database branch (isolated, free)
+Staging | Vercel (staging branch) | Render staging service | Neon staging branch
+Production | Vercel (production/main branch) | Render production service | Neon production branch (primary)
+--- Table End ---
+
+CI/CD Pipeline (GitHub Actions)
+On every pull request: install dependencies, run lint (ESLint), run type-check (tsc), run unit + integration tests, run a Prisma migration dry-run against a Neon preview branch.
+On merge to main: run the same checks, then trigger Vercel production deploy and Render production deploy; run Prisma migrations against the production database as a controlled, reviewed step (never auto-applied without review for destructive changes).
+Secrets (Paystack keys, JWT secret, database URL, Resend/WhatsApp tokens) are stored as encrypted GitHub Actions secrets and platform-native environment variables on Vercel/Render — never committed to source control.
+10. Implementation Plan
+Phased to deliver Must Have screens first, matching the PRD's priority ordering.
+Phase 0 — Foundation
+Initialize monorepo (frontend/, backend/, docs/) and Git repository with branch protection on main.
+Set up Neon Postgres project (dev + staging branches) and Upstash Redis instance.
+Configure Prisma schema from Section 6 (Database Schema) and run initial migration.
+Set up Vercel project (frontend) and Render service (backend), each connected to the repo for auto-deploy.
+Configure Cloudflare DNS in front of both.
+Phase 1 — Core Commerce (Must Have screens)
+Build Auth module (register/login/refresh/MFA) and RBAC middleware.
+Build Catalog module + Landing, Shop, Collections, Product Page screens.
+Build Cart + Checkout modules and screens, with server-side price/stock re-validation.
+Integrate Paystack (init + webhook + verify) and build the Payment screen/flow.
+Build Order Tracking (guest + logged-in) and the Notifications module (Resend + WhatsApp Cloud API).
+Phase 2 — Admin Back-Office (Must Have screens)
+Build Admin Login (with mandatory MFA) and RBAC-scoped Admin Dashboard.
+Build Product Management and Inventory screens with audit logging.
+Build Admin Orders screen including refund flow via Paystack's refund API.
+Phase 3 — Trust & Retention (Should Have screens)
+Build Wishlist, Customer Dashboard, Reviews (with verified-purchase enforcement).
+Build Admin Analytics and Admin Customer Management screens.
+Build Contact and FAQ screens.
+Phase 4 — Growth (Could Have / Post-MVP)
+Build Blog module and screen.
+Evaluate AI-driven recommendations, AR try-on, and referral program as future scope.
+Phase 5 — Hardening & Launch
+Full OWASP Top 10 review against the Security Suite checklist.
+Load-test checkout/payment flow for race conditions (concurrent last-unit purchase).
+Configure Sentry, UptimeRobot, and GitHub Actions deploy pipelines for staging + production.
+Run a documented backup/restore drill against Neon's point-in-time recovery before go-live.
+11. Security
+Full implementation and operational security standards live in the dedicated Hairotic.ng Security Suite document. This spec implements the baseline controls it requires:
+TLS/HTTPS everywhere, enforced at the Cloudflare edge and platform level (Vercel/Render both provide automatic HTTPS).
+JWT access + refresh token rotation; bcrypt password hashing (cost factor ≥12).
+RBAC guard applied at the NestJS controller level for every admin route, not just hidden in the UI.
+Mandatory MFA for all admin/staff accounts.
+Rate limiting via Upstash Redis on auth, checkout, contact-form, and review-submission endpoints.
+Input validation on every mutating endpoint via class-validator (backend) mirroring Zod schemas (frontend).
+Parameterized queries exclusively via Prisma — no raw string-concatenated SQL.
+Paystack webhook signature verification on every payment webhook before trusting the payload.
+Daily automated backups via Neon's built-in point-in-time recovery, with a documented quarterly restore drill.
+Structured audit logging (audit_logs table) for all admin actions and security-relevant events.
+12. Monitoring & Operations
+Sentry captures unhandled exceptions on both frontend (Vercel) and backend (Render), with Slack/email alerting on new issue types.
+UptimeRobot polls a `/health` endpoint on the API and the storefront homepage every 5 minutes, alerting on downtime, feeding the ≥99.9% uptime KPI.
+Vercel Analytics provides Core Web Vitals and traffic data at no extra cost; combined with first-party event logging in Postgres for ecommerce funnel analysis (feeds the Admin Analytics screen).
+A weekly manual or scheduled review of Sentry issues, UptimeRobot incidents, and low-stock alerts is recommended until traffic justifies a dedicated on-call rotation.
+Disaster recovery: Neon point-in-time recovery covers database restore; Vercel/Render deployments are redeployable from Git history at any time, so full-stack recovery does not depend on manual server rebuilds.

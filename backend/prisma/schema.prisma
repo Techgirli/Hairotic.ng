@@ -1,0 +1,317 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  phone         String         @unique
+  passwordHash  String         @map("password_hash")
+  role          Role           @default(CUSTOMER)
+  mfaEnabled    Boolean        @default(false) @map("mfa_enabled")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  
+  addresses     Address[]
+  orders        Order[]
+  reviews       Review[]
+  wishlist      Wishlist[]
+  adminNotes    CustomerNote[] @relation("AdminNotes")
+  customerNotes CustomerNote[] @relation("CustomerNotes")
+
+  @@map("users")
+}
+
+model Address {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  label     String   // e.g., "Home", "Office"
+  state     String
+  lga       String   // Local Government Area
+  street    String
+  phone     String
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  bannerUrl   String?   @map("banner_url")
+  published   Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Collection {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  bannerUrl   String?   @map("banner_url")
+  published   Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  products    Product[]
+
+  @@map("collections")
+}
+
+model Product {
+  id           String        @id @default(uuid())
+  name         String
+  slug         String        @unique
+  description  String
+  categoryId   String        @map("category_id")
+  collectionId String?       @map("collection_id")
+  status       ProductStatus @default(DRAFT)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  category     Category      @relation(fields: [categoryId], references: [id])
+  collection   Collection?   @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  variants     ProductVariant[]
+  reviews      Review[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id             String         @id @default(uuid())
+  productId      String         @map("product_id")
+  sku            String         @unique
+  attributes     Json           // e.g. { "length": "18", "color": "1B", "texture": "curly" }
+  price          Int            // Stored in kobo
+  compareAtPrice Int?           @map("compare_at_price") // Stored in kobo
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  images         ProductImage[]
+  inventory      Inventory?
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  wishlistItems  Wishlist[]
+
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id               String         @id @default(uuid())
+  productVariantId String         @map("product_variant_id")
+  url              String
+  position         Int            @default(0)
+
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model Inventory {
+  id                 String         @id @default(uuid())
+  productVariantId   String         @unique @map("product_variant_id")
+  quantity           Int            @default(0)
+  lowStockThreshold  Int            @default(5) @map("low_stock_threshold")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  variant            ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  @@map("inventory")
+}
+
+model Cart {
+  id         String     @id @default(uuid())
+  customerId String?    @unique @map("customer_id") // Nullable for guest carts
+  sessionId  String?    @unique @map("session_id")  // For guest carts tracked via session
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  
+  items      CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id               String         @id @default(uuid())
+  cartId           String         @map("cart_id")
+  productVariantId String         @map("product_variant_id")
+  quantity         Int            @default(1)
+
+  cart             Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productVariantId])
+  @@map("cart_items")
+}
+
+model Order {
+  id             String              @id @default(uuid())
+  orderNumber    String              @unique @map("order_number") // readable reference like HR-2026-XXXX
+  customerId     String?             @map("customer_id") // Nullable for guest checkout
+  status         OrderStatus         @default(PENDING_PAYMENT)
+  subtotal       Int                 // Stored in kobo
+  deliveryFee    Int                 @map("delivery_fee") // Stored in kobo
+  total          Int                 // Stored in kobo
+  idempotencyKey String              @unique @map("idempotency_key")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  customer       User?               @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items          OrderItem[]
+  statusHistory  OrderStatusHistory[]
+  payments       Payment[]
+  reviews        Review[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id               String         @id @default(uuid())
+  orderId          String         @map("order_id")
+  productVariantId String         @map("product_variant_id")
+  quantity         Int
+  unitPrice        Int            @map("unit_price") // Stored in kobo, snapshotted at purchase time
+
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String      @map("order_id")
+  status    OrderStatus
+  note      String?
+  changedBy String      @map("changed_by") // e.g. "SYSTEM" or user UUID
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_history")
+}
+
+model Payment {
+  id                 String        @id @default(uuid())
+  orderId            String        @map("order_id")
+  paystackReference  String        @unique @map("paystack_reference")
+  status             PaymentStatus @default(PENDING)
+  amount             Int           // Stored in kobo
+  verifiedAt         DateTime?     @map("verified_at")
+  createdAt          DateTime      @default(now()) @map("created_at")
+
+  order              Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Review {
+  id               String        @id @default(uuid())
+  productId        String        @map("product_id")
+  customerId       String        @map("customer_id")
+  orderId          String        @map("order_id")
+  rating           Int           // 1 to 5
+  body             String
+  verifiedPurchase Boolean       @default(true) @map("verified_purchase")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  product          Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer         User          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order            Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  photos           ReviewPhoto[]
+
+  @@map("reviews")
+}
+
+model ReviewPhoto {
+  id       String @id @default(uuid())
+  reviewId String @map("review_id")
+  url      String
+
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_photos")
+}
+
+model Wishlist {
+  id               String         @id @default(uuid())
+  customerId       String         @map("customer_id")
+  productVariantId String         @map("product_variant_id")
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  customer         User           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productVariantId])
+  @@map("wishlists")
+}
+
+model CustomerNote {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  adminId    String   @map("admin_id")
+  note       String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  customer   User     @relation("CustomerNotes", fields: [customerId], references: [id], onDelete: Cascade)
+  admin      User     @relation("AdminNotes", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("customer_notes")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String   @map("actor_id")
+  action    String
+  entity    String
+  entityId  String   @map("entity_id")
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}

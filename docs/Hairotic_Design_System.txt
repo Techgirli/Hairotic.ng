@@ -1,0 +1,265 @@
+
+HAIROTIC.NG
+DESIGN SYSTEM
+Version 1.0  •  Prepared by Miracle  •  Status: Draft
+Shop it like a premium fashion brand — not a traditional online store.
+1. Design Philosophy
+Hairotic.ng is not just another hair website. Every screen should communicate:
+Confidence
+Luxury
+Simplicity
+Boldness
+Trust
+The interface should make users feel as though they are shopping from a premium fashion brand rather than a traditional online store.
+Design Principles
+
+--- Table Start ---
+Principle | What it means
+Bold | Every page makes a statement. Never look generic.
+Premium | Lots of whitespace. High-quality photography. Minimal clutter.
+Human | Warm language. Helpful guidance. Friendly interactions.
+Fast | Users should reach checkout within a few clicks.
+Trustworthy | Transparent pricing. Real reviews. Clear policies. Professional design.
+--- Table End ---
+
+2. Brand Identity
+Mission
+To empower every woman to express her boldest, most confident self through premium hair that turns heads, inspires confidence, and never holds her back.
+Vision
+To become Nigeria's most loved premium hair brand, known for bold style, uncompromising quality, and unforgettable customer experiences — starting in Lagos and inspiring confidence nationwide.
+Brand Personality
+Bold  •  Stylish  •  Confident  •  Youthful  •  Creative  •  Honest  •  Premium
+Voice
+Confident  •  Playful  •  Friendly  •  Authentic  •  Supportive
+Never sound
+Corporate  •  Cold  •  Pushy  •  Overly salesy
+3. Logo Usage
+Your logo should appear
+Top-left navigation
+Footer
+Checkout
+Packaging
+Emails
+Invoice
+Order Tracking
+Minimum spacing
+At least the height of the "H" on all sides.
+Never
+Stretch
+Rotate
+Change colors
+Add shadows
+Add outlines
+4. Color System
+Primary — Deep Orange (#E56717)
+Used for: primary buttons, links, highlights, icons, active navigation, progress bars.
+Secondary — White (#FFFFFF)
+Used for: backgrounds, cards, forms, sections.
+Dark — Charcoal (#222222)
+Used for: text, icons, navigation.
+Gray (#6B7280)
+Used for: secondary text, labels, descriptions.
+Light Gray (#F8F8F8)
+Used for: cards, section backgrounds.
+Semantic Colors
+
+--- Table Start ---
+Name | Hex | Usage
+Success | #22C55E | Confirmations, completed states, positive validation
+Error | #EF4444 | Failed actions, form errors, destructive states
+Warning | #F59E0B | Caution states, low stock, pending actions
+Info | #3B82F6 | Neutral notices, helper messages
+--- Table End ---
+
+5. Typography
+Display — Rubik Spray Paint
+Use only for: logo, hero, campaign, large headings. Never body text.
+Primary Typeface — TASA Explorer
+Weights: Regular, Medium, SemiBold, Bold.
+Heading Sizes
+
+--- Table Start ---
+Style | Size
+H1 | 64px
+H2 | 48px
+H3 | 36px
+H4 | 28px
+H5 | 22px
+Body | 18px
+Small | 14px
+Button | 16px (SemiBold)
+--- Table End ---
+
+6. Grid System
+
+--- Table Start ---
+Breakpoint | Columns / Width
+Desktop | 12 columns, 1440px container
+Tablet | 8 columns
+Mobile | 4 columns
+Maximum Content Width | 1280px
+--- Table End ---
+
+Spacing Scale
+4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96 · 128
+Never use arbitrary spacing — always pull from this scale.
+7. Elevation
+
+--- Table Start ---
+Element | Shadow
+Cards | 2px shadow
+Modals | 12px shadow
+Navigation | 4px shadow
+Hover | Increase elevation
+--- Table End ---
+
+8. Border Radius
+
+--- Table Start ---
+Element | Radius
+Buttons | 12px
+Cards | 20px
+Inputs | 12px
+Product Cards | 24px
+Images | 24px
+Badges | 999px (pill)
+--- Table End ---
+
+9. Buttons
+
+--- Table Start ---
+Type | Style
+Primary | Orange fill, white text
+Secondary | White fill, orange border, orange text
+Ghost | Transparent, orange text
+Danger | Red
+Success | Green
+Loading | Spinner state
+Disabled | Click disabled, reduced opacity
+--- Table End ---
+
+10. Forms
+
+--- Table Start ---
+Property | Value
+Input height | 52px
+Radius | 12px
+Validation — success | Green
+Validation — error | Red
+Focus state | Orange
+--- Table End ---
+
+Labels are always visible — never rely on placeholder text alone.
+11. Cards
+Product Card
+Large image
+Wishlist icon
+Quick Add
+Price
+Rating
+Badges
+Blog Card
+Large image
+Title
+Excerpt
+Date
+Testimonial Card
+Photo
+Name
+Stars
+Quote
+12. Navigation
+Desktop
+Logo · Shop · Collections · New Arrivals · Best Sellers · About · Styling · Contact · Search · Cart · Profile
+Mobile
+Hamburger · Search · Cart
+Sticky Navigation
+Yes — navigation remains visible on scroll.
+13. Footer
+Logo
+Quick Links
+Policies
+Newsletter
+Social Icons
+Contact
+Copyright
+14. Icons
+Use a consistent icon set such as Lucide.
+Sizes: 20px · 24px · 32px
+15. Illustrations
+Minimal · Modern · Fashion-inspired
+16. Photography
+Style
+Premium
+Natural lighting
+Clean backgrounds
+Fashion editorial
+High contrast
+Never
+Stock-looking
+Low quality
+Over-edited
+17. Motion
+
+--- Table Start ---
+Element | Motion
+Duration | 200ms – 300ms
+Hover | Scale 1.03
+Buttons | Fade
+Cards | Lift
+Images | Zoom
+--- Table End ---
+
+18. Accessibility
+WCAG AA minimum contrast
+Keyboard navigation
+Focus indicators
+Screen reader labels
+Alt text on all images
+Semantic HTML
+19. Component Library
+We'll design the following components as reusable, token-driven elements:
+
+--- Table Start ---
+ | 
+Buttons | Cards
+Forms | Dropdowns
+Navbar | Footer
+Product Gallery | Product Cards
+Breadcrumbs | Accordions
+Modals | Toasts / Notifications
+Pagination | Carousel
+Review Cards | Wishlist Button
+Quantity Selector | Checkout Steps
+Tables | Charts
+Admin Sidebar | Admin Tables
+Data Cards | 
+--- Table End ---
+
+20. Responsive Breakpoints
+
+--- Table Start ---
+Device | Range
+Mobile | 320px – 767px
+Tablet | 768px – 1023px
+Laptop | 1024px – 1439px
+Desktop | 1440px+
+--- Table End ---
+
+21. Dark Mode
+Planned for a future release. Not part of v1.0 scope.
+22. Design Tokens
+All tokens below will be reusable across the codebase (e.g. as CSS variables / Tailwind theme extensions):
+Colors
+Spacing
+Radius
+Typography
+Elevation
+Opacity
+Motion
+23. UX Principles
+Every page must answer:
+Where am I?
+What can I do?
+What happens next?
+Never leave users guessing.

@@ -1,0 +1,203 @@
+
+HAIROTIC.NG
+SECURITY REQUIREMENTS & OPERATIONS GUIDE
+Version 1.0  •  Prepared by Miracle  •  Status: Draft
+How Hairotic.ng is designed, built, deployed, and operated securely.
+1. Executive Summary
+Security Objectives
+Protect customer accounts, orders, and payment interactions from unauthorized access
+Maintain confidentiality of personal data (names, addresses, phone numbers, order history)
+Ensure the integrity and availability of the storefront and checkout flow
+Keep the platform compliant with baseline data protection expectations for a Nigerian ecommerce business
+Security Principles
+Least privilege — every user, service, and integration gets only the access it needs
+Defense in depth — no single control is a single point of failure
+Secure by default — safe configurations out of the box, not opt-in
+Fail securely — errors should not leak data or open access
+Assume breach — design logging and containment as if an incident is inevitable
+Shared Responsibility Model
+Hairotic.ng runs on managed platforms (Vercel, Render, Neon, Upstash, Cloudinary, Resend, Paystack, Meta WhatsApp Cloud API). Each provider secures its own infrastructure layer; Hairotic.ng is responsible for how it configures, authenticates to, and builds on top of those services.
+
+--- Table Start ---
+Layer | Responsibility
+Physical infrastructure, network, hypervisor | Cloud/platform providers (Vercel, Render, Neon, etc.)
+Platform configuration, environment variables, access control | Hairotic.ng engineering team
+Application code, business logic, input validation | Hairotic.ng engineering team
+Payment card data handling | Paystack (PCI-DSS certified); Hairotic.ng never stores card data
+--- Table End ---
+
+2. Security Architecture
+Trust Boundaries
+Public internet ↔ Vercel edge (frontend, static assets, SSR)
+Vercel frontend ↔ Render backend API (authenticated service-to-service calls)
+Render backend ↔ Neon Postgres (private connection string, not publicly browsable)
+Render backend ↔ Upstash Redis (session/cache layer)
+Render backend ↔ third-party services (Paystack, Cloudinary, Resend, Meta WhatsApp Cloud API) — all outbound, authenticated via API keys
+High-Level Architecture
+Customer-facing traffic terminates at Vercel, which serves the storefront and calls the Render-hosted API for dynamic operations (auth, cart, checkout, orders). The API is the only component with direct database access. Media assets are offloaded to Cloudinary; transactional email through Resend; payments through Paystack; customer notifications through the Meta WhatsApp Cloud API.
+Data Classification
+
+--- Table Start ---
+Class | Examples | Handling
+Public | Product catalog, blog content | No special controls
+Internal | Order metadata, inventory counts | Authenticated access only
+Sensitive | Names, addresses, phone numbers, emails | Encrypted at rest, access-logged
+Restricted | Payment references, auth tokens, admin credentials | Never logged in plaintext; encrypted; least-privilege access
+--- Table End ---
+
+Network Flow
+All customer-facing traffic is HTTPS-only. Backend-to-database and backend-to-Redis connections use provider-issued TLS connection strings. No service accepts unauthenticated inbound traffic other than the public storefront and documented API routes.
+3. Secure Development Lifecycle (SSDLC)
+
+--- Table Start ---
+Stage | Practice
+Requirements | Security requirements defined alongside feature requirements (auth, data sensitivity, rate limits)
+Design review | New features touching auth, payments, or PII get a lightweight design review before build
+Code review | All changes reviewed before merge; no direct pushes to main/production branches
+Security testing | Manual test of auth flows, input validation, and access control before release
+Release gates | CI must pass (build, lint, dependency scan) before deploy is allowed
+--- Table End ---
+
+4. Identity & Access Management
+Customer Authentication
+Passwords hashed with a modern algorithm (bcrypt or argon2) — never stored or logged in plaintext
+Session tokens are short-lived and refreshed; invalidated on logout and password change
+Account lockout / backoff after repeated failed login attempts
+Admin Authentication
+Separate admin login path from customer login
+Multi-factor authentication (MFA) required for all admin and staff accounts
+Admin sessions expire faster than customer sessions and require re-authentication for sensitive actions
+Role-Based Access Control (RBAC)
+
+--- Table Start ---
+Role | Access
+Customer | Own account, own orders, own cart/wishlist
+Support staff | Read access to orders and customer contact info for support purposes only
+Catalog manager | Product, inventory, and pricing management
+Admin | Full access, including user management and configuration
+--- Table End ---
+
+Least Privilege & Session Management
+Every role has the minimum permissions needed to do its job — no shared "super admin" logins
+Sessions are tied to a single device/browser context where possible and invalidated on suspicious activity
+5. Secrets Management
+All credentials (database URLs, API keys, webhook secrets) live in platform environment variables — never committed to source control
+Separate secrets per environment (development, staging, production) so a leak in one doesn't compromise another
+Secrets rotated on a regular schedule and immediately after any suspected exposure
+Paystack, Cloudinary, Resend, and Meta API keys are scoped to the minimum permissions each integration needs
+Database credentials are never shared with frontend code or exposed in client-side bundles
+A prior incident on Hairotic's infrastructure originated from a compromised npm dependency. Secrets rotation after any dependency-related compromise is treated as mandatory, not optional.
+6. Data Protection
+
+--- Table Start ---
+Control | Implementation
+Encryption in transit | HTTPS/TLS enforced across Vercel, Render, and all third-party API calls
+Encryption at rest | Neon Postgres encrypts data at rest by default; Cloudinary assets stored under access-controlled URLs
+Password hashing | bcrypt/argon2 with per-user salt; never reversible encryption
+Personal data handling | Access limited to systems/roles that need it; no PII in logs
+Payment data boundary | Card data never touches Hairotic.ng servers — handled entirely within Paystack's hosted checkout/PCI-DSS environment
+--- Table End ---
+
+7. API Security
+Authentication required on all non-public endpoints; public endpoints (catalog, product pages) are explicitly allow-listed
+Authorization checks confirm the requesting user owns or is permitted to access the specific resource (not just that they're logged in)
+All input validated and sanitized server-side, regardless of client-side validation
+Output encoding applied to prevent injection into HTML, JSON, or downstream systems
+API versioned (e.g. /api/v1/) so breaking changes don't silently affect integrations
+Rate limiting applied per-IP and per-account on sensitive endpoints (login, checkout, password reset)
+Error responses return generic messages to clients; detailed errors are logged server-side only
+8. Frontend Security
+Content Security Policy (CSP) restricts which scripts, styles, and frames can load on the site
+Cookies marked Secure, HttpOnly, and SameSite to reduce theft and cross-site risk
+Output encoding and framework-level escaping used to prevent cross-site scripting (XSS)
+Anti-CSRF tokens on state-changing forms (checkout, account updates)
+X-Frame-Options / frame-ancestors set to prevent clickjacking on sensitive pages (login, checkout)
+9. Backend Security
+Server-side validation on every input, independent of frontend checks
+Structured logging for requests, errors, and security-relevant events
+Audit trails for admin actions (who changed what, and when)
+Dependencies tracked and kept current; unused packages removed
+Secure-by-default configuration — new endpoints are private unless explicitly made public
+10. Database Security
+Neon Postgres accessed only from the Render backend, never directly from the frontend or public internet
+Database roles scoped to least privilege — application role cannot drop tables or alter schema in production
+Automated backups enabled and verified regularly
+Restore process tested periodically, not just assumed to work
+Data retention policy defined for closed accounts and abandoned carts
+11. Cloud & Hosting Security
+
+--- Table Start ---
+Service | Security Configuration
+Vercel | Environment variables scoped per environment; preview deployments not exposed with production secrets
+Render | Private networking between services where supported; environment variables encrypted at rest
+Neon (Postgres) | Connection pooling with TLS; IP/branch-level access managed via Neon's console
+Upstash (Redis) | TLS-enabled connections; used only for sessions/cache, not long-term sensitive data
+Cloudinary | Signed upload presets; access restricted so only the backend can request uploads/deletes
+--- Table End ---
+
+12. CI/CD Security
+Protected branches — no direct commits to main/production
+Required code review before merge
+Automated secret scanning on every commit/PR to catch accidental credential leaks
+Dependency scanning integrated into CI to flag known-vulnerable packages before merge
+Build verification step confirms the app builds and passes checks before any deploy is triggered
+13. Logging & Monitoring
+Application logs capture requests, errors, and key business events (orders, payments, logins)
+Audit logs capture admin and staff actions separately from general application logs
+Error tracking captures unhandled exceptions with enough context to debug, without logging sensitive data
+Uptime/availability monitoring on the storefront and API
+Alerting configured for elevated error rates, failed payment spikes, or repeated auth failures
+14. Vulnerability Management
+Dependencies updated on a regular cadence, not just when something breaks
+Automated scans for known vulnerabilities in both frontend and backend dependency trees
+Patch management prioritized by severity — critical vulnerabilities patched immediately, not queued
+Periodic security review of the codebase and configuration, especially after major feature releases
+Given the prior npm-package compromise on Hairotic infrastructure, new dependencies are reviewed before being added, and postinstall scripts are treated as a specific area of caution.
+15. Incident Response
+
+--- Table Start ---
+Phase | Focus
+Detection | Identify signs of compromise via monitoring, alerts, or reports
+Triage | Assess scope and severity; decide who needs to be involved
+Containment | Limit further damage — revoke credentials, isolate affected systems
+Eradication | Remove the root cause (malicious code, compromised account, vulnerable dependency)
+Recovery | Restore normal operation, rotate all potentially exposed secrets
+Lessons learned | Document what happened and what changes prevent recurrence
+--- Table End ---
+
+16. Backup & Disaster Recovery
+Regular automated backups of the production database
+Backup restore process tested on a schedule, not left unverified
+Recovery Time Objective (RTO) and Recovery Point Objective (RPO) defined for the storefront and order data
+Business continuity plan covers what happens if a core provider (Render, Neon, Paystack) has an outage
+17. Privacy & Compliance
+Customer data used only for the purpose it was collected for (orders, support, marketing opt-in)
+Data minimization — collect only what's needed to fulfill orders and support customers
+Cookie usage disclosed, with essential vs. marketing cookies distinguished
+Applicable legal considerations reviewed, including Nigeria's Data Protection Act (NDPA) and general ecommerce consumer protection expectations
+18. Release Security Checklist
+A practical pre-release checklist — not an exhaustive technical playbook, but a working gate before shipping to production.
+
+--- Table Start ---
+Area | Checklist Item
+Authentication | MFA enforced for admin accounts; session expiry confirmed
+Authorization | New endpoints checked for correct ownership/role checks
+Transport security | HTTPS enforced; no mixed content
+Dependency hygiene | No new high/critical vulnerabilities in dependency scan
+Logging | New features log key events without logging sensitive data
+Backups | Backup job confirmed running before major release
+Monitoring | Alerts configured for any new critical paths (e.g. new payment flow)
+Operational readiness | Rollback plan documented for the release
+--- Table End ---
+
+19. Security Review Process
+Design review — for features touching auth, payments, or PII, before implementation starts
+Code review — every pull request reviewed for security-relevant issues, not just functionality
+Pre-release review — checklist (Section 18) confirmed before deploying to production
+Post-release monitoring — active watch on logs/alerts in the hours after a significant release
+20. Future Security Roadmap
+MFA for customers (currently required for admin/staff only)
+Advanced fraud detection on checkout and payment flows
+Device management — visibility and control over active sessions per account
+Security automation — expand automated scanning and alerting coverage
+Threat detection improvements as order volume and attack surface grow

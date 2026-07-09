@@ -1,0 +1,320 @@
+Phase 1 — Foundation & Marketing Website
+Goal: Build the public-facing marketing experience that introduces the brand and encourages visitors to explore.
+Global Layout
+Responsive Layout 
+Header 
+Navigation 
+Mega Menu 
+Mobile Navigation 
+Footer 
+Announcement Bar 
+Cookie Consent 
+Search Overlay 
+Global Loading States 
+Error Pages (404, 500) 
+Maintenance Page 
+
+Homepage
+Hero Section 
+Animated Hero 
+Featured Collections 
+Featured Products 
+Brand Story 
+Why Choose Hairotic 
+Customer Reviews 
+Before & After Gallery 
+Instagram Feed 
+Blog Preview 
+Newsletter Section 
+WhatsApp CTA 
+FAQ Preview 
+
+Static Pages
+About Us 
+Contact Us 
+FAQ 
+Shipping Policy 
+Returns & Refunds 
+Privacy Policy 
+Terms & Conditions 
+
+Blog
+Blog Listing 
+Blog Details 
+Category Pages 
+
+Components
+Buttons 
+Cards 
+Inputs 
+Badges 
+Chips 
+Breadcrumbs 
+Modals 
+Drawers 
+Toast Notifications 
+Skeleton Loaders 
+Empty States 
+
+Phase 2 — Product Discovery
+Goal: Allow customers to browse and discover products effortlessly.
+Shop
+Shop Landing 
+Product Grid 
+Product List View 
+Filters 
+Sorting 
+Search Results 
+Pagination / Infinite Scroll 
+
+Collections
+Collections Landing 
+Individual Collection 
+
+Categories
+Straight Hair 
+Curly Hair 
+Wavy Hair 
+Bob Wigs 
+Closure Wigs 
+Frontal Wigs 
+Bundles 
+Accessories 
+
+Search
+Instant Search 
+Search Suggestions 
+Popular Searches 
+Search History 
+Empty Search 
+
+Wishlist
+Wishlist Page 
+Save for Later 
+
+Phase 3 — Product Experience
+Goal: Create a premium shopping experience.
+Product Details
+Product Gallery 
+Image Zoom 
+360° Viewer 
+Product Video 
+Variant Selector 
+Length Selector 
+Density Selector 
+Texture Selector 
+Color Selector 
+Quantity Selector 
+Delivery Information 
+Return Policy 
+Hair Care Instructions 
+Reviews 
+Q&A 
+Frequently Bought Together 
+Similar Products 
+Sticky Add to Cart 
+Floating WhatsApp Button 
+
+Phase 4 — Shopping & Checkout
+Goal: Convert visitors into paying customers.
+Cart
+Cart Page 
+Mini Cart 
+Empty Cart 
+Cart Recommendations 
+
+Checkout
+Guest Checkout 
+Logged-in Checkout 
+Shipping Address 
+Billing Address 
+Shipping Method 
+Payment 
+Order Summary 
+Order Review 
+Success Page 
+Failed Payment Page 
+
+Phase 5 — Authentication
+Goal: Enable secure customer accounts.
+Authentication
+Login 
+Register 
+Verify Email 
+Forgot Password 
+Reset Password 
+Magic Link (Future) 
+OTP Verification (Future) 
+
+Account Setup
+Welcome Screen 
+Complete Profile 
+Add Address 
+
+Phase 6 — Customer Dashboard
+Goal: Give customers control over their account and orders.
+Dashboard
+Overview 
+Profile 
+Addresses 
+Saved Payment Methods (Future) 
+Orders 
+Order Details 
+Wishlist 
+Reviews 
+Notifications 
+Security Settings 
+Password Change 
+Delete Account 
+Logout 
+
+Phase 7 — WhatsApp Commerce
+Goal: Blend traditional e-commerce with conversational shopping.
+WhatsApp Features
+Floating WhatsApp Widget 
+Product Consultation 
+Custom Wig Request 
+Order Tracking 
+Customer Support 
+Complaint Form 
+Return Request 
+Delivery Updates 
+Review Request 
+
+Phase 8 — Customer Engagement
+Goal: Increase retention and conversions.
+Engagement Features
+Newsletter 
+Referral Page (Future) 
+Loyalty Dashboard (Future) 
+Discount Codes 
+Gift Cards (Future) 
+Promotions 
+Flash Sales 
+Recently Viewed 
+Continue Shopping 
+
+Phase 9 — Admin Dashboard
+Authentication
+Admin Login 
+MFA Verification 
+Forgot Password 
+
+Dashboard
+Overview 
+Sales Analytics 
+Revenue Charts 
+Orders 
+Customers 
+Products 
+Categories 
+Inventory 
+Reviews 
+Coupons 
+Blog Manager 
+Media Library 
+WhatsApp Templates 
+Notifications 
+Reports 
+Activity Logs 
+Settings 
+
+Phase 10 — Premium Experience
+This is where Hairotic becomes memorable.
+Motion Graphics
+Hero animations 
+Smooth page transitions 
+Animated typography 
+Floating product cards 
+Parallax scrolling 
+Scroll-triggered reveals 
+Micro-interactions 
+Magnetic buttons 
+Animated counters 
+Progress indicators 
+Elegant loading animations 
+Smooth section transitions 
+
+3D Features
+Floating wig display 
+Interactive 3D hero scene 
+Rotating product showcase 
+Glassmorphism cards 
+Soft particle backgrounds 
+Dynamic lighting effects 
+Floating abstract shapes 
+Organic morphing elements 
+
+Suggested Development Timeline
+
+--- Table Start ---
+Phase | Focus | Priority
+1 | Foundation & Marketing | 🔴 Critical
+2 | Product Discovery | 🔴 Critical
+3 | Product Experience | 🔴 Critical
+4 | Cart & Checkout | 🔴 Critical
+5 | Authentication | 🔴 Critical
+6 | Customer Dashboard | 🟠 High
+7 | WhatsApp Commerce | 🟠 High
+8 | Customer Engagement | 🟡 Medium
+9 | Admin Dashboard | 🔴 Critical
+10 | Motion & 3D Polish | 🟢 Final Polish
+--- Table End ---
+
+This phased approach ensures that by the end of each stage, the application remains usable, testable, and progressively closer to a production-ready launch, while leaving the advanced animations and visual polish until the core commerce functionality is stable.
+
+These are nice, Using the information give me a detailed prompt for each phase to create this website, let it have animations, 3D and motion graphics for FIgma make. remember to make the colours and typography let it have animations, 3D and motion graphics. remember to make the colours and typography. I want a prompt that would wow the users, put them in a google docx file.
+
+Done! I've created the DOCX file.
+📄 Download it here:Hairotic_Figma_Make_Master_Prompts_By_Phase.docx
+One recommendation
+If your goal is to produce an Awwwards-level, Apple-quality, luxury e-commerce experience, I wouldn't stop at these prompts.
+I would create a comprehensive Figma Make Prompt Book of around 150–200 pages, where every single screen gets its own dedicated prompt instead of grouping them by phase.
+For example:
+Homepage (15–20 page prompt) 
+Shop Page (10-page prompt) 
+Product Details (20-page prompt) 
+Cart (8-page prompt) 
+Checkout (15-page prompt) 
+Authentication (12-page prompt) 
+Customer Dashboard (20-page prompt) 
+Admin Dashboard (30-page prompt) 
+Mobile Experience (25-page prompt) 
+Motion & 3D System (20-page prompt) 
+Each prompt would include:
+Design philosophy 
+Layout grid 
+Typography hierarchy 
+Color application 
+Component placement 
+Animation choreography 
+3D scene direction 
+Motion graphics timing 
+Scroll interactions 
+Micro-interactions 
+Accessibility requirements 
+Responsive behavior 
+Design tokens 
+Implementation notes for Next.js, Tailwind CSS, Framer Motion, and React Three Fiber 
+That level of detail typically results in much higher-quality AI-generated designs and gives you a polished, consistent design language across the entire Hairotic.ng platform. 
+Hairotic.ng - Figma Make Prompts by Phase
+1 Foundation & Marketing
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Create homepage, hero, about, contact, blog, footer, FAQ, newsletter, testimonials, Instagram feed, WhatsApp CTA with cinematic animations and 3D.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+2 Product Discovery
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Create shop, collections, filters, search, wishlist, animated product grid, hover interactions and editorial layouts.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+3 Product Experience
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Create premium PDP with 360 gallery, zoom, variants, reviews, sticky add to cart, delivery info, WhatsApp consultation.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+4 Shopping & Checkout
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Design cart, mini-cart, checkout, payment, success/failure, progress indicators, trust badges and elegant transitions.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+5 Authentication
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Design login, register, verify email, forgot/reset password, onboarding using secure luxury UI.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+6 Customer Dashboard
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Design orders, profile, wishlist, addresses, notifications, reviews, security settings with SaaS-inspired cards.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+7 WhatsApp Commerce
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Design conversational commerce, support, tracking, custom wig requests, review flow.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+8 Customer Engagement
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Design promotions, recommendations, newsletter, loyalty placeholders, recently viewed.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+9 Admin Dashboard
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Design analytics, inventory, orders, products, customers, reports, settings in premium dark/light modes.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.
+10 Motion & Polish
+Brand: Hairotic.ng. Luxury editorial ecommerce. Colors: Deep Burnt Orange #C65A12, White #FFFFFF, Ivory #FFF8F2, Cream #FAF7F4, Charcoal #222222. Typography: Rubik Spray Paint for hero/logo, TASA Explorer for UI/body. Use immersive storytelling, premium photography, 3D floating wigs, glassmorphism, soft gradients, motion graphics, parallax, animated typography, magnetic buttons, scroll reveals, premium micro-interactions, responsive layouts, WCAG AA.Task: Unify entire experience with Apple-quality animations, 3D, parallax, loading states, page transitions and motion specs.Deliver complete high-fidelity Figma screens, reusable components, design tokens, animation specifications, responsive desktop/tablet/mobile variants, and implementation-ready layouts.

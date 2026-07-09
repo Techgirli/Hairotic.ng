@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #222222;
+
+  --color-brand-orange: #E56717;
+  --color-brand-orange-burnt: #C65A12;
+  --color-brand-charcoal: #222222;
+  --color-brand-ivory: #FFF8F2;
+  --color-brand-cream: #FAF7F4;
+  --color-brand-gray: #6B7280;
+  --color-brand-lightgray: #F8F8F8;
+
+  --color-brand-success: #22C55E;
+  --color-brand-error: #EF4444;
+  --color-brand-warning: #F59E0B;
+
+  --radius-btn: 12px;
+  --radius-card: 20px;
+  --radius-input: 12px;
+  --radius-product-card: 24px;
+  --radius-image: 24px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-brand-orange: var(--color-brand-orange);
+  --color-brand-orange-burnt: var(--color-brand-orange-burnt);
+  --color-brand-charcoal: var(--color-brand-charcoal);
+  --color-brand-ivory: var(--color-brand-ivory);
+  --color-brand-cream: var(--color-brand-cream);
+  --color-brand-gray: var(--color-brand-gray);
+  --color-brand-lightgray: var(--color-brand-lightgray);
+
+  --color-brand-success: var(--color-brand-success);
+  --color-brand-error: var(--color-brand-error);
+  --color-brand-warning: var(--color-brand-warning);
+
+  --radius-btn: var(--radius-btn);
+  --radius-card: var(--radius-card);
+  --radius-input: var(--radius-input);
+  --radius-product-card: var(--radius-product-card);
+  --radius-image: var(--radius-image);
+
+  --font-display: var(--font-rubik-spray);
+  --font-sans: var(--font-outfit);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-outfit), sans-serif;
+}

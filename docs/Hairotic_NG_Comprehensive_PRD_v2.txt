@@ -1,0 +1,894 @@
+HAIROTIC.NG
+Comprehensive Product Requirements Document
+Version 2.0 — Full Detailed Edition
+Free-Tier Cloud Architecture (No AWS)
+Prepared for: Hairotic.ng — Premium Nigerian Hair Ecommerce
+Document Owner: Product / Engineering
+Date: July 2026
+
+Document Control
+
+--- Table Start ---
+Document Title | Hairotic.ng Comprehensive PRD
+Version | 2.0
+Status | Draft for Engineering & AI-Agent Implementation
+Owner | Product Lead / DevOps Engineer
+Related Documents | Hairotic.ng Security Suite (referenced, not duplicated), Brand Guidelines
+Cloud Policy | No AWS. All infrastructure must run on free/low-cost tiers documented in Section 5.
+--- Table End ---
+
+
+1. Executive Summary
+Hairotic.ng is a premium Nigerian hair ecommerce brand built around trust, authenticity, and a bold, expressive identity (deep orange/white palette, confident brand voice). This document is the single source of truth for what to build, why, and how — detailed enough that a human engineering team or an AI coding agent can implement the platform consistently without ambiguity.
+This edition treats the project like a flagship open-source-grade repository: every feature carries an objective, business value, user story, acceptance criteria, edge cases, dependencies, technical notes, analytics events, and security considerations. Every one of the 21 screens across the customer-facing storefront and admin back-office is documented to this standard.
+A key constraint for this version: the platform must run entirely on free or near-free cloud tiers — AWS is explicitly excluded. Section 5 defines the replacement architecture.
+2. Vision & Business Goals
+Mission
+To help every woman express her boldest self through hair that turns heads and never holds her back.
+Vision
+To become the number one name young, confident Nigerian women think of when they want hair that matches their energy — starting in Lagos, scaling nationwide.
+Business Goals
+Become a trusted, premium hair destination online.
+Increase online sales volume and average order value.
+Deliver an excellent, fast, mobile-first shopping experience.
+Scale the platform securely without AWS-scale infrastructure cost.
+Objectives & KPIs
+Conversion rate > 2.5%
+Platform uptime ≥ 99.9%
+Page load time < 2.5 seconds on mobile
+Repeat purchase rate > 20%
+Net Promoter Score (NPS) > 50
+3. Problem Statement
+Customers shopping for hair online in Nigeria routinely struggle with counterfeit or misrepresented products, poor mobile UX, low trust in payment security, and fragmented, confusing checkout flows split across Instagram DMs, WhatsApp, and unreliable websites. Hairotic.ng solves this by combining a single trustworthy storefront with a familiar WhatsApp-based confirmation and support layer, transparent stock/pricing, and verified reviews.
+4. Target Personas
+Busy Professional (primary)
+Female, 25-40, Lagos-based, values convenience and low-maintenance protective styles, willing to pay for guaranteed quality, shops mostly on mobile during commute/lunch breaks.
+Beauty Entrepreneur
+Runs her own salon or resells hair; buys in bulk, price-sensitive, needs fast WhatsApp communication and reliable stock availability.
+First-Time Buyer
+18-30, trend-driven, discovered the brand via Instagram/TikTok, needs strong trust signals (reviews, guarantees) before committing to a first purchase.
+Returning Customer
+Already purchased once, values a fast reorder experience, saved addresses, and recognition (loyalty, personalized recommendations).
+5. Customer Journey Flow
+The primary end-to-end customer flow this platform must support:
+Landing  →  Browse Products  →  Product Details  →  Add to Cart  →  Checkout  →  Paystack  →  Order Confirmation  →  WhatsApp Confirmation  →  Shipping Updates  →  Delivery  →  Review  →  Repeat Purchase
+Every stage in this flow maps directly to a documented screen/feature in Section 8, and every transition emits an analytics event so the funnel is fully measurable end to end (see Section 11, Analytics).
+6. Free-Tier Cloud Architecture (No AWS)
+AWS is explicitly excluded from this platform. The table below replaces every AWS component referenced in earlier planning with a free or near-free equivalent, chosen to minimize operating cost while the store is pre-revenue or early-revenue, with a clear upgrade path as traffic grows.
+
+--- Table Start ---
+Concern | Free-Tier Service | Why / Notes
+Frontend hosting | Vercel (Hobby / free tier) | Next.js storefront + admin panel. Free tier covers generous bandwidth/build minutes for an early-stage store; automatic HTTPS, global CDN, preview deployments per PR.
+Backend API hosting | Render (Free / Starter tier) or Railway (free credit tier) | NestJS API service. Free web service tier is sufficient for MVP traffic; documented upgrade path to a paid instance only when sustained load requires it.
+Primary database | Neon (Postgres, free tier) — Supabase Postgres free tier as an alternative | Serverless Postgres with generous free storage/compute; branching supports safe staging/preview databases at no extra cost.
+Caching / sessions | Upstash Redis (free tier) | Guest cart sessions, rate-limiting counters, short-lived stock holds during checkout.
+Media storage & transforms | Cloudinary (free tier) | Product images, review photos, blog images; automatic responsive/format optimization (WebP/AVIF).
+Transactional email | Resend (free tier) | Order confirmations, password resets, admin alerts.
+WhatsApp messaging | Meta WhatsApp Cloud API (free conversation tier within Meta's free monthly conversation allowance) | Order confirmation, shipping updates, support click-to-chat.
+Payments | Paystack | Card, bank transfer, and USSD payment channels; no separate PCI-DSS burden since Hairotic.ng never touches raw card data.
+DNS / CDN / WAF | Cloudflare (Free plan) | DNS management, basic DDoS mitigation, and edge caching in front of Vercel/Render.
+Error tracking | Sentry (free Developer tier) | Frontend and backend error monitoring with alerting.
+Uptime monitoring | UptimeRobot (free tier) | External synthetic uptime checks feeding the 99.9% uptime KPI.
+CI/CD | GitHub Actions (free minutes for public repos / limited free minutes for private) | Lint, test, build, and deploy pipelines on every pull request and merge to main.
+Analytics | Vercel Analytics (free, basic) + custom event logging into Postgres | Web vitals/traffic from Vercel; ecommerce funnel analytics captured as first-party events (Section 11).
+Secrets management | Platform-native encrypted environment variables (Vercel / Render project secrets) | No dedicated secrets-manager service required at this scale; documented rotation policy in the Security Suite.
+--- Table End ---
+
+Migration & Scaling Path
+Every service above has a paid tier on the same platform (Vercel Pro, Render paid instance, Neon paid compute, Upstash pay-as-you-go, Cloudinary paid plan). This means scaling up is a configuration/billing change, not a re-architecture — no component requires migrating to AWS or another provider to grow.
+7. Enterprise / Composable Commerce Architecture
+The platform is organized as independently-owned modules rather than one monolithic block of features. Each module has a clear boundary, its own data ownership, and can evolve (or be swapped) without breaking the others. This is the same composable-commerce alignment referenced in prior planning, now mapped explicitly to screens and free-tier services.
+
+--- Table Start ---
+Module | Responsibility | Screens it powers
+Catalog | Products, variants, collections, categories, search/filter, stock display. | Landing, Shop, Collections, Product Page
+Customer | Registration, authentication, profile, addresses, wishlist. | Customer Dashboard, Wishlist, Admin Customer Management
+Checkout | Cart, address capture, order creation, stock holds. | Cart, Checkout
+Payments | Paystack integration, webhook verification, refunds. | Payment, Admin Orders
+Notifications | Transactional email via Resend. | Order Confirmation, Contact
+WhatsApp Messaging | Order confirmation, shipping updates, click-to-chat support. | Contact, Order Tracking
+Analytics | Event capture, funnel reporting, admin dashboards. | Admin Analytics, Admin Dashboard
+Administration | RBAC, admin auth, product/inventory/order management, audit logging. | Admin Login, Admin Dashboard, Product Management, Inventory, Orders, Customer Management
+--- Table End ---
+
+Module Boundaries — Implementation Note
+At MVP scale, all modules can live in a single NestJS monorepo with clear internal module boundaries (NestJS modules mapping 1:1 to the table above) backed by one Neon Postgres database with clearly namespaced schemas/tables. This avoids the operational overhead of real microservices while preserving the ability to split any module out into its own service later without a rewrite.
+8. Feature Specifications — All Screens
+Every screen below is documented to the full quality standard: Objective, Business Value, Description, Priority, User Story, Acceptance Criteria, Edge Cases, Dependencies, Technical Notes, Analytics Events, and Security Considerations.
+1. Landing Page (Home)
+
+--- Table Start ---
+Module | Catalog / Marketing
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Give a first-time visitor an instant, trustworthy impression of Hairotic.ng and route them to the products most likely to convert within 5 seconds of load.
+Business Value
+First impression drives bounce rate and brand trust — directly impacts conversion rate KPI (>2.5%).
+Showcases bestsellers and promotions to increase average order value.
+Establishes brand identity (deep orange/white, bold voice) that differentiates Hairotic.ng from generic hair vendors.
+Description
+The homepage introduces the brand, highlights hero promotions, bestsellers, collections, trust signals (reviews, guarantees), and drives users into the Shop or a specific Collection.
+User Story
+As a new visitor, I want to immediately understand what Hairotic.ng sells and why I should trust it, so that I feel confident browsing further.
+Acceptance Criteria
+Hero banner loads within 2.5s on 3G-equivalent mobile connection and supports rotating promotional slides.
+Bestsellers and New Arrivals sections pull live data from the Catalog service, not hardcoded content.
+Trust bar displays real aggregated review rating, delivery promise, and payment security badges.
+All primary CTAs (Shop Now, View Collection, Add to Wishlist) are reachable within one tap/click.
+Page is fully responsive across mobile (360px+), tablet, and desktop breakpoints.
+Edge Cases
+No internet / slow connection: show skeleton loaders, never a blank white screen.
+Empty bestseller data (new store, no sales yet): fall back to featured/curated products set by admin.
+Promotional banner expired but not replaced: hide banner slot gracefully rather than showing broken content.
+Dependencies
+Catalog service (products, collections)
+Reviews service (aggregate rating)
+CMS/Admin (banner & promo management)
+Technical Notes
+Static-first rendering via Next.js ISR (Incremental Static Regeneration) with revalidation every 5 minutes for bestseller/promo blocks.
+Images served through Cloudinary with automatic format (WebP/AVIF) and responsive sizing.
+Deployed on Vercel free Hobby tier; upgrade path to Pro tier documented but not required at MVP scale.
+Analytics Events
+page_view (landing)  •  cta_click (shop_now, view_collection)  •  banner_impression  •  banner_click  •  bestseller_click
+Security Considerations
+No authentication required; treat as fully public surface — sanitize any CMS-driven HTML to prevent stored XSS.
+Rate-limit any embedded newsletter/signup form to prevent spam bot abuse.
+
+2. Shop (Product Listing)
+
+--- Table Start ---
+Module | Catalog
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Let customers browse the full catalog with filtering, sorting, and search so they can find the right product quickly.
+Business Value
+Primary discovery surface for customers who don't land on a specific Collection or product link.
+Good filtering/sort reduces search abandonment and increases products-viewed-per-session.
+Description
+A paginated/infinite-scroll grid of all active products with filters (hair type, texture, length, price, color) and sort options (price, newest, popularity, rating).
+User Story
+As a shopper, I want to filter and sort products by what matters to me (length, texture, price) so I don't have to scroll through everything.
+Acceptance Criteria
+Filters can be combined (e.g., texture=curly AND length=18-20in) and reflected in the URL as query params for shareability.
+Out-of-stock products are visibly marked but still appear (not silently hidden) unless admin disables them.
+Search-within-shop returns results in under 500ms for catalogs up to 5,000 SKUs.
+Grid supports at least 24 products per page with lazy-loaded images.
+Edge Cases
+Zero results after filtering: show a friendly empty state with a 'clear filters' action, never a blank grid.
+Filter combination that matches nothing: suggest the nearest matching alternative (e.g., relax price range).
+Product removed mid-session (admin deletes while user has tab open): handle gracefully on add-to-cart with a clear message.
+Dependencies
+Catalog service
+Search index (e.g., Postgres full-text or Meilisearch free/self-hosted)
+Inventory service (stock status)
+Technical Notes
+Use cursor-based pagination for performance at scale rather than offset pagination.
+Search can start on Postgres `tsvector` full-text search (free, no extra infra) before graduating to a dedicated search engine if catalog grows beyond ~10k SKUs.
+Analytics Events
+shop_view  •  filter_applied  •  sort_applied  •  search_query  •  product_card_click  •  empty_search_result
+Security Considerations
+Sanitize and validate all filter/search query params server-side to prevent injection via crafted URLs.
+Rate-limit search endpoint to prevent scraping/abuse.
+
+3. Collections
+
+--- Table Start ---
+Module | Catalog
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Group related products (e.g., 'Bone Straight', 'Curly Bundles', 'New Drops') into curated, shareable landing pages that support campaigns.
+Business Value
+Enables targeted marketing campaigns (Instagram bio link → specific collection) which improves campaign attribution and conversion.
+Improves SEO through keyword-rich, themed landing pages.
+Description
+Each collection has its own hero image/banner, description, and a filtered product grid scoped to that collection.
+User Story
+As a shopper who clicked an Instagram ad for 'New Drops', I want to land directly on that themed collection, not a generic shop page.
+Acceptance Criteria
+Each collection has a unique, human-readable URL slug (e.g., /collections/new-drops).
+Admin can create, edit, reorder, publish/unpublish collections without a code deploy.
+Collection pages support the same filter/sort capability as the Shop page, scoped to the collection.
+Edge Cases
+Collection with zero published products: hide from navigation automatically, but allow direct link to show a 'coming soon' state rather than a 404.
+Overlapping products across multiple collections: ensure inventory count stays consistent (single source of truth).
+Dependencies
+Catalog service
+Admin CMS
+Technical Notes
+Reuse the Shop page's product grid component to avoid duplication; only the query scope changes.
+Analytics Events
+collection_view  •  collection_product_click  •  collection_share
+Security Considerations
+Validate collection slugs server-side against an allowlist to prevent path traversal or unintended data exposure.
+
+4. Product Page (PDP)
+
+--- Table Start ---
+Module | Catalog
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Provide all information a buyer needs (photos, texture, length, price, stock, reviews) to decide to purchase with confidence.
+Business Value
+The single highest-leverage page for conversion — poor PDPs are the #1 cause of cart abandonment before cart even starts.
+Reduces return/complaint rate by setting accurate expectations (real photos, honest stock, sizing/length guide).
+Description
+Product image gallery/zoom, variant selection (length, color, texture), price, stock status, add-to-cart/wishlist, description, care instructions, and customer reviews.
+User Story
+As a shopper, I want to see multiple real photos and reviews of a specific hair bundle/wig before I commit to buying it.
+Acceptance Criteria
+Selecting a variant (e.g., 20-inch, Color 1B) updates price, images, and stock status without a full page reload.
+Add to Cart is disabled with a clear 'Out of Stock' / 'Notify Me' state when the selected variant has zero stock.
+Reviews section shows verified-purchase badge and supports photo reviews.
+Structured data (schema.org Product) is present for SEO and Google Shopping eligibility.
+Edge Cases
+Variant goes out of stock while user has it in an open tab: re-validate stock at add-to-cart time, not just page load.
+Product has only one variant (no options to choose): skip variant selector UI entirely.
+Missing images for a variant: fall back to the default product image set, never show a broken image icon.
+Dependencies
+Catalog service
+Inventory service
+Reviews service
+Wishlist service
+Technical Notes
+Variant matrix stored as normalized product_variants table (SKU, attributes, price override, stock) rather than JSON blobs, to keep inventory accurate.
+Images via Cloudinary with zoom/lightbox handled client-side.
+Analytics Events
+product_view  •  variant_selected  •  add_to_cart  •  add_to_wishlist  •  review_read  •  zoom_image
+Security Considerations
+Server-side re-validation of price and stock at cart-add time — never trust client-submitted price.
+Sanitize user-generated review content to prevent stored XSS.
+
+5. Wishlist
+
+--- Table Start ---
+Module | Customer
+Priority | Should Have (MVP)
+--- Table End ---
+
+Objective
+Let logged-in customers save products for later, encouraging return visits and repeat-purchase behavior.
+Business Value
+Increases return-visit rate and provides a remarketing signal (abandoned wishlist emails/WhatsApp nudges).
+Low-friction way to capture purchase intent before the customer is ready to buy.
+Description
+A personal, persistent list of saved products accessible from the account/dashboard and from a heart icon on product cards/PDP.
+User Story
+As a returning customer, I want to save products I like so I can find them again without re-searching.
+Acceptance Criteria
+Wishlist persists across sessions and devices once the user is logged in.
+Guest users seeing the heart icon are prompted to log in/register rather than the action silently failing.
+Wishlist item shows current price and stock status live, not a snapshot from when it was added.
+One-click 'Move to Cart' from the wishlist.
+Edge Cases
+Wishlisted product deleted/discontinued by admin: show clearly as 'No longer available' rather than removing silently.
+Same product wishlisted twice via race condition (double click): enforce uniqueness at the database level.
+Dependencies
+Customer/Auth service
+Catalog service
+Technical Notes
+Simple join table (customer_id, product_variant_id, created_at) is sufficient — no need for a separate microservice at MVP scale.
+Analytics Events
+wishlist_add  •  wishlist_remove  •  wishlist_to_cart
+Security Considerations
+Wishlist endpoints must verify the requesting user owns the wishlist (authorization check), not just that they're authenticated.
+
+6. Cart
+
+--- Table Start ---
+Module | Checkout
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Let customers review, adjust quantity/variants, and confirm what they're about to buy before checkout.
+Business Value
+Cart abandonment is typically the largest drop-off point in ecommerce — clarity here directly protects the conversion KPI.
+Cross-sell opportunity (recommended add-ons) increases average order value.
+Description
+A summary of selected items with quantity controls, per-item and total pricing, promo code entry, and a clear path to Checkout.
+User Story
+As a shopper, I want to review exactly what I'm buying and adjust quantities before I commit to checkout.
+Acceptance Criteria
+Cart persists for guest users via a session/cookie-based cart and merges into the account cart on login.
+Quantity changes and removals update the total instantly without a full page reload.
+Promo code field validates in real time and shows a clear error for invalid/expired codes.
+Cart displays an accurate, live stock check before allowing proceed-to-checkout.
+Edge Cases
+Item goes out of stock while sitting in cart: flag it clearly and prevent checkout until resolved (remove or reduce quantity).
+Guest cart abandoned then user logs in on another device: only merge, never silently overwrite, the existing account cart.
+Price changed by admin after item was added to cart: always show the current live price, with a visible note if it changed.
+Dependencies
+Catalog service
+Inventory service
+Promotions/Coupon service (optional at MVP)
+Technical Notes
+Cart state stored server-side keyed by session ID (Redis via Upstash free tier) for guests, and by customer_id in Postgres once logged in.
+Analytics Events
+cart_view  •  cart_item_add  •  cart_item_remove  •  cart_quantity_change  •  promo_code_applied  •  promo_code_failed  •  begin_checkout
+Security Considerations
+Never trust client-submitted line-item prices/totals — recompute server-side from the Catalog/Inventory source of truth at every step.
+
+7. Checkout
+
+--- Table Start ---
+Module | Checkout
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Collect shipping/contact details and produce a confirmed, payable order with minimal friction.
+Business Value
+Directly gates the conversion KPI — every unnecessary field or step here costs completed orders.
+Accurate address/contact capture reduces failed deliveries and support tickets.
+Description
+A guest-friendly, multi-step (or single-page) flow collecting contact info, delivery address, delivery method, and order review before handing off to Payment.
+User Story
+As a customer, I want to check out quickly, ideally without being forced to create an account first.
+Acceptance Criteria
+Guest checkout is fully supported; account creation is offered but never mandatory.
+Address form supports Nigerian states/LGAs via a structured dropdown, not free text, to reduce delivery errors.
+Order summary on the final review step shows itemized costs, delivery fee, and total with no hidden charges.
+Phone number is validated and required (used later for WhatsApp order confirmation).
+Edge Cases
+User abandons checkout mid-flow: recoverable via saved draft order tied to session/email for remarketing.
+Delivery address outside serviceable areas: clearly communicate this before payment, not after.
+Duplicate order submission (double-click on submit): idempotency key prevents creating two orders.
+Dependencies
+Customer service
+Catalog/Inventory (final stock re-check)
+Payments module (handoff)
+Technical Notes
+Generate the order in a 'pending_payment' state before redirecting to Paystack, using an idempotency key to prevent duplicate orders on retry/back-button.
+Stock is soft-reserved (short TTL hold) at checkout start and confirmed on successful payment webhook.
+Analytics Events
+checkout_started  •  checkout_step_completed  •  address_entered  •  checkout_abandoned  •  order_created_pending
+Security Considerations
+All checkout traffic must be HTTPS only (enforced via Cloudflare/Vercel).
+Validate and sanitize all address/contact fields server-side; never trust client-side validation alone.
+
+8. Payment
+
+--- Table Start ---
+Module | Payments
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Securely process payment via Paystack and reliably confirm order status without exposing sensitive payment data to the app's own servers.
+Business Value
+Payment reliability is a direct driver of completed-order rate and customer trust.
+PCI-DSS scope stays minimal by never touching raw card data directly.
+Description
+Redirect/inline Paystack checkout for card, bank transfer, and USSD, followed by webhook-based server-side verification before marking an order as paid.
+User Story
+As a customer, I want to pay with my card, bank transfer, or USSD and get instant confirmation that my payment worked.
+Acceptance Criteria
+Order is only marked 'Paid' after Paystack webhook + server-side transaction verification, never on client-side redirect alone.
+Failed/cancelled payments return the customer to checkout with cart intact and a clear retry option.
+Successful payment triggers Order Confirmation screen, confirmation email, and WhatsApp message within seconds.
+Supports Paystack's card, bank transfer, and USSD channels at minimum.
+Edge Cases
+Webhook delayed or fails to arrive: a reconciliation job polls Paystack's verify-transaction API as a fallback within a few minutes.
+Customer closes the browser tab after paying but before redirect completes: webhook still confirms the order server-side independent of the client.
+Duplicate webhook delivery (Paystack retries): handle idempotently using the transaction reference, don't double-fulfill.
+Dependencies
+Checkout (pending order)
+Notifications module (email/WhatsApp)
+Order Tracking
+Technical Notes
+Verify every webhook's signature against the Paystack secret before trusting the payload.
+Store Paystack secret/public keys in the hosting provider's encrypted environment variables (Render/Vercel secrets), never in source control.
+Reconciliation cron job (e.g., a scheduled Render job or GitHub Actions scheduled workflow) re-verifies any order stuck in 'pending_payment' for more than 10 minutes.
+Analytics Events
+payment_initiated  •  payment_success  •  payment_failed  •  payment_channel_selected
+Security Considerations
+Validate Paystack webhook signatures on every request; reject unsigned/invalid payloads.
+No card data ever touches Hairotic.ng's own servers — Paystack hosted fields/redirect only.
+Log payment events without storing sensitive payment details beyond transaction reference and status.
+
+9. Customer Dashboard
+
+--- Table Start ---
+Module | Customer
+Priority | Should Have (MVP)
+--- Table End ---
+
+Objective
+Give logged-in customers a single place to view their profile, past orders, saved addresses, and wishlist.
+Business Value
+Reduces repeat-purchase friction (saved addresses, reorder) which supports the >20% repeat purchase KPI.
+Reduces support load by letting customers self-serve order status/history.
+Description
+Account overview with tabs/sections for Profile, Order History, Addresses, Wishlist, and Notification preferences.
+User Story
+As a returning customer, I want to see my past orders and reorder easily without contacting support.
+Acceptance Criteria
+Order history lists all past orders with status, date, total, and a link to full Order Tracking detail.
+Profile edits (name, email, phone) require re-verification of email/phone if changed.
+Saved addresses can be added, edited, deleted, and one marked as default.
+Edge Cases
+Customer has zero past orders: show an encouraging empty state with a Shop Now CTA, not a blank table.
+Email change to an address already used by another account: block with a clear error, don't silently merge accounts.
+Dependencies
+Customer/Auth service
+Orders service
+Wishlist
+Technical Notes
+Paginate order history server-side; do not load a customer's full order history in one query as the store scales.
+Analytics Events
+dashboard_view  •  profile_updated  •  address_added  •  reorder_click
+Security Considerations
+All dashboard data access must be scoped to the authenticated user's own customer_id — enforce this at the API/query layer, not just the UI.
+Require re-authentication (password confirm) for sensitive changes like email/phone update.
+
+10. Order Tracking
+
+--- Table Start ---
+Module | Checkout / Notifications
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Let customers see real-time order and shipping status without needing to contact support.
+Business Value
+Reduces 'where is my order' support inquiries, a major cost center for small ecommerce teams.
+Builds trust and reduces chargeback/dispute risk by showing transparent status.
+Description
+A per-order timeline (Placed → Paid → Processing → Shipped → Delivered) with courier/tracking reference where available, plus a public tracking link shareable via WhatsApp.
+User Story
+As a customer, I want to check exactly where my order is at any time.
+Acceptance Criteria
+Order status updates reflected within the dashboard and via WhatsApp notification at each major transition.
+A guest (non-logged-in) customer can track an order using order number + email/phone without needing an account.
+Estimated delivery window is shown and updated if delayed.
+Edge Cases
+Order stuck in 'Processing' beyond SLA (e.g., 48 hours): flagged internally for admin follow-up and customer proactively notified.
+Courier tracking number not yet available: show 'Preparing for shipment' rather than a broken/empty tracking widget.
+Dependencies
+Orders service
+Notifications (WhatsApp/Email)
+Admin Orders management
+Technical Notes
+Order status is a single source-of-truth enum on the order record; every status change is also written to an order_status_history table for auditability.
+Analytics Events
+order_tracking_view  •  order_status_changed
+Security Considerations
+Guest order lookup must require both order number AND a matching identifier (email or phone) to prevent order enumeration by guessing order IDs.
+
+11. Reviews
+
+--- Table Start ---
+Module | Catalog / Customer
+Priority | Should Have (MVP)
+--- Table End ---
+
+Objective
+Let verified buyers leave ratings, written feedback, and photos to build social proof for future shoppers.
+Business Value
+Reviews are one of the strongest conversion levers in ecommerce, especially for a trust-sensitive category like hair.
+Supports the NPS >50 KPI by surfacing satisfaction signals.
+Description
+Star rating + written review + optional photo upload, tied to a verified purchase, displayed on the relevant Product Page.
+User Story
+As a customer who received my order, I want to leave a review with photos to help other buyers decide.
+Acceptance Criteria
+Only customers with a delivered order for that product can submit a review (verified purchase enforcement).
+Reviews can include 1-5 photos, moderated before public display if flagged by automated filters.
+Admin can respond publicly to a review and can hide (not silently delete) reviews that violate guidelines.
+Edge Cases
+Customer tries to review before delivery confirmed: block with a clear message on when they'll be eligible.
+Spam/bot review submission: rate-limited and passed through basic content filtering before publishing.
+Dependencies
+Orders service (purchase verification)
+Catalog service
+Media storage (Cloudinary)
+Technical Notes
+Store review photos on Cloudinary free tier with moderation flag; do not auto-publish uploaded images without a lightweight automated check.
+Analytics Events
+review_submitted  •  review_photo_uploaded  •  review_helpful_vote
+Security Considerations
+Sanitize all review text server-side (stored XSS prevention); validate uploaded images are actually image MIME types, not disguised executables.
+
+12. Contact
+
+--- Table Start ---
+Module | Marketing / Support
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Give customers a clear, low-friction way to reach the business for questions, complaints, or partnership inquiries.
+Business Value
+Reduces lost sales from unanswered pre-purchase questions.
+WhatsApp-first contact matches how the target audience already communicates, improving response/resolution speed.
+Description
+A contact form plus prominent WhatsApp click-to-chat button, business hours, and social links.
+User Story
+As a shopper with a question before I buy, I want a fast, familiar way to reach a real person.
+Acceptance Criteria
+WhatsApp click-to-chat pre-fills a starter message and opens directly into the business WhatsApp number.
+Contact form submissions are delivered via email (Resend) and logged in the admin panel within seconds.
+Form validates required fields (name, contact method, message) before submission.
+Edge Cases
+Contact form submitted with an invalid/fake email: still store the submission but flag for lower-priority follow-up.
+WhatsApp Business API unavailable: click-to-chat link (wa.me) is a client-side fallback that still works even if the backend integration is down.
+Dependencies
+Notifications module (email)
+WhatsApp Messaging module
+Technical Notes
+Contact form submissions stored in Postgres and forwarded via Resend; no need for a separate CRM at MVP scale — the Admin Customer Management screen doubles as the inquiry log.
+Analytics Events
+contact_form_submitted  •  whatsapp_click  •  social_link_click
+Security Considerations
+Rate-limit and CAPTCHA/honeypot the contact form to prevent spam and email-bombing abuse.
+
+13. Blog
+
+--- Table Start ---
+Module | Marketing
+Priority | Could Have (Post-MVP)
+--- Table End ---
+
+Objective
+Publish hair-care and styling content that drives organic (SEO) traffic and builds brand authority.
+Business Value
+Long-term, low-cost acquisition channel that reduces reliance on paid social ads.
+Educational content (e.g., wig care) reduces returns/complaints from misuse.
+Description
+A simple content section with categorized articles, featured images, and related-product links.
+User Story
+As a new customer searching 'how to care for a wig', I want to find a trustworthy guide from the brand itself.
+Acceptance Criteria
+Admin can create/edit/publish blog posts with rich text, images, and SEO metadata (title, description, slug) without a code deploy.
+Blog posts can link directly to relevant products/collections.
+Posts are indexable by search engines with proper meta tags and sitemap inclusion.
+Edge Cases
+Draft post accidentally shared before publish: draft URLs are not indexable and require an admin preview token.
+Dependencies
+Admin CMS
+Catalog service (product linking)
+Technical Notes
+Can be built as a lightweight headless CMS collection within the same Postgres database rather than a separate CMS product, keeping infrastructure free-tier friendly.
+Analytics Events
+blog_post_view  •  blog_to_product_click
+Security Considerations
+Sanitize all rich-text HTML content server-side before rendering to prevent stored XSS from the admin editor.
+
+14. FAQ
+
+--- Table Start ---
+Module | Marketing / Support
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Pre-empt common questions (shipping times, returns, payment methods, hair care) to reduce support volume and purchase hesitation.
+Business Value
+Directly reduces repetitive WhatsApp/contact-form inquiries, saving support time.
+Answers trust-related objections (authenticity, returns) that block conversion.
+Description
+A categorized, searchable list of frequently asked questions and answers.
+User Story
+As a hesitant first-time buyer, I want to quickly check the return policy before I commit to buying.
+Acceptance Criteria
+FAQ entries are grouped by category (Shipping, Payment, Returns, Hair Care) and are searchable/filterable.
+Admin can add/edit/reorder FAQ entries without a code deploy.
+Edge Cases
+No search results found: show a fallback linking directly to the Contact page/WhatsApp.
+Dependencies
+Admin CMS
+Technical Notes
+Static content backed by a simple faqs table; can be rendered with ISR for fast load and easy admin edits.
+Analytics Events
+faq_view  •  faq_search  •  faq_item_expanded
+Security Considerations
+Standard content sanitization; no elevated risk beyond stored XSS prevention on admin-entered content.
+
+15. Admin Login
+
+--- Table Start ---
+Module | Administration
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Provide a secure, restricted entry point for staff to access the admin panel.
+Business Value
+Protects the business's most sensitive surface (inventory, orders, customer data, analytics) from unauthorized access.
+Description
+Email/password login with mandatory MFA for admin/staff accounts, separate from the customer-facing auth flow.
+User Story
+As a store admin, I want to log in securely knowing my access is well protected, since I can see all customer and order data.
+Acceptance Criteria
+Admin login is on a separate route/subdomain from customer auth and is not linked from public navigation.
+MFA (TOTP, e.g., Google/Authy authenticator) is mandatory for all admin/staff roles, not optional.
+Account lockout after 5 failed attempts within 15 minutes, with alerting to a super-admin.
+Edge Cases
+Staff member loses MFA device: recovery requires super-admin manual verification, not a self-service reset alone.
+Login attempted from a new/unrecognized location: triggers an email alert to the account owner.
+Dependencies
+Admin/Customer auth service (RBAC)
+Notifications (security alerts)
+Technical Notes
+Passwords hashed with bcrypt (cost factor ≥12); sessions via short-lived JWT + refresh token pattern, stored in httpOnly, Secure, SameSite=Strict cookies.
+Admin panel served from a distinct path/subdomain (e.g., admin.hairotic.ng) protected additionally by Cloudflare Access rules where feasible on the free plan.
+Analytics Events
+admin_login_success  •  admin_login_failed  •  admin_mfa_challenge  •  admin_account_locked
+Security Considerations
+This is the highest-risk screen in the product — full OWASP ASVS-aligned controls apply per the dedicated Security Suite document.
+Role-Based Access Control (RBAC) enforced at the API layer for every admin endpoint, not just hidden UI elements.
+All admin auth events logged to an append-only audit log.
+
+16. Admin Dashboard
+
+--- Table Start ---
+Module | Administration
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Give staff an at-a-glance operational summary: sales, pending orders, low stock, and recent activity.
+Business Value
+Reduces time-to-detect operational issues (e.g., low stock, stuck orders) that would otherwise cause lost sales or delayed fulfillment.
+Description
+Home screen of the admin panel showing key metrics (today's sales, pending orders, low-stock alerts), recent orders, and quick-action shortcuts.
+User Story
+As a store admin, I want to see what needs my attention today the moment I log in.
+Acceptance Criteria
+Dashboard loads key metrics (revenue today/week, pending orders count, low-stock count) within 2 seconds.
+Low-stock alerts link directly to the affected products in Inventory.
+Pending/unpaid orders older than a configurable threshold are visually flagged.
+Edge Cases
+No orders yet (new store): show a clean 'getting started' state rather than empty charts.
+Dependencies
+Orders service
+Inventory service
+Analytics service
+Technical Notes
+Aggregate queries should be indexed/materialized (e.g., a nightly rollup table) once order volume grows, to keep dashboard load fast without hitting AWS-scale infra needs.
+Analytics Events
+admin_dashboard_view  •  admin_quick_action_click
+Security Considerations
+RBAC-scoped: staff roles with limited permissions (e.g., support agent) should see a reduced dashboard view, not full financial data, unless explicitly granted.
+
+17. Product Management
+
+--- Table Start ---
+Module | Administration / Catalog
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Let admins create, edit, publish, and organize the product catalog without developer involvement.
+Business Value
+Enables fast, independent merchandising (new drops, price changes, promotions) which is critical for a fast-moving fashion/hair brand.
+Description
+CRUD interface for products and variants: images, pricing, descriptions, category/collection assignment, and publish status.
+User Story
+As an admin, I want to add a new hair bundle with photos, pricing, and variants in a few minutes without needing a developer.
+Acceptance Criteria
+Admin can create a product with multiple variants (length/color/texture), each with its own price and stock, in a single form flow.
+Image upload supports drag-and-drop, multiple images, and reordering, stored via Cloudinary.
+Draft products are not visible on the public site until explicitly published.
+Bulk actions (publish, unpublish, price update) are supported for efficiency.
+Edge Cases
+Product published with missing required fields (e.g., no price): blocked with a clear validation error, not silently published broken.
+Two admins editing the same product simultaneously: last-write-wins with a warning if the record changed since load (optimistic concurrency check).
+Dependencies
+Catalog service
+Media storage (Cloudinary)
+Inventory service
+Technical Notes
+Product and variant schema should be normalized (products, product_variants, product_images tables) rather than storing variant data as unstructured JSON, to keep inventory/reporting accurate.
+Analytics Events
+admin_product_created  •  admin_product_published  •  admin_product_updated  •  admin_bulk_action
+Security Considerations
+Restricted to Admin/Catalog-Manager roles via RBAC; all changes written to an audit trail with actor, timestamp, and diff.
+
+18. Inventory
+
+--- Table Start ---
+Module | Administration / Catalog
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Give admins real-time visibility into stock levels per variant and prevent overselling.
+Business Value
+Prevents the single most damaging ecommerce failure mode: selling out-of-stock items and having to cancel/refund, which destroys trust and NPS.
+Description
+A stock management view showing current quantity per SKU/variant, low-stock thresholds, manual adjustment, and stock movement history.
+User Story
+As an admin, I want to know exactly how many units of each variant are left and get warned before I run out.
+Acceptance Criteria
+Stock decrements automatically and atomically on confirmed payment, not on add-to-cart.
+Low-stock threshold is configurable per product/variant and triggers a dashboard alert plus optional email.
+Manual stock adjustments (e.g., damaged goods, restock) require a reason code and are logged.
+Edge Cases
+Two simultaneous orders for the last unit of a variant: database-level row locking/transaction ensures only one succeeds; the other is declined at payment confirmation with a refund-eligible flag.
+Negative stock from a data error: system flags and blocks further sale of that variant until reconciled, rather than silently allowing negative inventory.
+Dependencies
+Orders/Payments service (stock decrement trigger)
+Product Management
+Technical Notes
+Use database transactions with row-level locking (e.g., `SELECT ... FOR UPDATE` in Postgres) around stock decrement to guarantee no overselling under concurrent orders.
+Analytics Events
+admin_stock_adjusted  •  low_stock_alert_triggered  •  stock_out_event
+Security Considerations
+Restricted to Admin/Inventory-Manager roles; all stock adjustments logged to the audit trail with before/after values.
+
+19. Orders (Admin)
+
+--- Table Start ---
+Module | Administration / Checkout
+Priority | Must Have (MVP)
+--- Table End ---
+
+Objective
+Let admins view, filter, and manage the full lifecycle of every order, including fulfillment and refunds.
+Business Value
+Core operational tool for day-to-day fulfillment; directly impacts delivery speed and customer satisfaction.
+Description
+A searchable, filterable order list with detail view showing customer info, items, payment status, and controls to update fulfillment status or issue refunds.
+User Story
+As an admin, I want to see all pending orders and mark them as shipped with tracking info as soon as they go out.
+Acceptance Criteria
+Orders can be filtered by status (pending, paid, processing, shipped, delivered, cancelled, refunded) and searched by customer name/order number.
+Updating an order's status to 'Shipped' with a tracking number automatically triggers a customer notification (email + WhatsApp).
+Refunds initiate the corresponding Paystack refund API call and update order status accordingly, never just an internal note.
+Edge Cases
+Refund requested for an order already reconciled/settled beyond Paystack's refund window: system surfaces this limitation clearly to the admin.
+Order marked shipped without a tracking number: allowed but flagged, since some local courier arrangements may not have one.
+Dependencies
+Payments module (Paystack refund API)
+Notifications module
+Order Tracking
+Technical Notes
+Every status transition is written to order_status_history for auditability and to power the customer-facing Order Tracking timeline.
+Analytics Events
+admin_order_status_updated  •  admin_refund_issued  •  admin_order_search
+Security Considerations
+Refund actions restricted to Admin/Finance roles specifically (narrower than general staff access); all refund actions logged with actor and reason.
+
+20. Analytics (Admin)
+
+--- Table Start ---
+Module | Administration / Analytics
+Priority | Should Have (MVP)
+--- Table End ---
+
+Objective
+Give the business owner visibility into sales trends, top products, customer behavior, and marketing performance.
+Business Value
+Enables data-driven merchandising and marketing decisions (what to restock, what to promote) directly supporting the conversion and repeat-purchase KPIs.
+Description
+Dashboards/reports covering revenue over time, top-selling products/variants, conversion funnel (view→cart→checkout→purchase), and traffic sources.
+User Story
+As the business owner, I want to see which products are actually selling so I know what to restock and promote.
+Acceptance Criteria
+Revenue and order-count charts support date-range filtering (today, 7 days, 30 days, custom).
+Funnel view shows drop-off rate at each stage (product view → add to cart → checkout started → paid).
+Reports are exportable as CSV for offline analysis.
+Edge Cases
+Insufficient data for a meaningful chart (very new store): show a clear 'not enough data yet' state rather than a misleading empty/flat chart.
+Dependencies
+Analytics event pipeline (all screens' analytics events)
+Orders service
+Technical Notes
+Use a free/privacy-friendly analytics approach: Vercel Analytics (basic, free on Hobby) for web vitals/traffic, combined with custom event logging into Postgres for ecommerce-specific funnel analytics — avoids paid analytics infra.
+Aggregate heavy queries via scheduled rollup jobs (e.g., nightly GitHub Actions cron) rather than real-time heavy queries on the transactional database.
+Analytics Events
+admin_analytics_view  •  admin_report_exported
+Security Considerations
+Restricted to Admin/Owner roles; exported reports should exclude raw sensitive customer PII beyond what's needed for the report's purpose.
+
+21. Customer Management (Admin)
+
+--- Table Start ---
+Module | Administration / Customer
+Priority | Should Have (MVP)
+--- Table End ---
+
+Objective
+Let admins view customer profiles, order history, and support notes to deliver better service.
+Business Value
+Supports faster, more personal customer service (e.g., recognizing repeat/VIP customers), improving NPS and repeat purchase rate.
+Description
+A searchable customer list with profile detail view: contact info, order history, total lifetime spend, and internal notes.
+User Story
+As an admin handling a WhatsApp complaint, I want to quickly pull up that customer's order history to resolve the issue.
+Acceptance Criteria
+Customers are searchable by name, email, or phone number.
+Customer detail view shows full order history and total lifetime value at a glance.
+Admins can add internal notes on a customer profile not visible to the customer.
+Edge Cases
+Customer requests data deletion (privacy request): admin has a documented process to anonymize/delete personal data while preserving order records required for financial/tax record-keeping.
+Dependencies
+Customer/Auth service
+Orders service
+Technical Notes
+Internal notes stored in a separate customer_notes table scoped to admin visibility only, never exposed via any customer-facing API.
+Analytics Events
+admin_customer_search  •  admin_customer_note_added
+Security Considerations
+Customer PII access restricted by role; general support staff should see contact/orders but not payment details beyond status.
+All customer data views logged for audit purposes given the sensitivity of PII under NDPR (Nigeria Data Protection Regulation).
+
+9. AI Development Guidelines
+This section instructs any AI coding agent (or human engineer using AI-assisted tooling) on how to use this PRD alongside the technical specification to implement the application consistently.
+What to Build
+Exactly the 21 screens and 8 modules documented in Sections 6-8, in the priority order given (Must Have first).
+Every acceptance criterion listed per screen — treat these as the literal definition of 'done' for that feature.
+All free-tier cloud integrations listed in Section 6 — no AWS services, no paid-only infrastructure at MVP stage.
+What NOT to Build
+Native mobile apps (explicitly out of scope for MVP).
+AI-driven product recommendations or AR try-on (out of scope for MVP; may be revisited post-MVP).
+A multi-vendor marketplace model — Hairotic.ng is a single-seller storefront.
+Subscription/recurring-billing products or a referral/affiliate program (post-MVP).
+Any AWS service (S3, EC2, RDS, CloudFront, etc.) — use the Section 6 equivalents instead.
+Custom-built secrets management, service mesh, or Kubernetes — unnecessary complexity at this scale.
+Business Logic — Non-Negotiable Rules
+An order is only 'Paid' after Paystack webhook signature verification succeeds — never on client-side redirect alone.
+Stock is decremented atomically and only on confirmed payment, using row-level locking to prevent overselling.
+Prices and totals are always recomputed server-side from the Catalog/Inventory source of truth; client-submitted prices are never trusted.
+Guest checkout must always remain possible — account creation is optional, never mandatory, at any step.
+Every order status transition is written to an immutable order_status_history record.
+Feature Priorities
+Build in this order: (1) all screens marked 'Must Have (MVP)', (2) 'Should Have (MVP)' screens, (3) 'Could Have (Post-MVP)' screens such as the Blog. Do not begin Should/Could items until all Must Have acceptance criteria pass.
+Acceptance Criteria
+Use the Acceptance Criteria list under each screen in Section 8 as the literal test checklist. A feature is not complete until every listed criterion is verifiably true, including the listed edge cases.
+Success Metrics
+Conversion rate > 2.5% (tracked via the funnel events defined in Section 11).
+Platform uptime ≥ 99.9% (tracked via UptimeRobot).
+Mobile page load < 2.5 seconds (tracked via Vercel Analytics / Web Vitals).
+Repeat purchase rate > 20% and NPS > 50 (tracked via Customer Dashboard reorders and post-delivery review/survey data).
+10. Non-Functional Requirements
+Accessibility: WCAG 2.1 AA color contrast and keyboard navigability across the storefront, particularly given the deep-orange brand palette (verify contrast ratios against white backgrounds).
+Performance: <2.5s page load on mobile 3G-equivalent; images served via Cloudinary responsive/auto-format.
+Availability: ≥99.9% uptime, monitored externally via UptimeRobot with alerting to admin.
+Scalability: stateless API instances behind Render's autoscaling (paid tier) as a documented upgrade path; database connection pooling (e.g., PgBouncer / Neon's built-in pooler) to handle burst traffic without an AWS-scale re-architecture.
+Observability: structured logs, Sentry error tracking, and the Admin Analytics dashboard (Section 8, Screen 20) as the primary operational visibility tools.
+11. Security
+This PRD references the dedicated Hairotic.ng Security Suite for full implementation and operational standards rather than duplicating them here. Each feature in Section 8 states its security expectations (authentication, authorization, data protection); the Security Suite defines exactly how those expectations are implemented and audited.
+Baseline Controls Assumed by Every Feature
+HTTPS everywhere, enforced at the Cloudflare/Vercel edge.
+JWT-based session auth with short-lived access tokens and httpOnly, Secure, SameSite=Strict cookies.
+bcrypt password hashing (cost factor ≥12).
+Role-Based Access Control (RBAC) enforced at the API layer for all admin endpoints.
+Mandatory MFA for all admin/staff accounts.
+Rate limiting on all public-facing write endpoints (auth, checkout, contact form, reviews) via Upstash Redis.
+OWASP Top 10 mitigations (injection, broken auth, XSS, insecure deserialization, etc.) verified in CI before deploy.
+Daily automated database backups (Neon's built-in point-in-time recovery on the free/paid tier) with a documented restore test cadence.
+NDPR (Nigeria Data Protection Regulation) compliance for all customer PII handling, including a documented data-deletion process.
+Refer to the Security Suite document for detailed threat models, incident response procedures, and audit logging schema.
+12. API Modules
+Auth
+Users / Customers
+Products & Variants
+Orders
+Payments (Paystack webhook + verify)
+Reviews
+Notifications (Email + WhatsApp)
+Admin
+13. Database Entities
+Users / Customers (with role field distinguishing customer vs staff/admin)
+Products, ProductVariants, ProductImages
+Categories, Collections
+Orders, OrderItems, OrderStatusHistory
+Payments (Paystack transaction references)
+Addresses
+Reviews, ReviewPhotos
+Wishlists
+CustomerNotes (admin-only)
+AuditLog (all admin/security-relevant actions)
+14. Final Recommendation
+Given the size and importance of this project, Hairotic.ng should be treated like a flagship repository rather than just another website. High-quality documentation, clear architecture boundaries, security discipline, automated testing, and CI/CD automation will differentiate Hairotic.ng far more than the code alone.
+Documents should be built incrementally — this PRD, the Security Suite, and the Technical Specification each complete and internally consistent — so that any engineer or AI agent joining the project can implement confidently without guessing at intent.
