@@ -116,10 +116,26 @@ export default function CheckoutPage() {
       }
 
       const order = await res.json();
-      
-      // Clear store cart and go to success screen
+
+      // Initialize Paystack Payment
+      const payRes = await fetch('http://localhost:3001/api/v1/payments/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+
+      if (!payRes.ok) {
+        const payData = await payRes.json();
+        throw new Error(payData.message || 'Failed to initialize payment portal');
+      }
+
+      const paymentDetails = await payRes.json();
+
+      // Clear local store cart items
       clearCart();
-      router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
+
+      // Redirect user directly to Paystack payment gateway (or mock success URL in dev)
+      window.location.href = paymentDetails.authorization_url;
     } catch (err: any) {
       setError(err.message || 'Checkout failed. Please check variant stock.');
       setIsSubmitting(false);
