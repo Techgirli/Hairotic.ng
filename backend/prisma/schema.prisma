@@ -196,6 +196,12 @@ model Order {
   subtotal       Int                 // Stored in kobo
   deliveryFee    Int                 @map("delivery_fee") // Stored in kobo
   total          Int                 // Stored in kobo
+  shippingName   String?             @map("shipping_name")
+  shippingEmail  String?             @map("shipping_email")
+  shippingPhone  String?             @map("shipping_phone")
+  shippingState  String?             @map("shipping_state")
+  shippingLga    String?             @map("shipping_lga")
+  shippingStreet String?             @map("shipping_street")
   idempotencyKey String              @unique @map("idempotency_key")
   createdAt      DateTime            @default(now()) @map("created_at")
   updatedAt      DateTime            @updatedAt @map("updated_at")

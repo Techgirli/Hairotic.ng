@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rubik_Spray_Paint, Outfit } from "next/font/google";
 import "./globals.css";
+import CartDrawer from "../components/cart-drawer";
 
 const rubikSprayPaint = Rubik_Spray_Paint({
   variable: "--font-rubik-spray",
@@ -34,6 +35,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans bg-[#FFFFFF] text-[#222222]">
         {children}
+        <CartDrawer />
       </body>
     </html>
   );
