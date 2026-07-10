@@ -4,10 +4,17 @@ import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, MessageCircle, ShoppingBag, ArrowRight } from 'lucide-react';
+import { trackEvent } from '../../../lib/analytics';
 
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('orderNumber') || 'HR-XXXXXX';
+
+  React.useEffect(() => {
+    if (orderNumber && orderNumber !== 'HR-XXXXXX') {
+      trackEvent('purchase', { orderNumber });
+    }
+  }, [orderNumber]);
 
   const whatsappMessage = `Hello Hairotic! I just placed an order on the store. Order Reference: ${orderNumber}. Please confirm my order details!`;
   const whatsappUrl = `https://wa.me/2348000000000?text=${encodeURIComponent(whatsappMessage)}`;

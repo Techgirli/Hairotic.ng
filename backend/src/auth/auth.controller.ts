@@ -5,11 +5,13 @@ import { RolesGuard } from './roles.guard';
 import { Roles } from './roles.decorator';
 import { Role } from '@prisma/client';
 import type { Request, Response } from 'express';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('register')
   async register(
     @Body() body: any,
@@ -19,6 +21,7 @@ export class AuthController {
     return { success: true, user };
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
   async login(
     @Body() body: any,
@@ -81,6 +84,7 @@ export class AuthController {
     return this.authService.setupMfa(req.user.id);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(JwtAuthGuard)
   @Post('mfa/verify')
   async verifyMfa(

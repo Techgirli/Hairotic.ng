@@ -2,6 +2,7 @@ import { Controller, Post, Body, Req } from '@nestjs/common';
 import { CheckoutService } from './checkout.service';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
+import { Throttle } from '@nestjs/throttler';
 
 interface ShippingAddress {
   name: string;
@@ -19,6 +20,7 @@ export class CheckoutController {
     private jwtService: JwtService,
   ) {}
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post()
   async checkout(
     @Req() req: Request,

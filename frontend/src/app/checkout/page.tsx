@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '../../store/cartStore';
 import { ShieldCheck, Truck, ShoppingBag, ArrowLeft, CreditCard } from 'lucide-react';
+import { trackEvent } from '../../lib/analytics';
 
 // Popular Nigerian States and their Local Government Areas (LGAs)
 const NIGERIAN_STATES_LGAS: Record<string, string[]> = {
@@ -60,6 +61,16 @@ export default function CheckoutPage() {
       router.push('/shop');
     }
   }, [items, router, isSubmitting]);
+
+  // Track checkout beginning
+  useEffect(() => {
+    if (items.length > 0) {
+      trackEvent('begin_checkout', {
+        cartItemsCount: items.length,
+        subtotal: subtotalInNgn,
+      });
+    }
+  }, [items.length]);
 
   const handleStateChange = (stateName: string) => {
     setForm((prev) => ({ ...prev, state: stateName, lga: '' }));

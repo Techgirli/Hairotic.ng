@@ -95,4 +95,99 @@ export class NotificationsService {
     this.logger.log(`[WHATSAPP NOTIFICATION TRIGGERED] To: ${phone} -> Message: "${message}"`);
     return { success: true };
   }
+
+  async sendOrderStatusUpdateNotification(order: any, status: string, note?: string) {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const trackingNote = note ? `<p><strong>Note from courier/staff:</strong> ${note}</p>` : '';
+    
+    const htmlContent = `
+      <div style="font-family: sans-serif; color: #222; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22222210; border-radius: 12px;">
+        <h2 style="color: #E56717; text-transform: uppercase; letter-spacing: 1px;">Hairotic.ng</h2>
+        <h3 style="border-bottom: 2px solid #E56717; padding-bottom: 10px;">Order Status Update</h3>
+        <p>Hello <strong>${order.shippingName}</strong>,</p>
+        <p>Your order <strong>${order.orderNumber}</strong> has been updated to: <strong style="color: #E56717; text-transform: uppercase;">${status}</strong>.</p>
+        
+        ${trackingNote}
+
+        <p>You can track your order live on our store at any time using this tracking number: <strong>${order.orderNumber}</strong>.</p>
+        
+        <p style="margin-top: 30px; font-size: 12px; color: #6B7280; text-align: center;">
+          © 2026 Hairotic.ng. Lekki Phase 1, Lagos, Nigeria.
+        </p>
+      </div>
+    `;
+
+    if (!resendApiKey) {
+      this.logger.warn('RESEND_API_KEY is not defined. Printing order status update email to console fallback:');
+      this.logger.log(`\n--- STATUS UPDATE EMAIL TO: ${order.shippingEmail} ---\nSubject: Order ${order.orderNumber} Update: ${status}\n${htmlContent}\n------------------------`);
+    } else {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: 'Hairotic.ng <orders@hairotic.ng>',
+            to: [order.shippingEmail],
+            subject: `Order ${order.orderNumber} Update - ${status}`,
+            html: htmlContent,
+          }),
+        });
+        this.logger.log(`Order status update email sent successfully for ${order.orderNumber}`);
+      } catch (err: any) {
+        this.logger.error(`Failed to send status update email: ${err.message}`);
+      }
+    }
+
+    // Send WhatsApp notification
+    const whatsappMsg = `Hi ${order.shippingName}! Your order ${order.orderNumber} has been updated to: ${status}.${note ? ` Note: ${note}` : ''} Track it live at http://localhost:3000/orders/track?orderNumber=${order.orderNumber}&email=${encodeURIComponent(order.shippingEmail || '')}`;
+    await this.sendWhatsAppNotification(order.shippingPhone || '', whatsappMsg).catch((e) =>
+      this.logger.error(`Failed to send WhatsApp status update: ${e.message}`)
+    );
+  }
+
+  async sendContactInquiryEmail(name: string, email: string, message: string) {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const htmlContent = `
+      <div style="font-family: sans-serif; color: #222; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22222210; border-radius: 12px;">
+        <h2 style="color: #E56717; text-transform: uppercase; letter-spacing: 1px;">Hairotic.ng</h2>
+        <h3 style="border-bottom: 2px solid #E56717; padding-bottom: 10px;">New Contact Form Submission</h3>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p style="background-color: #FAF7F4; padding: 15px; border-radius: 8px; font-style: italic;">
+          ${message}
+        </p>
+        <p style="margin-top: 30px; font-size: 12px; color: #6B7280; text-align: center;">
+          © 2026 Hairotic.ng.
+        </p>
+      </div>
+    `;
+
+    if (!resendApiKey) {
+      this.logger.warn('RESEND_API_KEY is not defined. Printing contact form email to console fallback:');
+      this.logger.log(`\n--- CONTACT EMAIL FROM: ${email} ---\nSubject: New Contact Submission from ${name}\n${htmlContent}\n------------------------`);
+    } else {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: 'Hairotic.ng Contact <contact@hairotic.ng>',
+            to: ['support@hairotic.ng'],
+            subject: `New Contact Submission from ${name}`,
+            html: htmlContent,
+          }),
+        });
+        this.logger.log(`Contact inquiry email sent successfully from ${email}`);
+      } catch (err: any) {
+        this.logger.error(`Failed to send contact email: ${err.message}`);
+      }
+    }
+  }
 }

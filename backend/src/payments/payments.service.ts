@@ -219,4 +219,89 @@ export class PaymentsService {
       return updatedOrder;
     });
   }
+
+  async refundTransaction(orderId: string, reason: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { payments: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (
+      order.status !== OrderStatus.PAID &&
+      order.status !== OrderStatus.PROCESSING &&
+      order.status !== OrderStatus.SHIPPED &&
+      order.status !== OrderStatus.DELIVERED
+    ) {
+      throw new BadRequestException('Order cannot be refunded in its current status');
+    }
+
+    const successfulPayment = order.payments.find((p) => p.status === PaymentStatus.SUCCESS);
+    if (!successfulPayment) {
+      throw new BadRequestException('No successful payment found for this order');
+    }
+
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+
+    if (!paystackSecret) {
+      this.logger.warn('PAYSTACK_SECRET_KEY is not defined. Simulating mock refund.');
+      await this.processRefundFulfillment(order.id, successfulPayment.paystackReference);
+      return { status: 'mock_refunded', reference: successfulPayment.paystackReference };
+    }
+
+    try {
+      const response = await fetch('https://api.paystack.co/refund', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${paystackSecret}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transaction: successfulPayment.paystackReference,
+          amount: order.total,
+          customer_note: reason,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.status) {
+        throw new Error(result.message || 'Refund request failed');
+      }
+
+      await this.processRefundFulfillment(order.id, successfulPayment.paystackReference);
+      return result.data;
+    } catch (err: any) {
+      this.logger.error(`Failed to refund transaction ${successfulPayment.paystackReference}: ${err.message}`);
+      throw new BadRequestException(`Refund failed: ${err.message}`);
+    }
+  }
+
+  private async processRefundFulfillment(orderId: string, reference: string) {
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Update Order status to REFUNDED
+      await tx.order.update({
+        where: { id: orderId },
+        data: { status: OrderStatus.REFUNDED },
+      });
+
+      // 2. Update Payment log to REFUNDED
+      await tx.payment.update({
+        where: { paystackReference: reference },
+        data: { status: PaymentStatus.REFUNDED },
+      });
+
+      // 3. Record Order Status History
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId,
+          status: OrderStatus.REFUNDED,
+          note: 'Refund processed successfully.',
+          changedBy: 'ADMIN_REFUND',
+        },
+      });
+    });
+  }
 }

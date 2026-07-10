@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShoppingBag, MessageCircle, Heart, Star, Sparkles } from 'lucide-react';
+import { ShoppingBag, MessageCircle, Heart, Star, Sparkles, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+import { trackEvent } from '../../../lib/analytics';
 
 interface ProductImage {
   id: string;
@@ -52,6 +54,23 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
     selectedVariant.images[0]?.url || '/Logo/photo_2023-09-25_16-13-56.jpg'
   );
   const [quantity, setQuantity] = useState(1);
+
+  React.useEffect(() => {
+    trackEvent('view_product', {
+      productId: product.id,
+      name: product.name,
+    });
+  }, [product.id]);
+
+  const handleAddToCart = () => {
+    trackEvent('add_to_cart', {
+      productId: product.id,
+      variantId: selectedVariant.id,
+      quantity,
+      price: selectedVariant.price,
+    });
+    alert('Added to Bag!');
+  };
 
   const handleVariantSelect = (variant: ProductVariant) => {
     setSelectedVariant(variant);
@@ -210,6 +229,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
           </div>
 
           <button
+            onClick={handleAddToCart}
             disabled={isOutOfStock}
             className="flex-1 h-[52px] bg-[#E56717] hover:bg-[#C65A12] disabled:bg-[#FAF7F4] disabled:border disabled:border-[#222222]/10 disabled:text-[#6B7280] text-white text-[15px] font-bold uppercase tracking-widest rounded-[12px] shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer disabled:cursor-not-allowed"
           >
@@ -237,6 +257,300 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
           </div>
         </div>
       </div>
+
+      {/* Product Reviews & Ratings Section */}
+      <ProductReviewsSection productId={product.id} initialReviews={product.reviews} />
+
     </div>
   );
 }
+
+// Sub-component for reviews
+interface ReviewWithPhotos extends Review {
+  photos?: { id: string; url: string }[];
+}
+
+function ProductReviewsSection({ productId, initialReviews }: { productId: string; initialReviews: Review[] }) {
+  const [reviews, setReviews] = useState<ReviewWithPhotos[]>(initialReviews);
+  const [rating, setRating] = useState(5);
+  const [body, setBody] = useState('');
+  const [photosInput, setPhotosInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+  const checkUserSession = async () => {
+    try {
+      const res = await fetch(`${API_URL}/users/me`, { credentials: 'include' });
+      setIsLoggedIn(res.ok);
+    } catch {
+      setIsLoggedIn(false);
+    }
+  };
+
+  const fetchLiveReviews = async () => {
+    try {
+      const res = await fetch(`${API_URL}/products/${productId}/reviews`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  React.useEffect(() => {
+    checkUserSession();
+    fetchLiveReviews();
+  }, [productId]);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError(null);
+    setSubmitSuccess(false);
+    setIsSubmitting(true);
+
+    try {
+      const photosArray = photosInput
+        .split(',')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+
+      const res = await fetch(`${API_URL}/products/${productId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating,
+          body,
+          photos: photosArray.length > 0 ? photosArray : undefined,
+        }),
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to submit review');
+      }
+
+      setBody('');
+      setPhotosInput('');
+      setRating(5);
+      setSubmitSuccess(true);
+      fetchLiveReviews();
+    } catch (err: any) {
+      setSubmitError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const maskEmail = (email: string) => {
+    if (!email) return 'Customer';
+    const [name, domain] = email.split('@');
+    if (!domain) return email;
+    return `${name.substring(0, 2)}***${name.substring(name.length - 1)}@${domain}`;
+  };
+
+  return (
+    <div className="lg:col-span-2 border-t border-[#222222]/5 pt-12 mt-12 grid grid-cols-1 md:grid-cols-3 gap-12">
+      
+      {/* Summary and Form */}
+      <div className="space-y-6 md:col-span-1">
+        <div>
+          <h3 className="text-[20px] font-extrabold uppercase tracking-tight text-[#222222]">Customer Reviews</h3>
+          <p className="text-[13px] text-[#6B7280] mt-0.5">Read experiences of verified bundlers.</p>
+        </div>
+
+        {/* Rating Breakdown summary card */}
+        <div className="bg-[#FAF7F4] p-5 rounded-[20px] border border-[#222222]/5 space-y-3">
+          <div className="flex items-center gap-3">
+            <h4 className="text-[36px] font-extrabold text-[#E56717]">
+              {reviews.length > 0
+                ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+                : '5.0'}
+            </h4>
+            <div>
+              <div className="flex text-[#E56717]">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} className="w-4 h-4 fill-[#E56717] stroke-transparent" />
+                ))}
+              </div>
+              <span className="text-[11px] text-[#6B7280] font-bold uppercase tracking-wider">
+                based on {reviews.length} reviews
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Write Review Form Card */}
+        <div className="bg-white border border-[#222222]/5 p-5 rounded-[20px] shadow-sm space-y-4">
+          <h4 className="text-[13px] font-bold uppercase tracking-wider text-[#222222]">
+            Write a Review
+          </h4>
+
+          {!isLoggedIn ? (
+            <div className="bg-[#FAF7F4] p-4 rounded-[12px] border border-[#222222]/5 text-center text-[12.5px] text-[#6B7280] space-y-2">
+              <p>You must be signed in to submit product reviews.</p>
+              <Link href="/account" className="inline-block text-[#E56717] font-bold hover:underline">
+                Sign In now →
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              
+              {/* Star selector */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider block">Your Rating</label>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      className="p-0.5 cursor-pointer hover:scale-110 transition-transform"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          star <= rating
+                            ? 'fill-[#E56717] stroke-[#E56717]'
+                            : 'stroke-[#6B7280] fill-transparent'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Review text */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider">Review Comments</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Describe bundle softness, lace quality, shedding..."
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  className="w-full p-3 border border-[#222222]/10 rounded-[10px] bg-[#FAF7F4] text-[13px] focus:border-[#E56717] outline-none resize-none"
+                />
+              </div>
+
+              {/* Cloudinary mock photo url list */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider">Photo Attachments (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="Image URLs (comma separated)..."
+                  value={photosInput}
+                  onChange={(e) => setPhotosInput(e.target.value)}
+                  className="w-full h-10 px-3 border border-[#222222]/10 rounded-[10px] bg-[#FAF7F4] text-[13px] focus:border-[#E56717] outline-none"
+                />
+                <span className="text-[9px] text-[#6B7280] leading-tight block">
+                  For demonstration, you can append photo URLs directly e.g. `/Logo/photo_2023-09-25_16-13-56.jpg`.
+                </span>
+              </div>
+
+              {submitError && (
+                <div className="bg-[#EF4444]/10 border border-[#EF4444]/20 p-3 rounded-[10px] text-[#EF4444] text-[11px] font-bold">
+                  ⚠️ {submitError}
+                </div>
+              )}
+
+              {submitSuccess && (
+                <div className="bg-[#22C55E]/10 border border-[#22C55E]/20 p-3 rounded-[10px] text-[#22C55E] text-[11px] font-bold">
+                  ✓ Review submitted successfully!
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-10 bg-[#E56717] hover:bg-[#C65A12] disabled:bg-[#6B7280] text-white text-[12px] font-bold uppercase tracking-widest rounded-[10px] shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              >
+                {isSubmitting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                ) : (
+                  <span>Publish Review</span>
+                )}
+              </button>
+
+            </form>
+          )}
+        </div>
+      </div>
+
+      {/* Reviews feed */}
+      <div className="md:col-span-2 space-y-6">
+        <h4 className="text-[14px] font-bold uppercase tracking-wider text-[#222222]">
+          Shopper Reviews ({reviews.length})
+        </h4>
+
+        {reviews.length === 0 ? (
+          <div className="py-12 text-center text-[#6B7280] border border-dashed border-[#222222]/10 rounded-[24px]">
+            No reviews published yet for this product. Be the first to purchase and review!
+          </div>
+        ) : (
+          <div className="divide-y divide-[#222222]/5">
+            {reviews.map((r) => (
+              <div key={r.id} className="py-6 first:pt-0 last:pb-0 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="font-bold text-[#222222] text-[13.5px]">
+                      {maskEmail(r.customer?.email)}
+                    </h5>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex text-[#E56717]">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-3.5 h-3.5 ${
+                              star <= r.rating ? 'fill-[#E56717] stroke-transparent' : 'stroke-[#6B7280]/30 fill-transparent'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      {r.verifiedPurchase && (
+                        <span className="bg-[#22C55E]/10 text-[#22C55E] text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider flex items-center gap-0.5">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          <span>Verified Buyer</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[11px] text-[#6B7280] font-medium">
+                    {new Date(r.createdAt).toLocaleDateString('en-NG', { dateStyle: 'medium' })}
+                  </span>
+                </div>
+
+                <p className="text-[14.5px] text-[#6B7280] leading-relaxed font-light">{r.body}</p>
+
+                {/* Review images preview grid */}
+                {r.photos && r.photos.length > 0 && (
+                  <div className="flex gap-2 pt-1 overflow-x-auto">
+                    {r.photos.map((photo) => (
+                      <div
+                        key={photo.id}
+                        className="w-20 h-20 rounded-[8px] overflow-hidden border border-[#222222]/10 bg-[#FAF7F4] shrink-0"
+                      >
+                        <img
+                          src={photo.url}
+                          alt="review upload"
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-85 transition-opacity"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+}
+

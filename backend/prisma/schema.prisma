@@ -321,3 +321,26 @@ model AuditLog {
 
   @@map("audit_logs")
 }
+
+model Faq {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("faqs")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  name      String
+  properties Json?
+  userId    String?  @map("user_id")
+  sessionId String?  @map("session_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("analytics_events")
+}

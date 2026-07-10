@@ -19,7 +19,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "Hairotic.ng | Premium Nigerian Hair Store",
-  description: "Empower your boldest self with premium, high-quality wigs and hair bundles. Shopped like a fashion drop.",
+  description: "Hey! Hairotic Baddies!! Empower your boldest self with premium, high-quality wigs and hair bundles. Shopped like a fashion drop.",
   keywords: ["premium hair", "human hair wigs", "Nigerian hair store", "Lagos hair", "bundles", "closures", "frontals"],
 };
 
