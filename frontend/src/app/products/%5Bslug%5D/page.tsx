@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import ProductDetailView from './product-detail-view';
 import { Star, ShieldCheck } from 'lucide-react';
 
@@ -36,9 +37,12 @@ interface Product {
   reviews: Review[];
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
 async function getProduct(slug: string): Promise<Product | null> {
   try {
-    const res = await fetch(`http://localhost:3001/api/v1/products/${slug}`, {
+    const res = await fetch(`${API_URL}/products/${slug}`, {
       cache: 'no-store',
     });
     if (!res.ok) return null;
@@ -51,6 +55,38 @@ async function getProduct(slug: string): Promise<Product | null> {
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProduct(slug);
+  if (!product) {
+    return { title: 'Product Not Found' };
+  }
+
+  const defaultVariant = product.variants[0];
+  const image = defaultVariant?.images[0]?.url;
+  const priceInNgn = defaultVariant ? defaultVariant.price / 100 : 0;
+
+  return {
+    title: product.name,
+    description: `${product.description.slice(0, 155)}… Buy now from ₦${priceInNgn.toLocaleString()} at Hairotic.ng.`,
+    openGraph: {
+      title: `${product.name} | Hairotic.ng`,
+      description: product.description,
+      url: `${SITE_URL}/products/${product.slug}`,
+      type: 'website',
+      images: image
+        ? [{ url: `${SITE_URL}${image}`, width: 1200, height: 630, alt: product.name }]
+        : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name} | Hairotic.ng`,
+      description: product.description,
+      images: image ? [`${SITE_URL}${image}`] : [],
+    },
+  };
 }
 
 export default async function ProductPage({ params }: PageProps) {
@@ -80,12 +116,12 @@ export default async function ProductPage({ params }: PageProps) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     'name': product.name,
-    'image': `http://localhost:3000${defaultImage}`,
+    'image': `${SITE_URL}${defaultImage}`,
     'description': product.description,
     'sku': defaultSku,
     'offers': {
       '@type': 'Offer',
-      'url': `http://localhost:3000/products/${product.slug}`,
+      'url': `${SITE_URL}/products/${product.slug}`,
       'priceCurrency': 'NGN',
       'price': defaultPrice,
       'itemCondition': 'https://schema.org/NewCondition',

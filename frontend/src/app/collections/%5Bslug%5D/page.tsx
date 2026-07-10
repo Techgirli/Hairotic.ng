@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import FilterSidebar from '../../shop/filter-sidebar';
 import { Heart } from 'lucide-react';
 
@@ -131,6 +132,24 @@ function SortOptionLink({ label, value, activeSort, currentParams, slug }: {
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<any>;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const collection = await getCollection(slug);
+  if (!collection) {
+    return { title: 'Collection Not Found' };
+  }
+  return {
+    title: collection.name,
+    description: collection.description,
+    openGraph: {
+      title: `${collection.name} | Hairotic.ng`,
+      description: collection.description,
+      url: `/collections/${collection.slug}`,
+      type: 'website',
+    },
+  };
 }
 
 export default async function CollectionPage({ params, searchParams }: PageProps) {

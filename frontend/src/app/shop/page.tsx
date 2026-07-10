@@ -1,7 +1,19 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import FilterSidebar from './filter-sidebar';
 import { Heart } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Shop All Hair',
+  description: 'Browse all premium human hair wigs, bundles, and closures at Hairotic.ng. Bob cuts, bone straight, deep waves, and coily kinky textures. Shop by length, texture, and price.',
+  openGraph: {
+    title: 'Shop All Hair | Hairotic.ng',
+    description: 'Premium human hair wigs and bundles. Shop the full Hairotic.ng catalog — sorted by length, texture, and price.',
+    url: '/shop',
+    type: 'website',
+  },
+};
 
 interface ProductImage {
   id: string;
