@@ -254,8 +254,9 @@ export class AdminService {
     const { passwordHash, ...sanitized } = customer;
 
     // Calculate LTV
+    const paidStatuses = [OrderStatus.PAID, OrderStatus.PROCESSING, OrderStatus.SHIPPED, OrderStatus.DELIVERED] as OrderStatus[];
     const completedOrders = customer.orders.filter((o) =>
-      [OrderStatus.PAID, OrderStatus.PROCESSING, OrderStatus.SHIPPED, OrderStatus.DELIVERED].includes(o.status)
+      paidStatuses.includes(o.status)
     );
     const ltv = completedOrders.reduce((sum, order) => sum + order.total, 0);
 
