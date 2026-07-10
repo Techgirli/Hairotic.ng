@@ -89,8 +89,9 @@ export const useCartStore = create<CartState>((set, get) => ({
       if (!res.ok) throw new Error('Failed to retrieve cart');
       const data = await res.json();
       set({ id: data.id, items: data.items });
-    } catch (err: any) {
-      set({ error: err.message });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message });
     } finally {
       set({ isLoading: false });
     }
@@ -113,8 +114,9 @@ export const useCartStore = create<CartState>((set, get) => ({
       }
       const data = await res.json();
       set({ id: data.id, items: data.items, isDrawerOpen: true });
-    } catch (err: any) {
-      set({ error: err.message });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message });
       throw err;
     } finally {
       set({ isLoading: false });
@@ -138,8 +140,9 @@ export const useCartStore = create<CartState>((set, get) => ({
       }
       const data = await res.json();
       set({ id: data.id, items: data.items });
-    } catch (err: any) {
-      set({ error: err.message });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message });
       throw err;
     } finally {
       set({ isLoading: false });
@@ -159,8 +162,9 @@ export const useCartStore = create<CartState>((set, get) => ({
       if (!res.ok) throw new Error('Failed to remove item');
       const data = await res.json();
       set({ id: data.id, items: data.items });
-    } catch (err: any) {
-      set({ error: err.message });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message });
       throw err;
     } finally {
       set({ isLoading: false });
@@ -182,7 +186,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         const data = await res.json();
         set({ id: data.id, items: data.items });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to merge cart', err);
     } finally {
       set({ isLoading: false });

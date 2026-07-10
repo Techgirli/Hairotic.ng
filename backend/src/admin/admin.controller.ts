@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Body, Query, Param, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -34,14 +46,16 @@ export class AdminController {
     if (!status) {
       throw new BadRequestException('Status is required');
     }
-    return this.adminService.updateOrderStatus(id, status, req.user.id || 'ADMIN', note);
+    return this.adminService.updateOrderStatus(
+      id,
+      status,
+      req.user.id || 'ADMIN',
+      note,
+    );
   }
 
   @Post('orders/:id/refund')
-  async refundOrder(
-    @Param('id') id: string,
-    @Body('reason') reason: string,
-  ) {
+  async refundOrder(@Param('id') id: string, @Body('reason') reason: string) {
     if (!reason) {
       throw new BadRequestException('Refund reason is required');
     }
@@ -66,7 +80,12 @@ export class AdminController {
     if (!reason) {
       throw new BadRequestException('Reason code is required');
     }
-    return this.adminService.adjustInventory(id, quantity, reason, req.user.id || 'ADMIN');
+    return this.adminService.adjustInventory(
+      id,
+      quantity,
+      reason,
+      req.user.id || 'ADMIN',
+    );
   }
 
   @Get('customers')

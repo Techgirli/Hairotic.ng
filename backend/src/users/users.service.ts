@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -18,17 +22,24 @@ export class UsersService {
     return this.sanitizeUser(user);
   }
 
-  async updateProfile(userId: string, data: { email?: string; phone?: string }) {
+  async updateProfile(
+    userId: string,
+    data: { email?: string; phone?: string },
+  ) {
     // Basic unique checks if email/phone changed
     if (data.email) {
-      const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
+      const existing = await this.prisma.user.findUnique({
+        where: { email: data.email },
+      });
       if (existing && existing.id !== userId) {
         throw new BadRequestException('Email is already in use');
       }
     }
 
     if (data.phone) {
-      const existing = await this.prisma.user.findUnique({ where: { phone: data.phone } });
+      const existing = await this.prisma.user.findUnique({
+        where: { phone: data.phone },
+      });
       if (existing && existing.id !== userId) {
         throw new BadRequestException('Phone number is already in use');
       }
@@ -51,7 +62,14 @@ export class UsersService {
 
   async addAddress(
     userId: string,
-    data: { label: string; state: string; lga: string; street: string; phone: string; isDefault?: boolean }
+    data: {
+      label: string;
+      state: string;
+      lga: string;
+      street: string;
+      phone: string;
+      isDefault?: boolean;
+    },
   ) {
     const isDefault = data.isDefault === true;
 
@@ -143,7 +161,8 @@ export class UsersService {
   }
 
   private sanitizeUser(user: any) {
-    const { passwordHash, ...sanitized } = user;
+    const sanitized = { ...user };
+    delete sanitized.passwordHash;
     return sanitized;
   }
 }

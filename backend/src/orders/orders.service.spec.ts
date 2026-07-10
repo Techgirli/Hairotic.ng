@@ -38,7 +38,7 @@ describe('OrdersService', () => {
       const result = await service.getOrdersForCustomer('cust-1');
       expect(result).toEqual(mockOrders);
       expect(prisma.order.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { customerId: 'cust-1' } })
+        expect.objectContaining({ where: { customerId: 'cust-1' } }),
       );
     });
   });
@@ -54,7 +54,9 @@ describe('OrdersService', () => {
       };
       mockPrismaService.order.findUnique.mockResolvedValue(mockOrder);
 
-      const result = await service.trackOrder('HR-123456', { email: 'customer@example.com' });
+      const result = await service.trackOrder('HR-123456', {
+        email: 'customer@example.com',
+      });
       expect(result).toEqual(mockOrder);
     });
 
@@ -68,7 +70,7 @@ describe('OrdersService', () => {
       mockPrismaService.order.findUnique.mockResolvedValue(mockOrder);
 
       await expect(
-        service.trackOrder('HR-123456', { email: 'wrong@example.com' })
+        service.trackOrder('HR-123456', { email: 'wrong@example.com' }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -87,7 +89,7 @@ describe('OrdersService', () => {
       mockPrismaService.order.findUnique.mockResolvedValue(mockOrder);
 
       await expect(
-        service.getOrderDetails('order-1', 'cust-other')
+        service.getOrderDetails('order-1', 'cust-other'),
       ).rejects.toThrow(ForbiddenException);
     });
   });

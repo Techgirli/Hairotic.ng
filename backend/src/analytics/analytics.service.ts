@@ -6,7 +6,12 @@ import { OrderStatus } from '@prisma/client';
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
-  async logEvent(name: string, properties: any, userId?: string, sessionId?: string) {
+  async logEvent(
+    name: string,
+    properties: any,
+    userId?: string,
+    sessionId?: string,
+  ) {
     return this.prisma.analyticsEvent.create({
       data: {
         name,
@@ -60,7 +65,8 @@ export class AnalyticsService {
       },
     });
     const cartAddSessionsCount = cartAddSessions.length;
-    const cartAddRatio = totalSessions > 0 ? (cartAddSessionsCount / totalSessions) * 100 : 0;
+    const cartAddRatio =
+      totalSessions > 0 ? (cartAddSessionsCount / totalSessions) * 100 : 0;
 
     // 4. Fetch Popular Products (views & buys)
     const productViews = await this.prisma.analyticsEvent.findMany({
@@ -91,22 +97,24 @@ export class AnalyticsService {
       },
     });
 
-    const popularProducts = popularProductsRaw.map((p) => {
-      const views = viewsMap[p.id] ?? 0;
-      let unitsSold = 0;
-      p.variants.forEach((v) => {
-        v.orderItems.forEach((oi) => {
-          unitsSold += oi.quantity;
+    const popularProducts = popularProductsRaw
+      .map((p) => {
+        const views = viewsMap[p.id] ?? 0;
+        let unitsSold = 0;
+        p.variants.forEach((v) => {
+          v.orderItems.forEach((oi) => {
+            unitsSold += oi.quantity;
+          });
         });
-      });
 
-      return {
-        id: p.id,
-        name: p.name,
-        views,
-        unitsSold,
-      };
-    }).sort((a, b) => b.views - a.views);
+        return {
+          id: p.id,
+          name: p.name,
+          views,
+          unitsSold,
+        };
+      })
+      .sort((a, b) => b.views - a.views);
 
     return {
       totalRevenue,
@@ -134,7 +142,7 @@ export class AnalyticsService {
     const viewProductCount = await getStepSessionsCount('view_product');
     const addToCartCount = await getStepSessionsCount('add_to_cart');
     const beginCheckoutCount = await getStepSessionsCount('begin_checkout');
-    
+
     // Purchases are computed from actual paid orders
     const paidStatuses = [
       OrderStatus.PAID,
@@ -151,17 +159,26 @@ export class AnalyticsService {
       {
         name: 'Cart Adds',
         count: addToCartCount,
-        percentage: viewProductCount > 0 ? Math.round((addToCartCount / viewProductCount) * 100) : 0,
+        percentage:
+          viewProductCount > 0
+            ? Math.round((addToCartCount / viewProductCount) * 100)
+            : 0,
       },
       {
         name: 'Checkout Starts',
         count: beginCheckoutCount,
-        percentage: addToCartCount > 0 ? Math.round((beginCheckoutCount / addToCartCount) * 100) : 0,
+        percentage:
+          addToCartCount > 0
+            ? Math.round((beginCheckoutCount / addToCartCount) * 100)
+            : 0,
       },
       {
         name: 'Purchases',
         count: purchaseCount,
-        percentage: beginCheckoutCount > 0 ? Math.round((purchaseCount / beginCheckoutCount) * 100) : 0,
+        percentage:
+          beginCheckoutCount > 0
+            ? Math.round((purchaseCount / beginCheckoutCount) * 100)
+            : 0,
       },
     ];
 

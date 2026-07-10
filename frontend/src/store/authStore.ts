@@ -65,8 +65,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ user: data.user, mfaRequired: false, loading: false });
       return { mfaRequired: false, mfaSetup: false };
-    } catch (err: any) {
-      set({ error: err.message, loading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message, loading: false });
       throw err;
     }
   },
@@ -89,8 +90,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // MFA successfully verified. Now re-fetch profile to set final state
       await get().checkMe();
       set({ mfaRequired: false, mfaSetup: false, mfaQrCode: null, mfaSecret: null, loading: false });
-    } catch (err: any) {
-      set({ error: err.message, loading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message, loading: false });
       throw err;
     }
   },
@@ -114,8 +116,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         mfaSecret: data.secret,
         loading: false,
       });
-    } catch (err: any) {
-      set({ error: err.message, loading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message, loading: false });
       throw err;
     }
   },
@@ -145,7 +148,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         set({ user: null });
       }
-    } catch (err) {
+    } catch {
       set({ user: null });
     }
   },

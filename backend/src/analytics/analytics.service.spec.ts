@@ -46,8 +46,13 @@ describe('AnalyticsService', () => {
       expect(result).toEqual(mockEvent);
       expect(prisma.analyticsEvent.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { name: 'view_product', properties: {}, userId: 'u-1', sessionId: 's-1' },
-        })
+          data: {
+            name: 'view_product',
+            properties: {},
+            userId: 'u-1',
+            sessionId: 's-1',
+          },
+        }),
       );
     });
   });
@@ -60,11 +65,22 @@ describe('AnalyticsService', () => {
         _count: { id: 2 },
       });
       // Mock grouping for unique sessions count
-      mockPrismaService.analyticsEvent.groupBy.mockResolvedValueOnce([{ sessionId: 's-1' }, { sessionId: 's-2' }]); // total sessions
-      mockPrismaService.analyticsEvent.groupBy.mockResolvedValueOnce([{ sessionId: 's-1' }]); // cart adds sessions
-      mockPrismaService.analyticsEvent.findMany.mockResolvedValue([{ properties: { productId: 'p-1' } }]);
+      mockPrismaService.analyticsEvent.groupBy.mockResolvedValueOnce([
+        { sessionId: 's-1' },
+        { sessionId: 's-2' },
+      ]); // total sessions
+      mockPrismaService.analyticsEvent.groupBy.mockResolvedValueOnce([
+        { sessionId: 's-1' },
+      ]); // cart adds sessions
+      mockPrismaService.analyticsEvent.findMany.mockResolvedValue([
+        { properties: { productId: 'p-1' } },
+      ]);
       mockPrismaService.product.findMany.mockResolvedValue([
-        { id: 'p-1', name: 'Straight Bundles', variants: [{ orderItems: [{ quantity: 3 }] }] },
+        {
+          id: 'p-1',
+          name: 'Straight Bundles',
+          variants: [{ orderItems: [{ quantity: 3 }] }],
+        },
       ]);
 
       const result = await service.getSummaryStats();

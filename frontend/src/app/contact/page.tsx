@@ -35,8 +35,9 @@ export default function ContactPage() {
       setEmail('');
       setMessage('');
       setSubmitSuccess(true);
-    } catch (err: any) {
-      setSubmitError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -7,7 +11,9 @@ export class CartService {
 
   async getOrCreateCart(customerId?: string, sessionId?: string) {
     if (!customerId && !sessionId) {
-      throw new BadRequestException('Either customerId or sessionId must be provided');
+      throw new BadRequestException(
+        'Either customerId or sessionId must be provided',
+      );
     }
 
     let cart = null;
@@ -77,7 +83,7 @@ export class CartService {
       cart = await this.prisma.cart.create({
         data: {
           customerId: customerId || null,
-          sessionId: customerId ? null : (sessionId || null),
+          sessionId: customerId ? null : sessionId || null,
         },
         include: {
           items: {
@@ -121,10 +127,14 @@ export class CartService {
       },
     });
 
-    const targetQty = existingItem ? existingItem.quantity + quantity : quantity;
+    const targetQty = existingItem
+      ? existingItem.quantity + quantity
+      : quantity;
 
     if (inventory.quantity < targetQty) {
-      throw new BadRequestException(`Insufficient stock. Only ${inventory.quantity} units available.`);
+      throw new BadRequestException(
+        `Insufficient stock. Only ${inventory.quantity} units available.`,
+      );
     }
 
     if (existingItem) {
@@ -162,7 +172,9 @@ export class CartService {
     });
 
     if (!inventory || inventory.quantity < quantity) {
-      throw new BadRequestException(`Insufficient stock. Only ${inventory?.quantity || 0} units available.`);
+      throw new BadRequestException(
+        `Insufficient stock. Only ${inventory?.quantity || 0} units available.`,
+      );
     }
 
     return this.prisma.cartItem.update({
@@ -199,7 +211,7 @@ export class CartService {
     // Merge items
     for (const guestItem of guestCart.items) {
       const existingCustomerItem = customerCart.items.find(
-        (ci) => ci.productVariantId === guestItem.productVariantId
+        (ci) => ci.productVariantId === guestItem.productVariantId,
       );
 
       if (existingCustomerItem) {
@@ -210,7 +222,7 @@ export class CartService {
 
         const mergedQty = Math.min(
           existingCustomerItem.quantity + guestItem.quantity,
-          inventory?.quantity || 10
+          inventory?.quantity || 10,
         );
 
         await this.prisma.cartItem.update({

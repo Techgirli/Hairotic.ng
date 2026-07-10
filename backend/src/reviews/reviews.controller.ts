@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  UseGuards,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -16,7 +25,7 @@ export class ReviewsController {
   async createReview(
     @Param('productId') productId: string,
     @Req() req: any,
-    @Body() body: any
+    @Body() body: any,
   ) {
     if (body.rating === undefined || body.rating === null) {
       throw new BadRequestException('Rating is required');

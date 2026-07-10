@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Res, Req, UseGuards, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  UseGuards,
+  Get,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
@@ -13,20 +21,18 @@ export class AuthController {
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('register')
-  async register(
-    @Body() body: any,
-    @Res({ passthrough: true }) res: Response
-  ) {
-    const user = await this.authService.register(body.email, body.phone, body.password);
+  async register(@Body() body: any) {
+    const user = await this.authService.register(
+      body.email,
+      body.phone,
+      body.password,
+    );
     return { success: true, user };
   }
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
-  async login(
-    @Body() body: any,
-    @Res({ passthrough: true }) res: Response
-  ) {
+  async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(body.email, body.password);
 
     if (result.mfaRequired) {
@@ -40,9 +46,18 @@ export class AuthController {
     }
 
     // Since mfaRequired is false, we have access and refresh tokens
-    const tokens = result as { accessToken: string; refreshToken: string; user: any };
+    const tokens = result as {
+      accessToken: string;
+      refreshToken: string;
+      user: any;
+    };
     this.setCookie(res, 'access_token', tokens.accessToken, 15 * 60 * 1000); // 15m
-    this.setCookie(res, 'refresh_token', tokens.refreshToken, 7 * 24 * 60 * 60 * 1000); // 7d
+    this.setCookie(
+      res,
+      'refresh_token',
+      tokens.refreshToken,
+      7 * 24 * 60 * 60 * 1000,
+    ); // 7d
 
     return {
       success: true,
@@ -54,24 +69,33 @@ export class AuthController {
   @Post('refresh')
   async refresh(
     @Req() req: Request,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = req.cookies['refresh_token'];
     if (!refreshToken) {
       return { success: false, message: 'Refresh token missing' };
     }
 
-    const { user, mfaVerified } = await this.authService.verifyRefresh(refreshToken);
+    const { user, mfaVerified } =
+      await this.authService.verifyRefresh(refreshToken);
     const tokens = this.authService.generateTokens(user, mfaVerified);
 
     this.setCookie(res, 'access_token', tokens.accessToken, 15 * 60 * 1000);
-    this.setCookie(res, 'refresh_token', tokens.refreshToken, 7 * 24 * 60 * 60 * 1000);
+    this.setCookie(
+      res,
+      'refresh_token',
+      tokens.refreshToken,
+      7 * 24 * 60 * 60 * 1000,
+    );
 
-    return { success: true, user: { id: user.id, email: user.email, role: user.role } };
+    return {
+      success: true,
+      user: { id: user.id, email: user.email, role: user.role },
+    };
   }
 
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
+  logout(@Res({ passthrough: true }) res: Response) {
     this.clearCookie(res, 'access_token');
     this.clearCookie(res, 'refresh_token');
     return { success: true, message: 'Logged out successfully' };
@@ -90,13 +114,22 @@ export class AuthController {
   async verifyMfa(
     @Req() req: any,
     @Body() body: any,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ) {
     const isSetupFlow = body.isSetupFlow === true;
-    const tokens = await this.authService.verifyMfa(req.user.id, body.code, isSetupFlow);
+    const tokens = await this.authService.verifyMfa(
+      req.user.id,
+      body.code,
+      isSetupFlow,
+    );
 
     this.setCookie(res, 'access_token', tokens.accessToken, 15 * 60 * 1000);
-    this.setCookie(res, 'refresh_token', tokens.refreshToken, 7 * 24 * 60 * 60 * 1000);
+    this.setCookie(
+      res,
+      'refresh_token',
+      tokens.refreshToken,
+      7 * 24 * 60 * 60 * 1000,
+    );
 
     return { success: true, mfaVerified: true };
   }
@@ -104,11 +137,16 @@ export class AuthController {
   // Helper route to check current login state
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getProfile(@Req() req: any) {
+  getProfile(@Req() req: any) {
     return { user: req.user };
   }
 
-  private setCookie(res: Response, name: string, token: string, maxAge: number) {
+  private setCookie(
+    res: Response,
+    name: string,
+    token: string,
+    maxAge: number,
+  ) {
     res.cookie(name, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

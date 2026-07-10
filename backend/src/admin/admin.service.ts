@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { OrderStatus, PaymentStatus, Role } from '@prisma/client';
+import { OrderStatus, Role } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
@@ -23,7 +27,14 @@ export class AdminService {
     const salesTodayAggregate = await this.prisma.order.aggregate({
       _sum: { total: true },
       where: {
-        status: { in: [OrderStatus.PAID, OrderStatus.PROCESSING, OrderStatus.SHIPPED, OrderStatus.DELIVERED] },
+        status: {
+          in: [
+            OrderStatus.PAID,
+            OrderStatus.PROCESSING,
+            OrderStatus.SHIPPED,
+            OrderStatus.DELIVERED,
+          ],
+        },
         createdAt: { gte: startOfToday, lte: endOfToday },
       },
     });
@@ -32,7 +43,14 @@ export class AdminService {
     const totalRevenueAggregate = await this.prisma.order.aggregate({
       _sum: { total: true },
       where: {
-        status: { in: [OrderStatus.PAID, OrderStatus.PROCESSING, OrderStatus.SHIPPED, OrderStatus.DELIVERED] },
+        status: {
+          in: [
+            OrderStatus.PAID,
+            OrderStatus.PROCESSING,
+            OrderStatus.SHIPPED,
+            OrderStatus.DELIVERED,
+          ],
+        },
       },
     });
 
@@ -108,7 +126,12 @@ export class AdminService {
     });
   }
 
-  async updateOrderStatus(orderId: string, status: OrderStatus, changedBy: string, note?: string) {
+  async updateOrderStatus(
+    orderId: string,
+    status: OrderStatus,
+    changedBy: string,
+    note?: string,
+  ) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
     });
@@ -137,10 +160,19 @@ export class AdminService {
     });
 
     // Send customer updates asynchronously
-    if (status === OrderStatus.PROCESSING || status === OrderStatus.SHIPPED || status === OrderStatus.DELIVERED || status === OrderStatus.CANCELLED) {
-      this.notificationsService.sendOrderStatusUpdateNotification(updatedOrder, status, note).catch((e) =>
-        console.error(`Async status update notification dispatch failed: ${e.message}`)
-      );
+    if (
+      status === OrderStatus.PROCESSING ||
+      status === OrderStatus.SHIPPED ||
+      status === OrderStatus.DELIVERED ||
+      status === OrderStatus.CANCELLED
+    ) {
+      this.notificationsService
+        .sendOrderStatusUpdateNotification(updatedOrder, status, note)
+        .catch((e) =>
+          console.error(
+            `Async status update notification dispatch failed: ${e.message}`,
+          ),
+        );
     }
 
     return updatedOrder;
@@ -160,7 +192,12 @@ export class AdminService {
     });
   }
 
-  async adjustInventory(variantId: string, quantity: number, reason: string, actorId: string) {
+  async adjustInventory(
+    variantId: string,
+    quantity: number,
+    reason: string,
+    actorId: string,
+  ) {
     const inventory = await this.prisma.inventory.findUnique({
       where: { productVariantId: variantId },
     });
@@ -201,7 +238,14 @@ export class AdminService {
       include: {
         orders: {
           where: {
-            status: { in: [OrderStatus.PAID, OrderStatus.PROCESSING, OrderStatus.SHIPPED, OrderStatus.DELIVERED] },
+            status: {
+              in: [
+                OrderStatus.PAID,
+                OrderStatus.PROCESSING,
+                OrderStatus.SHIPPED,
+                OrderStatus.DELIVERED,
+              ],
+            },
           },
         },
       },
@@ -210,7 +254,8 @@ export class AdminService {
     return customers.map((c) => {
       const orderCount = c.orders.length;
       const ltv = c.orders.reduce((sum, order) => sum + order.total, 0);
-      const { passwordHash, ...sanitized } = c;
+      const sanitized = { ...c };
+      delete (sanitized as any).passwordHash;
       return {
         ...sanitized,
         orderCount,
@@ -251,12 +296,18 @@ export class AdminService {
       throw new NotFoundException('Customer not found');
     }
 
-    const { passwordHash, ...sanitized } = customer;
+    const sanitized = { ...customer };
+    delete (sanitized as any).passwordHash;
 
     // Calculate LTV
-    const paidStatuses = [OrderStatus.PAID, OrderStatus.PROCESSING, OrderStatus.SHIPPED, OrderStatus.DELIVERED] as OrderStatus[];
+    const paidStatuses = [
+      OrderStatus.PAID,
+      OrderStatus.PROCESSING,
+      OrderStatus.SHIPPED,
+      OrderStatus.DELIVERED,
+    ] as OrderStatus[];
     const completedOrders = customer.orders.filter((o) =>
-      paidStatuses.includes(o.status)
+      paidStatuses.includes(o.status),
     );
     const ltv = completedOrders.reduce((sum, order) => sum + order.total, 0);
 
@@ -307,7 +358,8 @@ export class AdminService {
   }
 
   async createProduct(body: any) {
-    const { name, description, categoryId, collectionId, status, variants } = body;
+    const { name, description, categoryId, collectionId, status, variants } =
+      body;
     const slug = name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -316,7 +368,9 @@ export class AdminService {
     // Check if slug already exists
     const existing = await this.prisma.product.findUnique({ where: { slug } });
     if (existing) {
-      throw new BadRequestException('Product with a similar name/slug already exists');
+      throw new BadRequestException(
+        'Product with a similar name/slug already exists',
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -338,7 +392,9 @@ export class AdminService {
               productId: product.id,
               sku: v.sku,
               price: Math.round(Number(v.price)),
-              compareAtPrice: v.compareAtPrice ? Math.round(Number(v.compareAtPrice)) : null,
+              compareAtPrice: v.compareAtPrice
+                ? Math.round(Number(v.compareAtPrice))
+                : null,
               attributes: v.attributes || {},
             },
           });
@@ -347,7 +403,10 @@ export class AdminService {
             data: {
               productVariantId: variant.id,
               quantity: v.quantity !== undefined ? Number(v.quantity) : 0,
-              lowStockThreshold: v.lowStockThreshold !== undefined ? Number(v.lowStockThreshold) : 5,
+              lowStockThreshold:
+                v.lowStockThreshold !== undefined
+                  ? Number(v.lowStockThreshold)
+                  : 5,
             },
           });
 
@@ -370,7 +429,15 @@ export class AdminService {
   }
 
   async updateProduct(id: string, body: any) {
-    const { name, description, categoryId, collectionId, status, price, compareAtPrice } = body;
+    const {
+      name,
+      description,
+      categoryId,
+      collectionId,
+      status,
+      price,
+      compareAtPrice,
+    } = body;
 
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -407,7 +474,9 @@ export class AdminService {
             where: { id: variant.id },
             data: {
               price: Math.round(Number(price)),
-              compareAtPrice: compareAtPrice ? Math.round(Number(compareAtPrice)) : null,
+              compareAtPrice: compareAtPrice
+                ? Math.round(Number(compareAtPrice))
+                : null,
             },
           });
         }

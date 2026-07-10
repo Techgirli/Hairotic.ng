@@ -1,4 +1,12 @@
-import { Controller, Get, Query, Param, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Param,
+  UseGuards,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -16,7 +24,9 @@ export class OrdersController {
       throw new BadRequestException('Order number is required');
     }
     if (!email && !phone) {
-      throw new BadRequestException('Email or phone number is required to verify ownership');
+      throw new BadRequestException(
+        'Email or phone number is required to verify ownership',
+      );
     }
 
     return this.ordersService.trackOrder(orderNumber, { email, phone });

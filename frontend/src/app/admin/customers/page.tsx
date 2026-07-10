@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Users, Search, RefreshCw, X, MessageSquare, AlertCircle } from 'lucide-react';
+import { Users, Search, RefreshCw, X, MessageSquare } from 'lucide-react';
 
 interface Address {
   id: string;
@@ -86,8 +86,9 @@ export default function AdminCustomersPage() {
       }
       const data = await res.json();
       setCustomers(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -104,8 +105,9 @@ export default function AdminCustomersPage() {
       }
       const data = await res.json();
       setDetails(data);
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     } finally {
       setLoadingDetails(false);
     }
@@ -113,6 +115,7 @@ export default function AdminCustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -121,6 +124,7 @@ export default function AdminCustomersPage() {
     } else {
       setDetails(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCustomerId]);
 
   const handleNoteSubmit = async (e: React.FormEvent) => {
@@ -142,8 +146,9 @@ export default function AdminCustomersPage() {
 
       setNewNote('');
       fetchCustomerDetails(selectedCustomerId);
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     } finally {
       setIsSubmittingNote(false);
     }

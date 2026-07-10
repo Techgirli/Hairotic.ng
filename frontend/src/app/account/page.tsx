@@ -1,8 +1,15 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
-import { User, MapPin, ShoppingBag, Eye, Plus, Trash2, ShieldAlert, LogOut, CheckCircle2, KeyRound } from 'lucide-react';
+import { User, MapPin, ShoppingBag, Eye, Plus, Trash2, ShieldAlert, LogOut, KeyRound } from 'lucide-react';
 import Link from 'next/link';
+
+interface UserData {
+  id: string;
+  email: string;
+  phone: string;
+  name?: string;
+}
 
 interface Address {
   id: string;
@@ -34,7 +41,7 @@ interface Order {
 }
 
 export default function AccountPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders'>('orders');
 
@@ -49,7 +56,6 @@ export default function AccountPage() {
   // Profile Edit Form States
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [name, setName] = useState('');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   // Address Form States
@@ -80,7 +86,6 @@ export default function AccountPage() {
         setUser(userData);
         setEmail(userData.email || '');
         setPhone(userData.phone || '');
-        setName(userData.name || '');
       } else {
         setUser(null);
       }
@@ -120,6 +125,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -127,6 +133,7 @@ export default function AccountPage() {
       fetchAddresses();
       fetchOrders();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -149,8 +156,9 @@ export default function AccountPage() {
 
       setAuthPassword('');
       checkAuth();
-    } catch (err: any) {
-      setAuthError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setAuthError(message);
     } finally {
       setIsSubmittingAuth(false);
     }
@@ -188,8 +196,9 @@ export default function AccountPage() {
 
       setAuthPassword('');
       checkAuth();
-    } catch (err: any) {
-      setAuthError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setAuthError(message);
     } finally {
       setIsSubmittingAuth(false);
     }
@@ -225,8 +234,9 @@ export default function AccountPage() {
 
       alert('Profile updated successfully!');
       checkAuth();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -261,8 +271,9 @@ export default function AccountPage() {
       setAddressDefault(false);
       setShowAddressForm(false);
       fetchAddresses();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     } finally {
       setIsAddingAddress(false);
     }
@@ -282,8 +293,9 @@ export default function AccountPage() {
       }
 
       fetchAddresses();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     }
   };
 
@@ -299,8 +311,9 @@ export default function AccountPage() {
       }
 
       fetchAddresses();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     }
   };
 
@@ -447,16 +460,16 @@ export default function AccountPage() {
         
         {/* Navigation Sidebar */}
         <div className="bg-white border border-[#222222]/5 p-4 rounded-[24px] shadow-sm self-start flex flex-row md:flex-col gap-1 overflow-x-auto">
-          {[
+          {([
             { key: 'orders', label: 'Order History', icon: ShoppingBag },
             { key: 'addresses', label: 'Saved Addresses', icon: MapPin },
             { key: 'profile', label: 'Security Profile', icon: KeyRound },
-          ].map((tab) => {
+          ] as const).map((tab) => {
             const IconComp = tab.icon;
             return (
               <button
                 key={tab.key}
-                onClick={() => startTransition(() => setActiveTab(tab.key as any))}
+                onClick={() => startTransition(() => setActiveTab(tab.key))}
                 className={`w-full h-11 px-4 rounded-[12px] flex items-center gap-3 text-[12px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab.key
                     ? 'bg-[#FAF7F4] text-[#E56717]'

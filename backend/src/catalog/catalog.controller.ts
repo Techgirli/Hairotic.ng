@@ -20,12 +20,16 @@ export class CatalogController {
   ) {
     // Normalize length query parameter into string array
     const lengths = lengthsInput
-      ? (Array.isArray(lengthsInput) ? lengthsInput : [lengthsInput])
+      ? Array.isArray(lengthsInput)
+        ? lengthsInput
+        : [lengthsInput]
       : [];
 
     // Normalize texture query parameter into string array
     const textures = texturesInput
-      ? (Array.isArray(texturesInput) ? texturesInput : [texturesInput])
+      ? Array.isArray(texturesInput)
+        ? texturesInput
+        : [texturesInput]
       : [];
 
     const minPriceNum = minPrice ? Number(minPrice) : undefined;

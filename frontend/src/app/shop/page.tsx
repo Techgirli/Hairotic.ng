@@ -48,22 +48,22 @@ async function getCategories(): Promise<Category[]> {
     const res = await fetch('http://localhost:3001/api/v1/categories', { cache: 'no-store' });
     if (!res.ok) return [];
     return await res.json();
-  } catch (err) {
+  } catch {
     return [];
   }
 }
 
 // Fetch filtered products
-async function getFilteredProducts(searchParams: any): Promise<Product[]> {
+async function getFilteredProducts(searchParams: Record<string, string | string[] | undefined>): Promise<Product[]> {
   try {
     const query = new URLSearchParams();
 
     // Map parameters safely
-    if (searchParams.categorySlug) query.set('categorySlug', searchParams.categorySlug);
-    if (searchParams.sort) query.set('sort', searchParams.sort);
-    if (searchParams.minPrice) query.set('minPrice', searchParams.minPrice);
-    if (searchParams.maxPrice) query.set('maxPrice', searchParams.maxPrice);
-    if (searchParams.search) query.set('search', searchParams.search);
+    if (searchParams.categorySlug) query.set('categorySlug', Array.isArray(searchParams.categorySlug) ? searchParams.categorySlug[0] : searchParams.categorySlug);
+    if (searchParams.sort) query.set('sort', Array.isArray(searchParams.sort) ? searchParams.sort[0] : searchParams.sort);
+    if (searchParams.minPrice) query.set('minPrice', Array.isArray(searchParams.minPrice) ? searchParams.minPrice[0] : searchParams.minPrice);
+    if (searchParams.maxPrice) query.set('maxPrice', Array.isArray(searchParams.maxPrice) ? searchParams.maxPrice[0] : searchParams.maxPrice);
+    if (searchParams.search) query.set('search', Array.isArray(searchParams.search) ? searchParams.search[0] : searchParams.search);
 
     // Propagate multiple array values
     const lengths = searchParams.lengths;
@@ -101,7 +101,7 @@ function SortOptionLink({ label, value, activeSort, currentParams }: {
   label: string;
   value: string;
   activeSort: string;
-  currentParams: any;
+  currentParams: Record<string, string | string[] | undefined>;
 }) {
   const params = new URLSearchParams();
   Object.keys(currentParams).forEach((key) => {
@@ -128,13 +128,13 @@ function SortOptionLink({ label, value, activeSort, currentParams }: {
   );
 }
 
-export default async function ShopPage({ searchParams }: { searchParams: Promise<any> }) {
+export default async function ShopPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   // Resolve searchParams promise in Next.js 15+ App Router
   const resolvedParams = await searchParams;
   const categories = await getCategories();
   const products = await getFilteredProducts(resolvedParams);
   
-  const activeSort = resolvedParams.sort || 'newest';
+  const activeSort = (Array.isArray(resolvedParams.sort) ? resolvedParams.sort[0] : resolvedParams.sort) || 'newest';
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
@@ -243,7 +243,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             <div className="bg-[#FAF7F4] border border-[#222222]/5 rounded-[24px] p-16 text-center select-none space-y-4">
               <h3 className="text-[20px] font-bold text-[#222222]">No Products Found</h3>
               <p className="text-[#6B7280] text-[14px] max-w-sm mx-auto">
-                We couldn't find any hair units matching your combination of filters. Try clearing some selections.
+                We couldn&apos;t find any hair units matching your combination of filters. Try clearing some selections.
               </p>
               <div className="pt-2">
                 <Link
@@ -264,7 +264,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           <div className="space-y-4">
             <h3 className="font-display text-[32px] tracking-wider text-[#FFFFFF] uppercase">Hairotic</h3>
             <p className="text-[14px] text-[#6B7280] leading-relaxed">
-              Nigeria's premium hair drop destination. Authentic donor hair units that represent your energy.
+              Nigeria&apos;s premium hair drop destination. Authentic donor hair units that represent your energy.
             </p>
           </div>
           <div>

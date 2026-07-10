@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 
@@ -9,7 +13,7 @@ export class ReviewsService {
   async createReview(
     userId: string,
     productId: string,
-    data: { rating: number; body: string; photos?: string[] }
+    data: { rating: number; body: string; photos?: string[] },
   ) {
     const { rating, body, photos } = data;
 
@@ -18,7 +22,9 @@ export class ReviewsService {
     }
 
     if (!body || body.trim().length < 5) {
-      throw new BadRequestException('Review body must be at least 5 characters long');
+      throw new BadRequestException(
+        'Review body must be at least 5 characters long',
+      );
     }
 
     // 1. Verify the product exists
@@ -53,7 +59,9 @@ export class ReviewsService {
     });
 
     if (!orders) {
-      throw new BadRequestException('Only verified purchasers can submit reviews for this product');
+      throw new BadRequestException(
+        'Only verified purchasers can submit reviews for this product',
+      );
     }
 
     // 3. Prevent duplicate reviews for the same product by the same user
@@ -66,7 +74,9 @@ export class ReviewsService {
     });
 
     if (existingReview) {
-      throw new BadRequestException('You have already submitted a review for this purchase');
+      throw new BadRequestException(
+        'You have already submitted a review for this purchase',
+      );
     }
 
     // 4. Create review inside transaction

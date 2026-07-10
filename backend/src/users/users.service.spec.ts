@@ -5,7 +5,6 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     user: {
@@ -34,7 +33,6 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -43,27 +41,42 @@ describe('UsersService', () => {
 
   describe('getProfile', () => {
     it('should return profile and omit passwordHash', async () => {
-      const mockUser = { id: 'u-1', email: 'test@example.com', passwordHash: 'hashed123', addresses: [] };
+      const mockUser = {
+        id: 'u-1',
+        email: 'test@example.com',
+        passwordHash: 'hashed123',
+        addresses: [],
+      };
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
       const result = await service.getProfile('u-1');
-      expect(result).toEqual({ id: 'u-1', email: 'test@example.com', addresses: [] });
+      expect(result).toEqual({
+        id: 'u-1',
+        email: 'test@example.com',
+        addresses: [],
+      });
       expect(result.passwordHash).toBeUndefined();
     });
 
     it('should throw NotFoundException if user profile not found', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
-      await expect(service.getProfile('u-wrong')).rejects.toThrow(NotFoundException);
+      await expect(service.getProfile('u-wrong')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('updateProfile', () => {
     it('should update profile and verify email uniques', async () => {
-      const mockUser = { id: 'u-1', email: 'test@example.com' };
       mockPrismaService.user.findUnique.mockResolvedValue(null); // No email clashes
-      mockPrismaService.user.update.mockResolvedValue({ id: 'u-1', email: 'new@example.com' });
+      mockPrismaService.user.update.mockResolvedValue({
+        id: 'u-1',
+        email: 'new@example.com',
+      });
 
-      const result = await service.updateProfile('u-1', { email: 'new@example.com' });
+      const result = await service.updateProfile('u-1', {
+        email: 'new@example.com',
+      });
       expect(result.email).toBe('new@example.com');
     });
 
@@ -72,14 +85,16 @@ describe('UsersService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(existingUser);
 
       await expect(
-        service.updateProfile('u-1', { email: 'clash@example.com' })
+        service.updateProfile('u-1', { email: 'clash@example.com' }),
       ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('getAddresses', () => {
     it('should return addresses sorted', async () => {
-      const mockAddresses = [{ id: 'a-1', street: 'street 1', isDefault: true }];
+      const mockAddresses = [
+        { id: 'a-1', street: 'street 1', isDefault: true },
+      ];
       mockPrismaService.address.findMany.mockResolvedValue(mockAddresses);
 
       const result = await service.getAddresses('u-1');
@@ -90,7 +105,10 @@ describe('UsersService', () => {
   describe('addAddress', () => {
     it('should append new address and toggle default status correctly', async () => {
       mockPrismaService.address.count.mockResolvedValue(1);
-      mockPrismaService.address.create.mockResolvedValue({ id: 'a-new', isDefault: true });
+      mockPrismaService.address.create.mockResolvedValue({
+        id: 'a-new',
+        isDefault: true,
+      });
 
       const result = await service.addAddress('u-1', {
         label: 'Work',
@@ -103,7 +121,7 @@ describe('UsersService', () => {
 
       expect(result.isDefault).toBe(true);
       expect(mockPrismaService.address.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { userId: 'u-1', isDefault: true } })
+        expect.objectContaining({ where: { userId: 'u-1', isDefault: true } }),
       );
     });
   });
@@ -112,12 +130,20 @@ describe('UsersService', () => {
     it('should check ownership and delete successfully', async () => {
       const mockAddress = { id: 'a-1', userId: 'u-1', isDefault: true };
       mockPrismaService.address.findUnique.mockResolvedValue(mockAddress);
-      mockPrismaService.address.findFirst.mockResolvedValue({ id: 'a-2', userId: 'u-1' });
+      mockPrismaService.address.findFirst.mockResolvedValue({
+        id: 'a-2',
+        userId: 'u-1',
+      });
 
       await service.deleteAddress('u-1', 'a-1');
-      expect(mockPrismaService.address.delete).toHaveBeenCalledWith({ where: { id: 'a-1' } });
+      expect(mockPrismaService.address.delete).toHaveBeenCalledWith({
+        where: { id: 'a-1' },
+      });
       expect(mockPrismaService.address.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'a-2' }, data: { isDefault: true } })
+        expect.objectContaining({
+          where: { id: 'a-2' },
+          data: { isDefault: true },
+        }),
       );
     });
   });

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Box, AlertTriangle, ArrowRightLeft, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Box, AlertTriangle, ArrowRightLeft, CheckCircle2 } from 'lucide-react';
 
 interface Variant {
   id: string;
   sku: string;
   price: number;
-  attributes: any;
+  attributes: { length?: string; texture?: string };
   product: {
     name: string;
   };
@@ -43,8 +43,9 @@ export default function AdminInventoryPage() {
       }
       const data = await res.json();
       setInventoryList(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -52,6 +53,7 @@ export default function AdminInventoryPage() {
 
   useEffect(() => {
     fetchInventory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAdjustClick = (v: Variant) => {
@@ -90,8 +92,9 @@ export default function AdminInventoryPage() {
       setShowAdjustModal(false);
       setSelectedVariant(null);
       fetchInventory();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -184,7 +187,7 @@ export default function AdminInventoryPage() {
                       </td>
                       <td className="py-4 px-6">
                         <span className="font-semibold text-[#6B7280] text-[12px] uppercase">
-                          Length: {v.attributes.length || 'Default'}"
+                          Length: {String(v.attributes.length || 'Default')}&quot;
                         </span>
                       </td>
                       <td className="py-4 px-6">

@@ -10,7 +10,7 @@ interface OrderItem {
   unitPrice: number;
   variant: {
     sku: string;
-    attributes: any;
+    attributes: { length?: string; texture?: string };
     product: {
       name: string;
     };
@@ -77,8 +77,9 @@ export default function OrderTrackingPage() {
       }
 
       setOrder(data);
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(message || 'Something went wrong.');
     } finally {
       setLoading(false);
     }
@@ -341,7 +342,7 @@ export default function OrderTrackingPage() {
                           {item.variant.product.name}
                         </h5>
                         <p className="text-[12px] text-[#6B7280] font-semibold uppercase tracking-wider mt-1">
-                          Length: {item.variant.attributes.length || 'Default'}" x {item.quantity}
+                          Length: {item.variant.attributes.length || 'Default'}&quot; x {item.quantity}
                         </p>
                       </div>
                       <div className="text-right shrink-0">

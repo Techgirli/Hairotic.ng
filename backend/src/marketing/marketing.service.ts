@@ -6,7 +6,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 export class MarketingService {
   constructor(
     private prisma: PrismaService,
-    private notificationsService: NotificationsService
+    private notificationsService: NotificationsService,
   ) {}
 
   async getFaqs() {
@@ -15,7 +15,12 @@ export class MarketingService {
     });
   }
 
-  async createFaq(data: { question: string; answer: string; category: string; position?: number }) {
+  async createFaq(data: {
+    question: string;
+    answer: string;
+    category: string;
+    position?: number;
+  }) {
     return this.prisma.faq.create({
       data: {
         question: data.question,
@@ -33,7 +38,11 @@ export class MarketingService {
   }
 
   async submitContact(data: { name: string; email: string; message: string }) {
-    await this.notificationsService.sendContactInquiryEmail(data.name, data.email, data.message);
+    await this.notificationsService.sendContactInquiryEmail(
+      data.name,
+      data.email,
+      data.message,
+    );
     return { success: true, message: 'Contact message forwarded successfully' };
   }
 }

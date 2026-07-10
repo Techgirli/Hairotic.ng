@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShoppingBag, MessageCircle, Heart, Star, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, MessageCircle, Heart, Star, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { trackEvent } from '../../../lib/analytics';
 
@@ -60,7 +60,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
       productId: product.id,
       name: product.name,
     });
-  }, [product.id]);
+  }, [product.id, product.name]);
 
   const handleAddToCart = () => {
     trackEvent('add_to_cart', {
@@ -189,7 +189,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                       : 'border-[#222222]/10 text-[#222222] hover:border-[#222222]/30'
                   }`}
                 >
-                  {len}" Inches
+                  {len}&quot; Inches
                 </button>
               );
             })}
@@ -306,6 +306,7 @@ function ProductReviewsSection({ productId, initialReviews }: { productId: strin
   React.useEffect(() => {
     checkUserSession();
     fetchLiveReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -341,8 +342,9 @@ function ProductReviewsSection({ productId, initialReviews }: { productId: strin
       setRating(5);
       setSubmitSuccess(true);
       fetchLiveReviews();
-    } catch (err: any) {
-      setSubmitError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }

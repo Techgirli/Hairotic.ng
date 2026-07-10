@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
-import { Trash2, ShoppingBag, Heart, Star, LogIn } from 'lucide-react';
+import { Trash2, ShoppingBag, Heart, LogIn } from 'lucide-react';
 
 interface ProductImage {
   id: string;
@@ -40,7 +40,6 @@ export default function WishlistPage() {
 
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Run auth check on mount
   useEffect(() => {
@@ -57,8 +56,8 @@ export default function WishlistPage() {
       if (!res.ok) throw new Error('Failed to load wishlist');
       const data = await res.json();
       setWishlist(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -76,7 +75,7 @@ export default function WishlistPage() {
       });
       if (!res.ok) throw new Error('Failed to remove item');
       setWishlist((prev) => prev.filter((item) => item.productVariantId !== variantId));
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
     }
   };
@@ -86,8 +85,9 @@ export default function WishlistPage() {
       await addItem(item.productVariantId, 1);
       // Remove from wishlist on successful add
       await handleRemove(item.productVariantId);
-    } catch (err: any) {
-      alert(err.message || 'Failed to move to bag');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message || 'Failed to move to bag');
     }
   };
 
@@ -195,7 +195,7 @@ export default function WishlistPage() {
                         {variant.product.name}
                       </h4>
                       <p className="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider">
-                        Length: {variant.attributes.length || 'Default'}" | {variant.attributes.texture || 'straight'}
+                        Length: {variant.attributes.length || 'Default'}&quot; | {variant.attributes.texture || 'straight'}
                       </p>
                       <div className="flex items-center gap-2">
                         <span className="text-[16px] font-extrabold text-[#E56717]">
@@ -253,7 +253,7 @@ export default function WishlistPage() {
           <div className="space-y-4">
             <h3 className="font-display text-[32px] tracking-wider text-[#FFFFFF] uppercase">Hairotic</h3>
             <p className="text-[14px] text-[#6B7280] leading-relaxed">
-              Nigeria's premium hair drop destination. Authentic donor hair units that represent your energy.
+              Nigeria&apos;s premium hair drop destination. Authentic donor hair units that represent your energy.
             </p>
           </div>
           <div>

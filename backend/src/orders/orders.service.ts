@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -24,7 +28,10 @@ export class OrdersService {
     });
   }
 
-  async trackOrder(orderNumber: string, contact: { email?: string; phone?: string }) {
+  async trackOrder(
+    orderNumber: string,
+    contact: { email?: string; phone?: string },
+  ) {
     const { email, phone } = contact;
 
     const order = await this.prisma.order.findUnique({
@@ -51,7 +58,8 @@ export class OrdersService {
     }
 
     // Guess-prevention: Ensure contact details match email or phone
-    const emailMatches = email && order.shippingEmail?.toLowerCase() === email.toLowerCase();
+    const emailMatches =
+      email && order.shippingEmail?.toLowerCase() === email.toLowerCase();
     const phoneMatches = phone && order.shippingPhone === phone;
 
     if (!emailMatches && !phoneMatches) {
@@ -86,7 +94,9 @@ export class OrdersService {
     }
 
     if (order.customerId !== userId) {
-      throw new ForbiddenException('You do not have permission to view this order');
+      throw new ForbiddenException(
+        'You do not have permission to view this order',
+      );
     }
 
     return order;

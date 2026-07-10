@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Req, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Req,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CartService } from './cart.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -20,7 +31,7 @@ export class CartController {
   @Post('items')
   async addItem(
     @Req() req: Request,
-    @Body() body: { variantId: string; quantity: number; sessionId?: string }
+    @Body() body: { variantId: string; quantity: number; sessionId?: string },
   ) {
     const userId = this.getUserIdFromCookie(req);
     const cart = await this.cartService.getOrCreateCart(userId, body.sessionId);
@@ -32,7 +43,7 @@ export class CartController {
   async updateQuantity(
     @Req() req: Request,
     @Param('itemId') itemId: string,
-    @Body() body: { quantity: number; sessionId?: string }
+    @Body() body: { quantity: number; sessionId?: string },
   ) {
     const userId = this.getUserIdFromCookie(req);
     await this.cartService.updateQuantity(itemId, body.quantity);
@@ -43,7 +54,7 @@ export class CartController {
   async removeItem(
     @Req() req: Request,
     @Param('itemId') itemId: string,
-    @Query('sessionId') sessionId?: string
+    @Query('sessionId') sessionId?: string,
   ) {
     const userId = this.getUserIdFromCookie(req);
     await this.cartService.removeItem(itemId);
@@ -64,7 +75,7 @@ export class CartController {
         secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
       });
       return payload.sub;
-    } catch (e) {
+    } catch {
       return undefined;
     }
   }

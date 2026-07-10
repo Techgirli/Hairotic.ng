@@ -42,6 +42,8 @@ const NIGERIAN_STATES_LGAS: Record<string, string[]> = {
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, sessionId, clearCart } = useCartStore();
+  const subtotal = items.reduce((acc, item) => acc + item.variant.price * item.quantity, 0);
+  const subtotalInNgn = subtotal / 100;
 
   const [form, setForm] = useState({
     name: '',
@@ -70,7 +72,7 @@ export default function CheckoutPage() {
         subtotal: subtotalInNgn,
       });
     }
-  }, [items.length]);
+  }, [items.length, subtotalInNgn]);
 
   const handleStateChange = (stateName: string) => {
     setForm((prev) => ({ ...prev, state: stateName, lga: '' }));
@@ -79,9 +81,6 @@ export default function CheckoutPage() {
   const handleInputChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
-
-  const subtotal = items.reduce((acc, item) => acc + item.variant.price * item.quantity, 0);
-  const subtotalInNgn = subtotal / 100;
 
   // Shipping calculation logic:
   // Lagos: ₦5,000 flat, free if subtotal >= ₦250,000 (250,000,000 kobo)
@@ -147,8 +146,9 @@ export default function CheckoutPage() {
 
       // Redirect user directly to Paystack payment gateway (or mock success URL in dev)
       window.location.href = paymentDetails.authorization_url;
-    } catch (err: any) {
-      setError(err.message || 'Checkout failed. Please check variant stock.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(message || 'Checkout failed. Please check variant stock.');
       setIsSubmitting(false);
     }
   };
@@ -314,7 +314,7 @@ export default function CheckoutPage() {
                         {variant.product.name}
                       </h5>
                       <span className="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider">
-                        Length: {variant.attributes.length || 'Default'}" x {item.quantity}
+                        Length: {variant.attributes.length || 'Default'}&quot; x {item.quantity}
                       </span>
                     </div>
                     <span className="text-[14px] font-extrabold text-[#E56717] shrink-0">

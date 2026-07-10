@@ -29,7 +29,7 @@ export class CheckoutController {
       shippingAddress: ShippingAddress;
       idempotencyKey: string;
       sessionId?: string;
-    }
+    },
   ) {
     const userId = this.getUserIdFromCookie(req);
     return this.checkoutService.createOrder(userId, body.sessionId, {
@@ -46,7 +46,7 @@ export class CheckoutController {
         secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
       });
       return payload.sub;
-    } catch (e) {
+    } catch {
       return undefined;
     }
   }

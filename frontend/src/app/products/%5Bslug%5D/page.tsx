@@ -235,7 +235,7 @@ export default async function ProductPage({ params }: PageProps) {
           <div className="space-y-4">
             <h3 className="font-display text-[32px] tracking-wider text-[#FFFFFF] uppercase">Hairotic</h3>
             <p className="text-[14px] text-[#6B7280] leading-relaxed">
-              Nigeria's premium hair drop destination. Authentic donor hair units that represent your energy.
+              Nigeria&apos;s premium hair drop destination. Authentic donor hair units that represent your energy.
             </p>
           </div>
           <div>

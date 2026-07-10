@@ -111,7 +111,7 @@ export default function CartDrawer() {
                           {variant.product.name}
                         </h4>
                         <p className="text-[12px] text-[#6B7280] font-medium uppercase tracking-wider">
-                          Length: {variant.attributes.length || 'Default'}" Inches |{' '}
+                          Length: {variant.attributes.length || 'Default'}&quot; Inches |{' '}
                           {variant.attributes.texture || 'straight'}
                         </p>
                       </div>

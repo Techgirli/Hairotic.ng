@@ -16,7 +16,6 @@ export default function AdminLoginPage() {
     loading,
     error,
     clearError,
-    user,
   } = useAuthStore();
 
   const [email, setEmail] = useState('');
@@ -32,7 +31,7 @@ export default function AdminLoginPage() {
   // Load MFA Setup details when required
   useEffect(() => {
     if (mfaRequired && mfaSetup && !mfaQrCode) {
-      setupMfa().catch((err) => console.error('MFA setup error', err));
+      setupMfa().catch(() => console.error('MFA setup error'));
     }
   }, [mfaRequired, mfaSetup, mfaQrCode, setupMfa]);
 
@@ -44,7 +43,7 @@ export default function AdminLoginPage() {
       if (!result.mfaRequired) {
         setSuccessMsg('Login successful! Redirecting...');
       }
-    } catch (err) {
+    } catch {
       // Handled by store error state
     }
   };
@@ -55,7 +54,7 @@ export default function AdminLoginPage() {
     try {
       await verifyMfa(mfaCode, mfaSetup);
       setSuccessMsg('Authentication verified successfully! Redirecting...');
-    } catch (err) {
+    } catch {
       // Handled by store error state
     }
   };

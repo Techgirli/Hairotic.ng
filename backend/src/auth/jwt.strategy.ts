@@ -20,11 +20,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
+      secretOrKey:
+        process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
     });
   }
 
-  async validate(payload: { sub: string; email: string; role: string; mfaVerified?: boolean }) {
+  async validate(payload: {
+    sub: string;
+    email: string;
+    role: string;
+    mfaVerified?: boolean;
+  }) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });

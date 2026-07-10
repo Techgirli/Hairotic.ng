@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -21,7 +25,9 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new BadRequestException('User with this email or phone number already exists');
+      throw new BadRequestException(
+        'User with this email or phone number already exists',
+      );
     }
 
     const salt = await bcrypt.genSalt(12);
@@ -60,8 +66,13 @@ export class AuthService {
       if (!user.mfaEnabled) {
         // MFA setup is required (first-time login)
         const tempToken = this.jwtService.sign(
-          { sub: user.id, email: user.email, role: user.role, mfaVerified: false },
-          { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }
+          {
+            sub: user.id,
+            email: user.email,
+            role: user.role,
+            mfaVerified: false,
+          },
+          { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
         );
         return {
           mfaRequired: true,
@@ -72,8 +83,13 @@ export class AuthService {
       } else {
         // MFA challenge required
         const tempToken = this.jwtService.sign(
-          { sub: user.id, email: user.email, role: user.role, mfaVerified: false },
-          { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }
+          {
+            sub: user.id,
+            email: user.email,
+            role: user.role,
+            mfaVerified: false,
+          },
+          { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
         );
         return {
           mfaRequired: true,
@@ -126,7 +142,7 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
       return { user, mfaVerified: payload.mfaVerified };
-    } catch (e) {
+    } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
@@ -138,7 +154,11 @@ export class AuthService {
     }
 
     const secret = generateSecret();
-    const otpauthUrl = generateURI({ secret, label: user.email, issuer: 'Hairotic.ng' });
+    const otpauthUrl = generateURI({
+      secret,
+      label: user.email,
+      issuer: 'Hairotic.ng',
+    });
     const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
     // Save temporary secret (we will finalize it on verify)
@@ -172,13 +192,15 @@ export class AuthService {
       });
 
       if (!tempNote) {
-        throw new BadRequestException('MFA setup session expired or not initialized');
+        throw new BadRequestException(
+          'MFA setup session expired or not initialized',
+        );
       }
 
       secret = tempNote.note.replace('TEMP_MFA_SECRET:', '');
 
       // Verify token
-      const isValid = verify({ token: code, secret });
+      const isValid = await verify({ token: code, secret });
       if (!isValid) {
         throw new BadRequestException('Invalid authentication code');
       }
@@ -215,11 +237,13 @@ export class AuthService {
       });
 
       if (!activeNote) {
-        throw new BadRequestException('MFA configuration missing. Please reset setup.');
+        throw new BadRequestException(
+          'MFA configuration missing. Please reset setup.',
+        );
       }
 
       secret = activeNote.note.replace('MFA_SECRET:', '');
-      const isValid = verify({ token: code, secret });
+      const isValid = await verify({ token: code, secret });
       if (!isValid) {
         throw new BadRequestException('Invalid authentication code');
       }
@@ -230,7 +254,8 @@ export class AuthService {
   }
 
   private sanitizeUser(user: User) {
-    const { passwordHash, ...sanitized } = user;
+    const sanitized = { ...user };
+    delete (sanitized as any).passwordHash;
     return sanitized;
   }
 }

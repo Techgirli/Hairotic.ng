@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle2, MessageCircle, ShoppingBag, ArrowRight } from 'lucide-react';
+import { CheckCircle2, MessageCircle, ArrowRight } from 'lucide-react';
 import { trackEvent } from '../../../lib/analytics';
 
 function CheckoutSuccessContent() {

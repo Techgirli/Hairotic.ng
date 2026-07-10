@@ -47,7 +47,10 @@ describe('ReviewsService', () => {
       mockPrismaService.product.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.createReview('u-1', 'p-wrong', { rating: 5, body: 'Perfect bundles' })
+        service.createReview('u-1', 'p-wrong', {
+          rating: 5,
+          body: 'Perfect bundles',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -56,7 +59,10 @@ describe('ReviewsService', () => {
       mockPrismaService.order.findFirst.mockResolvedValue(null); // No verified orders found
 
       await expect(
-        service.createReview('u-1', 'p-1', { rating: 5, body: 'Perfect bundles' })
+        service.createReview('u-1', 'p-1', {
+          rating: 5,
+          body: 'Perfect bundles',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -66,17 +72,28 @@ describe('ReviewsService', () => {
       mockPrismaService.review.findFirst.mockResolvedValue({ id: 'r-exist' }); // Review already exists
 
       await expect(
-        service.createReview('u-1', 'p-1', { rating: 5, body: 'Perfect bundles' })
+        service.createReview('u-1', 'p-1', {
+          rating: 5,
+          body: 'Perfect bundles',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should successfully post review and append photo links inside transactions', async () => {
-      const mockReview = { id: 'r-new', rating: 5, body: 'Perfect bundles', verifiedPurchase: true };
+      const mockReview = {
+        id: 'r-new',
+        rating: 5,
+        body: 'Perfect bundles',
+        verifiedPurchase: true,
+      };
       mockPrismaService.product.findUnique.mockResolvedValue({ id: 'p-1' });
       mockPrismaService.order.findFirst.mockResolvedValue({ id: 'o-1' });
       mockPrismaService.review.findFirst.mockResolvedValue(null);
       mockPrismaService.review.create.mockResolvedValue(mockReview);
-      mockPrismaService.review.findUnique.mockResolvedValue({ ...mockReview, photos: [{ url: 'http://img1' }] });
+      mockPrismaService.review.findUnique.mockResolvedValue({
+        ...mockReview,
+        photos: [{ url: 'http://img1' }],
+      });
 
       const result = await service.createReview('u-1', 'p-1', {
         rating: 5,
@@ -86,7 +103,9 @@ describe('ReviewsService', () => {
 
       expect(result.id).toBe('r-new');
       expect(mockPrismaService.reviewPhoto.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { reviewId: 'r-new', url: 'http://img1' } })
+        expect.objectContaining({
+          data: { reviewId: 'r-new', url: 'http://img1' },
+        }),
       );
     });
   });
@@ -99,7 +118,7 @@ describe('ReviewsService', () => {
       const result = await service.getProductReviews('p-1');
       expect(result).toEqual(mockReviews);
       expect(prisma.review.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { productId: 'p-1' } })
+        expect.objectContaining({ where: { productId: 'p-1' } }),
       );
     });
   });

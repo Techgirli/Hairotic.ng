@@ -134,7 +134,7 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
                   : 'border-[#222222]/10 text-[#222222] hover:border-[#222222]/30'
               }`}
             >
-              {len}"
+              {len}&quot;
             </button>
           ))}
         </div>

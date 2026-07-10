@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
-import { BarChart3, TrendingUp, ShoppingBag, Eye, Download, RefreshCw, Layers } from 'lucide-react';
+import { TrendingUp, Download, RefreshCw, Layers } from 'lucide-react';
+
+interface AnalyticsEvent {
+  id: string;
+  name: string;
+  sessionId?: string;
+  userId?: string;
+  properties: Record<string, unknown>;
+  createdAt: string;
+}
 
 interface SummaryStats {
   totalRevenue: number;
@@ -56,8 +65,9 @@ export default function AdminAnalyticsPage() {
 
       setSummary(sumData);
       setFunnel(funData);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -65,6 +75,7 @@ export default function AdminAnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleExportCSV = async () => {
@@ -72,11 +83,11 @@ export default function AdminAnalyticsPage() {
     try {
       const res = await fetch(`${API_URL}/analytics/export`, { credentials: 'include' });
       if (!res.ok) throw new Error('Export failed');
-      const events = await res.json();
+      const events: AnalyticsEvent[] = await res.json();
 
       // Formulate simple CSV
       const headers = ['Event ID', 'Event Name', 'Session ID', 'User ID', 'Properties', 'Created At'];
-      const rows = events.map((e: any) => [
+      const rows = events.map((e) => [
         e.id,
         e.name,
         e.sessionId || '',
@@ -87,7 +98,7 @@ export default function AdminAnalyticsPage() {
 
       const csvContent =
         'data:text/csv;charset=utf-8,' +
-        [headers.join(','), ...rows.map((r: any) => r.map((val: any) => `"${val}"`).join(','))].join('\n');
+        [headers.join(','), ...rows.map((r) => r.map((val) => `"${val}"`).join(','))].join('\n');
 
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
@@ -96,8 +107,9 @@ export default function AdminAnalyticsPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err: any) {
-      alert('Failed to export raw events: ' + err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert('Failed to export raw events: ' + message);
     } finally {
       setIsExporting(false);
     }

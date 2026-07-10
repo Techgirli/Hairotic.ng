@@ -14,7 +14,7 @@ export class NotificationsService {
         <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.variant.attributes.length || 'Default'}"</td>
         <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
         <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">₦${(item.unitPrice / 100).toLocaleString()}</td>
-      </tr>`
+      </tr>`,
       )
       .join('');
 
@@ -58,9 +58,16 @@ export class NotificationsService {
     `;
 
     if (!resendApiKey) {
-      this.logger.warn('RESEND_API_KEY is not defined. Printing order invoice email to console fallback:');
-      this.logger.log(`\n--- INVOICE EMAIL TO: ${order.shippingEmail} ---\nSubject: Order Confirmed - ${order.orderNumber}\n${htmlContent}\n------------------------`);
-      return { success: true, message: 'Printed invoice to console logs fallback.' };
+      this.logger.warn(
+        'RESEND_API_KEY is not defined. Printing order invoice email to console fallback:',
+      );
+      this.logger.log(
+        `\n--- INVOICE EMAIL TO: ${order.shippingEmail} ---\nSubject: Order Confirmed - ${order.orderNumber}\n${htmlContent}\n------------------------`,
+      );
+      return {
+        success: true,
+        message: 'Printed invoice to console logs fallback.',
+      };
     }
 
     try {
@@ -83,7 +90,9 @@ export class NotificationsService {
         throw new Error(errText);
       }
 
-      this.logger.log(`Order confirmation email sent successfully for ${order.orderNumber}`);
+      this.logger.log(
+        `Order confirmation email sent successfully for ${order.orderNumber}`,
+      );
       return { success: true };
     } catch (err: any) {
       this.logger.error(`Failed to send Resend email: ${err.message}`);
@@ -91,15 +100,23 @@ export class NotificationsService {
     }
   }
 
-  async sendWhatsAppNotification(phone: string, message: string) {
-    this.logger.log(`[WHATSAPP NOTIFICATION TRIGGERED] To: ${phone} -> Message: "${message}"`);
-    return { success: true };
+  sendWhatsAppNotification(phone: string, message: string) {
+    this.logger.log(
+      `[WHATSAPP NOTIFICATION TRIGGERED] To: ${phone} -> Message: "${message}"`,
+    );
+    return Promise.resolve({ success: true });
   }
 
-  async sendOrderStatusUpdateNotification(order: any, status: string, note?: string) {
+  async sendOrderStatusUpdateNotification(
+    order: any,
+    status: string,
+    note?: string,
+  ) {
     const resendApiKey = process.env.RESEND_API_KEY;
-    const trackingNote = note ? `<p><strong>Note from courier/staff:</strong> ${note}</p>` : '';
-    
+    const trackingNote = note
+      ? `<p><strong>Note from courier/staff:</strong> ${note}</p>`
+      : '';
+
     const htmlContent = `
       <div style="font-family: sans-serif; color: #222; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22222210; border-radius: 12px;">
         <h2 style="color: #E56717; text-transform: uppercase; letter-spacing: 1px;">Hairotic.ng</h2>
@@ -118,8 +135,12 @@ export class NotificationsService {
     `;
 
     if (!resendApiKey) {
-      this.logger.warn('RESEND_API_KEY is not defined. Printing order status update email to console fallback:');
-      this.logger.log(`\n--- STATUS UPDATE EMAIL TO: ${order.shippingEmail} ---\nSubject: Order ${order.orderNumber} Update: ${status}\n${htmlContent}\n------------------------`);
+      this.logger.warn(
+        'RESEND_API_KEY is not defined. Printing order status update email to console fallback:',
+      );
+      this.logger.log(
+        `\n--- STATUS UPDATE EMAIL TO: ${order.shippingEmail} ---\nSubject: Order ${order.orderNumber} Update: ${status}\n${htmlContent}\n------------------------`,
+      );
     } else {
       try {
         await fetch('https://api.resend.com/emails', {
@@ -135,7 +156,9 @@ export class NotificationsService {
             html: htmlContent,
           }),
         });
-        this.logger.log(`Order status update email sent successfully for ${order.orderNumber}`);
+        this.logger.log(
+          `Order status update email sent successfully for ${order.orderNumber}`,
+        );
       } catch (err: any) {
         this.logger.error(`Failed to send status update email: ${err.message}`);
       }
@@ -143,8 +166,11 @@ export class NotificationsService {
 
     // Send WhatsApp notification
     const whatsappMsg = `Hi ${order.shippingName}! Your order ${order.orderNumber} has been updated to: ${status}.${note ? ` Note: ${note}` : ''} Track it live at http://localhost:3000/orders/track?orderNumber=${order.orderNumber}&email=${encodeURIComponent(order.shippingEmail || '')}`;
-    await this.sendWhatsAppNotification(order.shippingPhone || '', whatsappMsg).catch((e) =>
-      this.logger.error(`Failed to send WhatsApp status update: ${e.message}`)
+    await this.sendWhatsAppNotification(
+      order.shippingPhone || '',
+      whatsappMsg,
+    ).catch((e) =>
+      this.logger.error(`Failed to send WhatsApp status update: ${e.message}`),
     );
   }
 
@@ -167,8 +193,12 @@ export class NotificationsService {
     `;
 
     if (!resendApiKey) {
-      this.logger.warn('RESEND_API_KEY is not defined. Printing contact form email to console fallback:');
-      this.logger.log(`\n--- CONTACT EMAIL FROM: ${email} ---\nSubject: New Contact Submission from ${name}\n${htmlContent}\n------------------------`);
+      this.logger.warn(
+        'RESEND_API_KEY is not defined. Printing contact form email to console fallback:',
+      );
+      this.logger.log(
+        `\n--- CONTACT EMAIL FROM: ${email} ---\nSubject: New Contact Submission from ${name}\n${htmlContent}\n------------------------`,
+      );
     } else {
       try {
         await fetch('https://api.resend.com/emails', {
@@ -184,7 +214,9 @@ export class NotificationsService {
             html: htmlContent,
           }),
         });
-        this.logger.log(`Contact inquiry email sent successfully from ${email}`);
+        this.logger.log(
+          `Contact inquiry email sent successfully from ${email}`,
+        );
       } catch (err: any) {
         this.logger.error(`Failed to send contact email: ${err.message}`);
       }

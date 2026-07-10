@@ -63,10 +63,7 @@ export class CatalogService {
       if (variantWhere.OR) {
         // If we already have length filters, we must intersect them
         // In Prisma, we can nest them inside AND
-        variantWhere.AND = [
-          { OR: variantWhere.OR },
-          { OR: textureConditions },
-        ];
+        variantWhere.AND = [{ OR: variantWhere.OR }, { OR: textureConditions }];
         delete variantWhere.OR;
       } else {
         variantWhere.OR = textureConditions;
@@ -136,7 +133,8 @@ export class CatalogService {
       },
     });
 
-    const nextCursor = products.length === limit ? products[products.length - 1].id : null;
+    const nextCursor =
+      products.length === limit ? products[products.length - 1].id : null;
 
     return {
       products,

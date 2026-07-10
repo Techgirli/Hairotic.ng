@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 
@@ -18,7 +22,7 @@ export class CheckoutService {
   async createOrder(
     customerId: string | undefined,
     sessionId: string | undefined,
-    body: { shippingAddress: ShippingAddress; idempotencyKey: string }
+    body: { shippingAddress: ShippingAddress; idempotencyKey: string },
   ) {
     const { shippingAddress, idempotencyKey } = body;
 
@@ -77,12 +81,14 @@ export class CheckoutService {
         });
 
         if (!inventory) {
-          throw new NotFoundException(`Inventory not found for variant ${item.variant.sku}`);
+          throw new NotFoundException(
+            `Inventory not found for variant ${item.variant.sku}`,
+          );
         }
 
         if (inventory.quantity < item.quantity) {
           throw new BadRequestException(
-            `Insufficient stock for variant ${item.variant.sku}. Requested: ${item.quantity}, Available: ${inventory.quantity}`
+            `Insufficient stock for variant ${item.variant.sku}. Requested: ${item.quantity}, Available: ${inventory.quantity}`,
           );
         }
 
@@ -107,7 +113,7 @@ export class CheckoutService {
 
       // Generate readable order reference code
       const orderRef = `HR-${Date.now().toString().slice(-6)}-${Math.floor(
-        1000 + Math.random() * 9000
+        1000 + Math.random() * 9000,
       )}`;
 
       // Create Order

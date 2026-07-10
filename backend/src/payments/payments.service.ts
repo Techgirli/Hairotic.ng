@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException, UnauthorizedException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
@@ -30,8 +36,10 @@ export class PaymentsService {
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
 
     if (!paystackSecret) {
-      this.logger.warn('PAYSTACK_SECRET_KEY is not defined. Falling back to local development mock checkout redirect.');
-      
+      this.logger.warn(
+        'PAYSTACK_SECRET_KEY is not defined. Falling back to local development mock checkout redirect.',
+      );
+
       // Local development mock mode: return success callback instantly
       return {
         authorization_url: `http://localhost:3000/checkout/success?orderNumber=${order.orderNumber}`,
@@ -41,21 +49,25 @@ export class PaymentsService {
     }
 
     try {
-      const email = order.shippingEmail || order.customer?.email || 'guest@hairotic.ng';
-      
-      const response = await fetch('https://api.paystack.co/transaction/initialize', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${paystackSecret}`,
-          'Content-Type': 'application/json',
+      const email =
+        order.shippingEmail || order.customer?.email || 'guest@hairotic.ng';
+
+      const response = await fetch(
+        'https://api.paystack.co/transaction/initialize',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${paystackSecret}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            amount: order.total, // already in kobo
+            reference: order.orderNumber,
+            callback_url: `http://localhost:3000/checkout/success?orderNumber=${order.orderNumber}`,
+          }),
         },
-        body: JSON.stringify({
-          email,
-          amount: order.total, // already in kobo
-          reference: order.orderNumber,
-          callback_url: `http://localhost:3000/checkout/success?orderNumber=${order.orderNumber}`,
-        }),
-      });
+      );
 
       const result = await response.json();
       if (!response.ok || !result.status) {
@@ -68,8 +80,12 @@ export class PaymentsService {
         isMock: false,
       };
     } catch (err: any) {
-      this.logger.error(`Failed to initialize Paystack transaction: ${err.message}`);
-      throw new BadRequestException(`Paystack initialization failed: ${err.message}`);
+      this.logger.error(
+        `Failed to initialize Paystack transaction: ${err.message}`,
+      );
+      throw new BadRequestException(
+        `Paystack initialization failed: ${err.message}`,
+      );
     }
   }
 
@@ -104,27 +120,37 @@ export class PaymentsService {
     }
 
     try {
-      const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${paystackSecret}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `https://api.paystack.co/transaction/verify/${reference}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${paystackSecret}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
 
       const result = await response.json();
       if (!response.ok || !result.status) {
         throw new Error(result.message || 'Verification check failed');
       }
 
-      if (result.data.status === 'success' && order.status === OrderStatus.PENDING_PAYMENT) {
+      if (
+        result.data.status === 'success' &&
+        order.status === OrderStatus.PENDING_PAYMENT
+      ) {
         await this.fulfillOrder(order.id, reference);
       }
 
       return result.data;
     } catch (err: any) {
-      this.logger.error(`Failed to verify transaction ${reference}: ${err.message}`);
-      throw new BadRequestException(`Verification check failed: ${err.message}`);
+      this.logger.error(
+        `Failed to verify transaction ${reference}: ${err.message}`,
+      );
+      throw new BadRequestException(
+        `Verification check failed: ${err.message}`,
+      );
     }
   }
 
@@ -132,7 +158,9 @@ export class PaymentsService {
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
 
     if (!paystackSecret) {
-      this.logger.warn('Webhook received but PAYSTACK_SECRET_KEY is missing. Skipping verification check.');
+      this.logger.warn(
+        'Webhook received but PAYSTACK_SECRET_KEY is missing. Skipping verification check.',
+      );
       return { status: 'ignored' };
     }
 
@@ -147,7 +175,7 @@ export class PaymentsService {
     }
 
     const payload = JSON.parse(rawBody);
-    
+
     if (payload.event === 'charge.success') {
       const reference = payload.data.reference;
       const order = await this.prisma.order.findUnique({
@@ -156,7 +184,9 @@ export class PaymentsService {
 
       if (order && order.status === OrderStatus.PENDING_PAYMENT) {
         await this.fulfillOrder(order.id, reference);
-        this.logger.log(`Webhook successfully fulfilled order reference: ${reference}`);
+        this.logger.log(
+          `Webhook successfully fulfilled order reference: ${reference}`,
+        );
       }
     }
 
@@ -205,16 +235,24 @@ export class PaymentsService {
       });
 
       // 4. Trigger Notifications asynchronously
-      this.notificationsService.sendOrderConfirmationEmail(updatedOrder).catch((e) =>
-        this.logger.error(`Async invoice email dispatch failed: ${e.message}`)
-      );
+      this.notificationsService
+        .sendOrderConfirmationEmail(updatedOrder)
+        .catch((e) =>
+          this.logger.error(
+            `Async invoice email dispatch failed: ${e.message}`,
+          ),
+        );
 
-      this.notificationsService.sendWhatsAppNotification(
-        updatedOrder.shippingPhone || '',
-        `Hi ${updatedOrder.shippingName}! Your payment for order ${updatedOrder.orderNumber} of amount ₦${(updatedOrder.total / 100).toLocaleString()} has been verified successfully. We are preparing it for delivery!`
-      ).catch((e) =>
-        this.logger.error(`Async WhatsApp notification dispatch failed: ${e.message}`)
-      );
+      this.notificationsService
+        .sendWhatsAppNotification(
+          updatedOrder.shippingPhone || '',
+          `Hi ${updatedOrder.shippingName}! Your payment for order ${updatedOrder.orderNumber} of amount ₦${(updatedOrder.total / 100).toLocaleString()} has been verified successfully. We are preparing it for delivery!`,
+        )
+        .catch((e) =>
+          this.logger.error(
+            `Async WhatsApp notification dispatch failed: ${e.message}`,
+          ),
+        );
 
       return updatedOrder;
     });
@@ -236,20 +274,34 @@ export class PaymentsService {
       order.status !== OrderStatus.SHIPPED &&
       order.status !== OrderStatus.DELIVERED
     ) {
-      throw new BadRequestException('Order cannot be refunded in its current status');
+      throw new BadRequestException(
+        'Order cannot be refunded in its current status',
+      );
     }
 
-    const successfulPayment = order.payments.find((p) => p.status === PaymentStatus.SUCCESS);
+    const successfulPayment = order.payments.find(
+      (p) => p.status === PaymentStatus.SUCCESS,
+    );
     if (!successfulPayment) {
-      throw new BadRequestException('No successful payment found for this order');
+      throw new BadRequestException(
+        'No successful payment found for this order',
+      );
     }
 
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
 
     if (!paystackSecret) {
-      this.logger.warn('PAYSTACK_SECRET_KEY is not defined. Simulating mock refund.');
-      await this.processRefundFulfillment(order.id, successfulPayment.paystackReference);
-      return { status: 'mock_refunded', reference: successfulPayment.paystackReference };
+      this.logger.warn(
+        'PAYSTACK_SECRET_KEY is not defined. Simulating mock refund.',
+      );
+      await this.processRefundFulfillment(
+        order.id,
+        successfulPayment.paystackReference,
+      );
+      return {
+        status: 'mock_refunded',
+        reference: successfulPayment.paystackReference,
+      };
     }
 
     try {
@@ -271,10 +323,15 @@ export class PaymentsService {
         throw new Error(result.message || 'Refund request failed');
       }
 
-      await this.processRefundFulfillment(order.id, successfulPayment.paystackReference);
+      await this.processRefundFulfillment(
+        order.id,
+        successfulPayment.paystackReference,
+      );
       return result.data;
     } catch (err: any) {
-      this.logger.error(`Failed to refund transaction ${successfulPayment.paystackReference}: ${err.message}`);
+      this.logger.error(
+        `Failed to refund transaction ${successfulPayment.paystackReference}: ${err.message}`,
+      );
       throw new BadRequestException(`Refund failed: ${err.message}`);
     }
   }

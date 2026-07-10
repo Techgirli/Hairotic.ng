@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
-import { ClipboardList, Search, RefreshCw, X, CreditCard, ChevronRight, Truck, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Search, RefreshCw, X, ChevronRight } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -9,7 +9,7 @@ interface OrderItem {
   unitPrice: number;
   variant: {
     sku: string;
-    attributes: any;
+    attributes: { length?: string; texture?: string };
     product: {
       name: string;
     };
@@ -90,8 +90,9 @@ export default function AdminOrdersPage() {
         const fresh = data.find((o: Order) => o.id === selectedOrder.id);
         if (fresh) setSelectedOrder(fresh);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -99,6 +100,7 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -130,8 +132,9 @@ export default function AdminOrdersPage() {
       setStatusNote('');
       setNewStatus('');
       fetchOrders();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -160,8 +163,9 @@ export default function AdminOrdersPage() {
       setShowRefundModal(false);
       setRefundReason('');
       fetchOrders();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     } finally {
       setIsRefunding(false);
     }
@@ -423,7 +427,7 @@ export default function AdminOrdersPage() {
                           {item.variant.product.name}
                         </h5>
                         <p className="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider mt-0.5">
-                          Length: {item.variant.attributes.length || 'Default'}" x {item.quantity}
+                          Length: {item.variant.attributes.length || 'Default'}&quot; x {item.quantity}
                         </p>
                       </div>
                       <span className="text-[13px] font-extrabold text-[#E56717] shrink-0">

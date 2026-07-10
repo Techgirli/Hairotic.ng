@@ -10,7 +10,7 @@ const getSessionId = (): string => {
   return sid;
 };
 
-export const trackEvent = async (name: string, properties?: any) => {
+export const trackEvent = async (name: string, properties?: Record<string, unknown>) => {
   if (typeof window === 'undefined') return;
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';

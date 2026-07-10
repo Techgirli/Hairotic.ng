@@ -8,7 +8,7 @@ interface Variant {
   sku: string;
   price: number;
   compareAtPrice: number | null;
-  attributes: any;
+  attributes: { length?: string; texture?: string };
   inventory: { quantity: number } | null;
 }
 
@@ -91,8 +91,9 @@ export default function AdminProductsPage() {
       setProducts(prodData);
       setCategories(catData);
       setCollections(colData);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -100,6 +101,7 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAddSubmit = async (e: React.FormEvent) => {
@@ -165,8 +167,9 @@ export default function AdminProductsPage() {
         variantStock: '10',
       });
       fetchData();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     }
   };
 
@@ -219,8 +222,9 @@ export default function AdminProductsPage() {
       setShowEditModal(false);
       setEditProduct(null);
       fetchData();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     }
   };
 
@@ -240,8 +244,9 @@ export default function AdminProductsPage() {
       }
 
       fetchData();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      alert(message);
     }
   };
 

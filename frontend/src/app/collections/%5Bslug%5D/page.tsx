@@ -44,7 +44,7 @@ async function getCategories(): Promise<Category[]> {
     const res = await fetch('http://localhost:3001/api/v1/categories', { cache: 'no-store' });
     if (!res.ok) return [];
     return await res.json();
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -54,19 +54,19 @@ async function getCollection(slug: string): Promise<Collection | null> {
     const res = await fetch(`http://localhost:3001/api/v1/collections/${slug}`, { cache: 'no-store' });
     if (!res.ok) return null;
     return await res.json();
-  } catch (err) {
+  } catch {
     return null;
   }
 }
 
-async function getCollectionProducts(slug: string, searchParams: any): Promise<Product[]> {
+async function getCollectionProducts(slug: string, searchParams: Record<string, string | string[] | undefined>): Promise<Product[]> {
   try {
     const query = new URLSearchParams();
     query.set('collectionSlug', slug);
 
-    if (searchParams.sort) query.set('sort', searchParams.sort);
-    if (searchParams.minPrice) query.set('minPrice', searchParams.minPrice);
-    if (searchParams.maxPrice) query.set('maxPrice', searchParams.maxPrice);
+    if (searchParams.sort) query.set('sort', Array.isArray(searchParams.sort) ? searchParams.sort[0] : searchParams.sort);
+    if (searchParams.minPrice) query.set('minPrice', Array.isArray(searchParams.minPrice) ? searchParams.minPrice[0] : searchParams.minPrice);
+    if (searchParams.maxPrice) query.set('maxPrice', Array.isArray(searchParams.maxPrice) ? searchParams.maxPrice[0] : searchParams.maxPrice);
 
     const lengths = searchParams.lengths;
     if (lengths) {
@@ -92,7 +92,7 @@ async function getCollectionProducts(slug: string, searchParams: any): Promise<P
     if (!res.ok) return [];
     const data = await res.json();
     return data.products || [];
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -101,7 +101,7 @@ function SortOptionLink({ label, value, activeSort, currentParams, slug }: {
   label: string;
   value: string;
   activeSort: string;
-  currentParams: any;
+  currentParams: Record<string, string | string[] | undefined>;
   slug: string;
 }) {
   const params = new URLSearchParams();
@@ -131,7 +131,7 @@ function SortOptionLink({ label, value, activeSort, currentParams, slug }: {
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<any>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -171,7 +171,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
   const categories = await getCategories();
   const products = await getCollectionProducts(resolvedParams.slug, resolvedSearchParams);
-  const activeSort = resolvedSearchParams.sort || 'newest';
+  const activeSort = (Array.isArray(resolvedSearchParams.sort) ? resolvedSearchParams.sort[0] : resolvedSearchParams.sort) || 'newest';
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
@@ -308,7 +308,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           <div className="space-y-4">
             <h3 className="font-display text-[32px] tracking-wider text-[#FFFFFF] uppercase">Hairotic</h3>
             <p className="text-[14px] text-[#6B7280] leading-relaxed">
-              Nigeria's premium hair drop destination. Authentic donor hair units that represent your energy.
+              Nigeria&apos;s premium hair drop destination. Authentic donor hair units that represent your energy.
             </p>
           </div>
           <div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Search, ChevronDown, HelpCircle, ShieldAlert } from 'lucide-react';
+import { Search, ChevronDown, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface FaqItem {
@@ -72,6 +72,7 @@ export default function FaqPage() {
 
   useEffect(() => {
     fetchFaqs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const categories = ['All', 'Shipping', 'Payment', 'Returns', 'Hair Care'];
