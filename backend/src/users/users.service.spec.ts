@@ -6,7 +6,7 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 describe('UsersService', () => {
   let service: UsersService;
 
-  const mockPrismaService = {
+  const mockPrismaService: any = {
     user: {
       findUnique: jest.fn(),
       update: jest.fn(),
@@ -21,7 +21,7 @@ describe('UsersService', () => {
       updateMany: jest.fn(),
       count: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrismaService)),
+    $transaction: jest.fn((callback: any): any => callback(mockPrismaService)),
   };
 
   beforeEach(async () => {

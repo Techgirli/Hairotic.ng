@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useTransition } from 'react';
 import { User, MapPin, ShoppingBag, Eye, Plus, Trash2, ShieldAlert, LogOut, KeyRound } from 'lucide-react';
 import Link from 'next/link';
+import Header from '../../components/header';
 
 interface UserData {
   id: string;
@@ -319,19 +320,23 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-2 select-none">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E56717]" />
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
-          Reading account credentials...
-        </span>
+      <div className="flex-1 flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 flex flex-col items-center justify-center gap-2 select-none">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E56717]" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+            Reading account credentials...
+          </span>
+        </main>
       </div>
     );
   }
 
-  // Auth Guard Fallback
   if (!user) {
     return (
-      <div className="max-w-md mx-auto my-12 bg-white border border-[#222222]/5 p-6 md:p-8 rounded-[32px] shadow-sm select-none">
+      <div className="flex-1 flex flex-col min-h-screen bg-[#FAF7F4]/30">
+        <Header />
+        <main className="flex-1 w-full max-w-md mx-auto my-12 bg-white border border-[#222222]/5 p-6 md:p-8 rounded-[32px] shadow-sm select-none">
         
         {/* Auth Tab switcher */}
         <div className="flex gap-1 bg-[#FAF7F4] border border-[#222222]/5 p-1 rounded-[16px] mb-8">
@@ -422,13 +427,16 @@ export default function AccountPage() {
             )}
           </button>
         </form>
-      </div>
-    );
-  }
+      </main>
+    </div>
+  );
+}
 
   // Logged-in Customer Dashboard View
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4 md:px-0 space-y-8 select-none">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#FAF7F4]/30">
+      <Header />
+      <main className="flex-1 w-full max-w-6xl mx-auto py-8 px-4 md:px-0 space-y-8 select-none">
       
       {/* Welcome Banner */}
       <div className="bg-white border border-[#222222]/5 p-6 rounded-[24px] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -755,9 +763,8 @@ export default function AccountPage() {
           )}
 
         </div>
-
       </div>
-
-    </div>
-  );
+    </main>
+  </div>
+);
 }

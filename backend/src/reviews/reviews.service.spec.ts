@@ -7,7 +7,7 @@ describe('ReviewsService', () => {
   let service: ReviewsService;
   let prisma: PrismaService;
 
-  const mockPrismaService = {
+  const mockPrismaService: any = {
     product: {
       findUnique: jest.fn(),
     },
@@ -23,7 +23,7 @@ describe('ReviewsService', () => {
     reviewPhoto: {
       create: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrismaService)),
+    $transaction: jest.fn((callback: any): any => callback(mockPrismaService)),
   };
 
   beforeEach(async () => {
@@ -101,7 +101,7 @@ describe('ReviewsService', () => {
         photos: ['http://img1'],
       });
 
-      expect(result.id).toBe('r-new');
+      expect(result!.id).toBe('r-new');
       expect(mockPrismaService.reviewPhoto.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { reviewId: 'r-new', url: 'http://img1' },

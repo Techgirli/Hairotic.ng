@@ -11,7 +11,7 @@ describe('AdminService', () => {
   let prisma: PrismaService;
   let payments: PaymentsService;
 
-  const mockPrismaService = {
+  const mockPrismaService: any = {
     order: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -40,7 +40,7 @@ describe('AdminService', () => {
     orderStatusHistory: {
       create: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrismaService)),
+    $transaction: jest.fn((callback: any): any => callback(mockPrismaService)),
   };
 
   const mockPaymentsService = {

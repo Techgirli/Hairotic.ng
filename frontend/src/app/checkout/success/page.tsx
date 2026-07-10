@@ -9,10 +9,31 @@ import { trackEvent } from '../../../lib/analytics';
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('orderNumber') || 'HR-XXXXXX';
+  const [verifying, setVerifying] = React.useState(true);
+  const [paymentStatus, setPaymentStatus] = React.useState<'success' | 'pending' | 'failed'>('pending');
 
   React.useEffect(() => {
     if (orderNumber && orderNumber !== 'HR-XXXXXX') {
       trackEvent('purchase', { orderNumber });
+
+      // Call backend to verify the Paystack transaction reference
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      fetch(`${API_URL}/payments/verify/${orderNumber}`)
+        .then((res) => {
+          if (res.ok) {
+            setPaymentStatus('success');
+          } else {
+            setPaymentStatus('failed');
+          }
+        })
+        .catch(() => {
+          setPaymentStatus('failed');
+        })
+        .finally(() => {
+          setVerifying(false);
+        });
+    } else {
+      setVerifying(false);
     }
   }, [orderNumber]);
 
@@ -22,21 +43,36 @@ function CheckoutSuccessContent() {
   return (
     <div className="max-w-md w-full bg-white border border-[#222222]/5 p-8 rounded-[28px] shadow-sm text-center space-y-6">
       
-      {/* Success Icon */}
-      <div className="w-16 h-16 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-[#22C55E] mx-auto animate-bounce">
-        <CheckCircle2 className="w-10 h-10" />
-      </div>
+      {/* Success Icon / Verifying Loader */}
+      {verifying ? (
+        <div className="py-6 flex flex-col items-center justify-center gap-2">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E56717] mx-auto" />
+          <span className="text-[12px] font-bold uppercase tracking-wider text-[#6B7280]">
+            Verifying Paystack Transaction...
+          </span>
+        </div>
+      ) : (
+        <div className="w-16 h-16 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-[#22C55E] mx-auto animate-bounce">
+          <CheckCircle2 className="w-10 h-10" />
+        </div>
+      )}
 
       {/* Text */}
       <div className="space-y-2">
         <span className="text-[#E56717] text-[12px] uppercase tracking-[0.2em] font-bold block">
-          Order Placed Successfully
+          {verifying ? 'Payment Verification In Progress' : 'Order Placed Successfully'}
         </span>
         <h2 className="text-[24px] md:text-[28px] font-bold text-[#222222] uppercase tracking-wide">
-          Thank You!
+          {verifying ? 'Verifying...' : 'Thank You!'}
         </h2>
         <p className="text-[14px] text-[#6B7280] leading-relaxed">
-          Your order has been received and is currently in status <span className="font-semibold text-[#222222]">Pending Payment</span>.
+          {verifying ? (
+            'Please hold on while we secure your payment confirmation with Paystack.'
+          ) : paymentStatus === 'success' ? (
+            <span>Your payment was <span className="font-extrabold text-[#22C55E] uppercase text-[12px] tracking-wider">verified successfully</span>! We are now preparing your human hair bundles for delivery.</span>
+          ) : (
+            <span>Your order has been received and is currently in status <span className="font-semibold text-[#222222]">Pending Payment Confirmation</span>.</span>
+          )}
         </p>
       </div>
 

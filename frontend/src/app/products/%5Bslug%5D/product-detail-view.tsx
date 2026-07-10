@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ShoppingBag, MessageCircle, Heart, Star, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { trackEvent } from '../../../lib/analytics';
+import { useCartStore } from '../../../store/cartStore';
 
 interface ProductImage {
   id: string;
@@ -54,6 +55,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
     selectedVariant.images[0]?.url || '/Logo/photo_2023-09-25_16-13-56.jpg'
   );
   const [quantity, setQuantity] = useState(1);
+  const { addItem, toggleDrawer } = useCartStore();
 
   React.useEffect(() => {
     trackEvent('view_product', {
@@ -62,14 +64,20 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
     });
   }, [product.id, product.name]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     trackEvent('add_to_cart', {
       productId: product.id,
       variantId: selectedVariant.id,
       quantity,
       price: selectedVariant.price,
     });
-    alert('Added to Bag!');
+    try {
+      await addItem(selectedVariant.id, quantity);
+      toggleDrawer(true);
+    } catch (e) {
+      console.error('Failed to add item to cart', e);
+      alert('Failed to add item to bag. Please try again.');
+    }
   };
 
   const handleVariantSelect = (variant: ProductVariant) => {
