@@ -21,7 +21,7 @@ describe('UsersService', () => {
       updateMany: jest.fn(),
       count: jest.fn(),
     },
-    $transaction: jest.fn((callback: any): any => callback(mockPrismaService)),
+    $transaction: jest.fn((callback: (prisma: any) => any): any => callback(mockPrismaService)),
   };
 
   beforeEach(async () => {

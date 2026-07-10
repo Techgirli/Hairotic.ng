@@ -23,7 +23,7 @@ describe('ReviewsService', () => {
     reviewPhoto: {
       create: jest.fn(),
     },
-    $transaction: jest.fn((callback: any): any => callback(mockPrismaService)),
+    $transaction: jest.fn((callback: (prisma: any) => any): any => callback(mockPrismaService)),
   };
 
   beforeEach(async () => {
