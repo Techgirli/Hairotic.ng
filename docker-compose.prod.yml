@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # --- PostgreSQL Database ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: hairotic-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-hairotic}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - hairotic-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Redis Cache ---
+  redis:
+    image: redis:7-alpine
+    container_name: hairotic-redis
+    volumes:
+      - redisdata:/data
+    networks:
+      - hairotic-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- NestJS Backend API ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hairotic-backend
+    env_file:
+      - ./backend/.env.production
+    networks:
+      - hairotic-internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --- Next.js Frontend ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hairotic-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: /api/v1
+    networks:
+      - hairotic-internal
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # --- Nginx Reverse Proxy ---
+  nginx:
+    image: nginx:alpine
+    container_name: hairotic-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - hairotic-internal
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  hairotic-internal:
+    driver: bridge

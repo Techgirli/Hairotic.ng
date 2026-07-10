@@ -1,0 +1,73 @@
+name: CI — Tests & Type Checks
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─── Backend Checks ─────────────────────────────────────────────────────────
+  backend-checks:
+    name: Backend — TypeScript & Jest Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hairotic
+
+      - name: TypeScript compilation check
+        run: npx tsc --noEmit
+
+      - name: Run unit tests
+        run: npm run test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hairotic
+          JWT_ACCESS_SECRET: ci_test_access_secret_key
+          JWT_REFRESH_SECRET: ci_test_refresh_secret_key
+          NODE_ENV: test
+
+  # ─── Frontend Checks ─────────────────────────────────────────────────────────
+  frontend-checks:
+    name: Frontend — TypeScript Check
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript compilation check
+        run: npx tsc --noEmit
