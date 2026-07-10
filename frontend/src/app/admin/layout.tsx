@@ -64,23 +64,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="w-full md:w-64 bg-white border-r border-[#222222]/5 p-6 shrink-0 flex flex-col justify-between">
         <div className="space-y-8">
           {/* Logo */}
-          <div className="flex items-center gap-2 border-b border-[#222222]/5 pb-4">
-            <Image
-              src="/Logo/photo_2023-09-25_16-13-56.jpg"
-              alt="Hairotic Logo"
-              width={48}
-              height={48}
-              className="h-12 w-auto object-contain"
-              priority
-            />
-            <div className="flex flex-col">
-              <span className="font-display text-[18px] tracking-wider uppercase font-bold text-[#222222]">
+          <div className="flex flex-col gap-3 border-b border-[#222222]/5 pb-4">
+            <div className="flex items-center gap-0 -ml-2">
+              <Image
+                src="/Logo/logo.svg"
+                alt="Hairotic Logo"
+                width={120}
+                height={120}
+                className="h-30 w-auto object-contain -mr-5"
+                priority
+              />
+              <span className="font-display text-[22px] tracking-wider uppercase font-black text-[#222222]">
                 Hairotic
               </span>
-              <span className="text-[8px] font-extrabold bg-[#E56717]/10 text-[#E56717] px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider mt-0.5 w-max">
-                Staff
-              </span>
             </div>
+            <span className="text-[9px] font-extrabold bg-[#E56717]/10 text-[#E56717] px-2 py-0.5 rounded-[4px] uppercase tracking-wider w-max ml-1">
+              Staff Portal
+            </span>
           </div>
 
           {/* Navigation Links */}

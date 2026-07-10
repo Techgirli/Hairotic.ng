@@ -64,8 +64,8 @@ export default async function Homepage() {
         <div className="absolute inset-0 bg-cover bg-center opacity-40 bg-[url('/straight-hairs/07f51f04c30a9ecd6659cb058a95859f.jpg')]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#222222] via-[#222222]/50 to-transparent" />
         <div className="relative max-w-4xl mx-auto px-6 text-center z-10 space-y-6">
-          <span className="text-[#E56717] text-[14px] uppercase tracking-[0.3em] font-bold block animate-pulse">
-            Premium Vietnamese Human Hair
+          <span className="text-[#FFFFFF] text-[14px] uppercase tracking-[0.3em] font-bold block animate-pulse">
+            Hey Hairotic Baddie!! <br /> Shop Your Premium Vietnamese Human Hair
           </span>
           <h2 className="font-display text-[48px] md:text-[76px] leading-[1.05] uppercase tracking-tight drop-shadow-md">
             Empower Your <br /> Boldest Self
@@ -119,29 +119,29 @@ export default async function Homepage() {
       </section>
 
       {/* Shop Categories Grid */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className="max-w-[1600px] mx-auto px-6 py-16">
         <div className="text-center mb-12">
           <h3 className="text-[32px] font-bold text-[#222222] uppercase tracking-wide">
             Shop By Texture
           </h3>
           <div className="w-12 h-1 bg-[#E56717] mx-auto mt-2" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex gap-8 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory scroll-smooth">
           {categories.map((cat) => (
             <Link
               key={cat.slug}
               href={`/shop?categorySlug=${cat.slug}`}
-              className="group relative h-[320px] rounded-[24px] overflow-hidden border border-[#222222]/5 shadow-sm hover:shadow-md transition-all duration-300 block"
+              className="group relative h-[320px] w-[420px] md:w-[560px] shrink-0 rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-xl transition-all duration-300 block snap-start"
             >
               <div
-                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
+                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700"
                 style={{ backgroundImage: `url('${cat.image}')` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#222222]/90 via-[#222222]/20 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-                <div>
-                  <h4 className="text-[18px] font-bold text-[#FFFFFF] uppercase tracking-wider">{cat.name}</h4>
-                  <span className="text-[12px] text-[#E56717] uppercase tracking-widest font-semibold">View Products</span>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#222222]/95 via-[#222222]/35 to-transparent" />
+              <div className="absolute bottom-8 left-8 right-8">
+                <div className="space-y-1">
+                  <h4 className="text-[24px] font-extrabold text-[#FFFFFF] uppercase tracking-wider group-hover:text-[#E56717] transition-colors duration-200">{cat.name}</h4>
+                  <span className="text-[13px] text-[#E56717] uppercase tracking-widest font-bold block opacity-90 group-hover:opacity-100 transition-opacity">View Collection</span>
                 </div>
               </div>
             </Link>
