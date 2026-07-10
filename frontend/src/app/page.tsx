@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Truck, ShieldCheck, CreditCard, Sparkles, MessageCircle, Heart } from 'lucide-react';
+import Header from '../components/header';
 
 interface ProductImage {
   id: string;
@@ -56,27 +57,7 @@ export default async function Homepage() {
       </div>
 
       {/* Sticky Premium Header */}
-      <header className="sticky top-0 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#222222]/5 z-50 h-20 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <Link href="/" className="font-display text-[32px] tracking-wider text-[#222222] uppercase select-none">
-            Hairotic
-          </Link>
-          <nav className="hidden md:flex items-center gap-8 text-[15px] font-semibold text-[#222222] uppercase tracking-wider">
-            <Link href="/shop" className="hover:text-[#E56717] transition-colors duration-200">Shop All</Link>
-            <Link href="/collections/best-sellers" className="hover:text-[#E56717] transition-colors duration-200">Bestsellers</Link>
-            <Link href="/collections/new-drops" className="hover:text-[#E56717] transition-colors duration-200">New Drops</Link>
-            <Link href="/admin/login" className="hover:text-[#E56717] transition-colors duration-200">Admin</Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/shop"
-              className="h-11 px-6 bg-[#222222] hover:bg-[#E56717] text-[#FFFFFF] text-[13px] font-bold uppercase tracking-widest rounded-[12px] transition-all duration-300 flex items-center justify-center"
-            >
-              Shop Collection
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Banner Section */}
       <section className="relative h-[80vh] flex items-center justify-center bg-[#222222] text-[#FFFFFF] overflow-hidden select-none">
