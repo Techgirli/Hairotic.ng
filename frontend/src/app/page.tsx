@@ -43,10 +43,10 @@ export default async function Homepage() {
 
   // Categories list with representative images copied to public/
   const categories = [
-    { name: 'Bob Hairs', slug: 'bob-hairs', image: '/BOB Hairs/2d0454f23e05f4a8e3b6c76ff466b580.jpg' },
-    { name: 'Straight Hairs', slug: 'straight-hairs', image: '/Straight Hairs/07f51f04c30a9ecd6659cb058a95859f.jpg' },
+    { name: 'Bob Hairs', slug: 'bob-hairs', image: '/bob-hairs/2d0454f23e05f4a8e3b6c76ff466b580.jpg' },
+    { name: 'Straight Hairs', slug: 'straight-hairs', image: '/straight-hairs/07f51f04c30a9ecd6659cb058a95859f.jpg' },
     { name: 'Curly Hairs', slug: 'curly-hairs', image: '/curly/0443d651affacccaf4e669a72ffc5247.jpg' },
-    { name: 'Coily Hairs', slug: 'coily-hairs', image: '/coily hairs/061b881e9eb397ca7e74298a5a2bb46f.jpg' },
+    { name: 'Coily Hairs', slug: 'coily-hairs', image: '/coily-hairs/061b881e9eb397ca7e74298a5a2bb46f.jpg' },
   ];
 
   return (
@@ -61,7 +61,7 @@ export default async function Homepage() {
 
       {/* Hero Banner Section */}
       <section className="relative h-[80vh] flex items-center justify-center bg-[#222222] text-[#FFFFFF] overflow-hidden select-none">
-        <div className="absolute inset-0 bg-cover bg-center opacity-40 bg-[url('/Straight%20Hairs/07f51f04c30a9ecd6659cb058a95859f.jpg')]" />
+        <div className="absolute inset-0 bg-cover bg-center opacity-40 bg-[url('/straight-hairs/07f51f04c30a9ecd6659cb058a95859f.jpg')]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#222222] via-[#222222]/50 to-transparent" />
         <div className="relative max-w-4xl mx-auto px-6 text-center z-10 space-y-6">
           <span className="text-[#E56717] text-[14px] uppercase tracking-[0.3em] font-bold block animate-pulse">

@@ -68,14 +68,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Image
               src="/Logo/photo_2023-09-25_16-13-56.jpg"
               alt="Hairotic Logo"
-              width={40}
-              height={40}
-              className="h-10 w-auto object-contain"
+              width={48}
+              height={48}
+              className="h-12 w-auto object-contain"
               priority
             />
-            <span className="text-[9px] font-extrabold bg-[#E56717]/10 text-[#E56717] px-2 py-0.5 rounded-[4px] uppercase tracking-wider">
-              Staff
-            </span>
+            <div className="flex flex-col">
+              <span className="font-display text-[18px] tracking-wider uppercase font-bold text-[#222222]">
+                Hairotic
+              </span>
+              <span className="text-[8px] font-extrabold bg-[#E56717]/10 text-[#E56717] px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider mt-0.5 w-max">
+                Staff
+              </span>
+            </div>
           </div>
 
           {/* Navigation Links */}

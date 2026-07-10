@@ -173,7 +173,7 @@ async function main() {
     'A sharp, premium cut closure wig made from 100% Vietnamese human hair. Lays flat, feels soft, and holds shine all day.',
     catBob.id,
     colBestsellers.id,
-    ['/BOB Hairs/02ab823d3a0c332042b5a6c3b3f99282.jpg', '/BOB Hairs/2d0454f23e05f4a8e3b6c76ff466b580.jpg'],
+    ['/bob-hairs/02ab823d3a0c332042b5a6c3b3f99282.jpg', '/bob-hairs/2d0454f23e05f4a8e3b6c76ff466b580.jpg'],
     ['10', '12', '14'],
     'straight',
     85000
@@ -185,7 +185,7 @@ async function main() {
     'Perfect everyday wig with zero glue needed. Pre-plucked closure with soft natural volume bob shape.',
     catBob.id,
     colNewDrops.id,
-    ['/BOB Hairs/deb96943abdd8693bc7cd6910ff8a879.jpg', '/BOB Hairs/e5ada6a44b4cee068499cac637d48d2a.jpg'],
+    ['/bob-hairs/deb96943abdd8693bc7cd6910ff8a879.jpg', '/bob-hairs/e5ada6a44b4cee068499cac637d48d2a.jpg'],
     ['12', '14'],
     'straight',
     95000
@@ -198,7 +198,7 @@ async function main() {
     'Super double drawn luxury bone straight hair. Lays completely flat, super silky touch, no shedding or tangles.',
     catStraight.id,
     colBestsellers.id,
-    ['/Straight Hairs/07f51f04c30a9ecd6659cb058a95859f.jpg', '/Straight Hairs/13f4b3f9d1e25df2f6a74d4600cb5766.jpg'],
+    ['/straight-hairs/07f51f04c30a9ecd6659cb058a95859f.jpg', '/straight-hairs/13f4b3f9d1e25df2f6a74d4600cb5766.jpg'],
     ['18', '20', '22', '24'],
     'straight',
     180000
@@ -210,7 +210,7 @@ async function main() {
     'Glueless frontal wig giving you the ultimate scalp illusion. Can be heat styled, colored, and parted anywhere.',
     catStraight.id,
     null,
-    ['/Straight Hairs/185fe686f5da0947e75f3bff9adfe1dc.jpg', '/Straight Hairs/31e8670dd3cc32374263cef8f046e791.jpg'],
+    ['/straight-hairs/185fe686f5da0947e75f3bff9adfe1dc.jpg', '/straight-hairs/31e8670dd3cc32374263cef8f046e791.jpg'],
     ['20', '22', '24'],
     'straight',
     210000
@@ -248,7 +248,7 @@ async function main() {
     'Raw kinky texture mimicking natural 4C coils. Full from root to tip, takes dye perfectly, premium raw grade.',
     catCoily.id,
     colNewDrops.id,
-    ['/coily hairs/061b881e9eb397ca7e74298a5a2bb46f.jpg', '/coily hairs/07c47b76fed43496e3e9520dd7cbf54c.jpg'],
+    ['/coily-hairs/061b881e9eb397ca7e74298a5a2bb46f.jpg', '/coily-hairs/07c47b76fed43496e3e9520dd7cbf54c.jpg'],
     ['14', '16', '18'],
     'coily',
     120000

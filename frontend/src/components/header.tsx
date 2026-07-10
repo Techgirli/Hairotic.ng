@@ -25,15 +25,18 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
         
         {/* Brand identity logo */}
-        <Link href="/" className="flex items-center select-none">
+        <Link href="/" className="flex items-center gap-3 select-none">
           <Image
             src="/Logo/photo_2023-09-25_16-13-56.jpg"
             alt="Hairotic Logo"
-            width={56}
-            height={56}
-            className="h-14 w-auto object-contain"
+            width={64}
+            height={64}
+            className="h-16 w-auto object-contain"
             priority
           />
+          <span className="font-display text-[26px] tracking-wider text-[#222222] font-extrabold uppercase">
+            Hairotic
+          </span>
         </Link>
 
         {/* Desktop Navigation Links */}
