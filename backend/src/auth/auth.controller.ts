@@ -30,6 +30,37 @@ export class AuthController {
     return { success: true, user };
   }
 
+  // Email verification — called when user clicks the link in their inbox
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Post('verify-email')
+  async verifyEmail(@Body('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
+
+  // Resend verification email (e.g. link expired)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Post('resend-verification')
+  async resendVerification(@Body('email') email: string) {
+    return this.authService.resendVerification(email);
+  }
+
+  // Password reset — step 1: request a reset link
+  @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 per 15 min
+  @Post('password-reset/request')
+  async requestPasswordReset(@Body('email') email: string) {
+    return this.authService.requestPasswordReset(email);
+  }
+
+  // Password reset — step 2: submit new password with the token
+  @Throttle({ default: { limit: 5, ttl: 900000 } })
+  @Post('password-reset/confirm')
+  async confirmPasswordReset(
+    @Body('token') token: string,
+    @Body('password') password: string,
+  ) {
+    return this.authService.confirmPasswordReset(token, password);
+  }
+
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
   async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {

@@ -361,4 +361,66 @@ export class PaymentsService {
       });
     });
   }
+
+  /**
+   * Reconciliation job — called by the GitHub Actions cron every 10 minutes.
+   *
+   * Finds all orders stuck in PENDING_PAYMENT for more than 10 minutes and
+   * re-verifies each one against Paystack. If Paystack confirms payment was
+   * successful, the order is fulfilled as if the webhook arrived normally.
+   *
+   * This handles the failure case where a webhook was lost (network blip,
+   * deploy restart, or Paystack retry window exceeded).
+   *
+   * PRD non-negotiable: "Scheduled reconciliation job re-verifies any order
+   * stuck in pending_payment for more than 10 minutes."
+   */
+  async reconcileStuckOrders() {
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
+    const stuckOrders = await this.prisma.order.findMany({
+      where: {
+        status: OrderStatus.PENDING_PAYMENT,
+        createdAt: { lte: tenMinutesAgo },
+      },
+      select: { id: true, orderNumber: true, createdAt: true },
+    });
+
+    if (stuckOrders.length === 0) {
+      this.logger.log('Reconciliation: no stuck orders found.');
+      return { checked: 0, fulfilled: 0 };
+    }
+
+    this.logger.log(`Reconciliation: found ${stuckOrders.length} stuck order(s). Re-verifying...`);
+
+    let fulfilled = 0;
+    const errors: string[] = [];
+
+    for (const order of stuckOrders) {
+      try {
+        await this.verifyTransaction(order.orderNumber);
+        // Check if it's now paid — verifyTransaction fulfills if Paystack says success
+        const refreshed = await this.prisma.order.findUnique({
+          where: { id: order.id },
+          select: { status: true },
+        });
+        if (refreshed?.status === OrderStatus.PAID) {
+          fulfilled++;
+          this.logger.log(`Reconciliation: fulfilled order ${order.orderNumber}`);
+        } else {
+          this.logger.log(`Reconciliation: order ${order.orderNumber} still pending after re-verify (payment not confirmed by Paystack)`);
+        }
+      } catch (err: any) {
+        const msg = `Reconciliation error for ${order.orderNumber}: ${err.message}`;
+        this.logger.error(msg);
+        errors.push(msg);
+      }
+    }
+
+    return {
+      checked: stuckOrders.length,
+      fulfilled,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  }
 }

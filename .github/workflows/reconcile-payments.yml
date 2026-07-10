@@ -1,0 +1,43 @@
+name: Reconcile — Stuck Payment Orders
+
+# Runs every 10 minutes to catch any orders that received a Paystack payment
+# confirmation but whose webhook was missed (network blip, server restart, etc.)
+# Calls the internal reconcile endpoint which re-verifies all orders that have
+# been in PENDING_PAYMENT status for more than 10 minutes.
+#
+# PRD requirement: "Scheduled reconciliation job re-verifies any order stuck
+# in pending_payment for more than 10 minutes."
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # Every 10 minutes, all day
+
+  # Allow manual trigger from the Actions UI for emergency use
+  workflow_dispatch:
+
+jobs:
+  reconcile-payments:
+    name: Re-verify stuck PENDING_PAYMENT orders
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call reconcile endpoint
+        run: |
+          RESPONSE=$(curl --silent --max-time 30 \
+            --write-out "\nHTTP_STATUS:%{http_code}" \
+            --request POST "${{ secrets.API_URL }}/api/v1/payments/reconcile" \
+            --header "Content-Type: application/json" \
+            --header "x-reconcile-secret: ${{ secrets.RECONCILE_SECRET }}")
+
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | sed 's/.*HTTP_STATUS://')
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")
+
+          echo "Response body: $BODY"
+          echo "HTTP status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "::error::Reconciliation endpoint returned non-2xx status: $HTTP_STATUS"
+            exit 1
+          fi
+
+          echo "Reconciliation run completed successfully."

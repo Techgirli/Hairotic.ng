@@ -74,30 +74,38 @@ export class CheckoutService {
     return this.prisma.$transaction(async (tx) => {
       let subtotal = 0;
 
-      // Validate stock levels and compute subtotal
+      // Validate stock levels and compute subtotal.
+      // CRITICAL: SELECT ... FOR UPDATE acquires a row-level lock on each
+      // inventory row for the duration of this transaction. This prevents two
+      // concurrent checkouts from both reading sufficient stock and both
+      // decrementing — which would cause an oversell. Do NOT remove this.
       for (const item of cart.items) {
-        const inventory = await tx.inventory.findUnique({
-          where: { productVariantId: item.productVariantId },
-        });
+        const [lockedInventory] = await tx.$queryRaw<
+          { id: string; quantity: number; low_stock_threshold: number }[]
+        >`
+          SELECT id, quantity, low_stock_threshold
+          FROM inventory
+          WHERE product_variant_id = ${item.productVariantId}
+          FOR UPDATE
+        `;
 
-        if (!inventory) {
+        if (!lockedInventory) {
           throw new NotFoundException(
             `Inventory not found for variant ${item.variant.sku}`,
           );
         }
 
-        if (inventory.quantity < item.quantity) {
+        if (lockedInventory.quantity < item.quantity) {
           throw new BadRequestException(
-            `Insufficient stock for variant ${item.variant.sku}. Requested: ${item.quantity}, Available: ${inventory.quantity}`,
+            `Insufficient stock for variant ${item.variant.sku}. Requested: ${item.quantity}, Available: ${lockedInventory.quantity}`,
           );
         }
 
-        // Atomically deduct inventory stock
+        // Atomically decrement stock — safe because the FOR UPDATE lock
+        // ensures no other transaction has modified this row since we read it.
         await tx.inventory.update({
-          where: { productVariantId: item.productVariantId },
-          data: {
-            quantity: inventory.quantity - item.quantity,
-          },
+          where: { id: lockedInventory.id },
+          data: { quantity: lockedInventory.quantity - item.quantity },
         });
 
         subtotal += item.variant.price * item.quantity;

@@ -116,20 +116,20 @@ export class AdminController {
   }
 
   @Post('products')
-  async createProduct(@Body() body: any) {
+  async createProduct(@Body() body: any, @Req() req?: any) {
     if (!body.name || !body.categoryId) {
       throw new BadRequestException('Product name and category are required');
     }
-    return this.adminService.createProduct(body);
+    return this.adminService.createProduct({ ...body, actorId: req?.user?.id || 'ADMIN' });
   }
 
   @Patch('products/:id')
-  async updateProduct(@Param('id') id: string, @Body() body: any) {
-    return this.adminService.updateProduct(id, body);
+  async updateProduct(@Param('id') id: string, @Body() body: any, @Req() req?: any) {
+    return this.adminService.updateProduct(id, { ...body, actorId: req?.user?.id || 'ADMIN' });
   }
 
   @Delete('products/:id')
-  async deleteProduct(@Param('id') id: string) {
-    return this.adminService.deleteProduct(id);
+  async deleteProduct(@Param('id') id: string, @Req() req?: any) {
+    return this.adminService.deleteProduct(id, req?.user?.id || 'ADMIN');
   }
 }

@@ -35,15 +35,24 @@ enum PaymentStatus {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  phone         String         @unique
-  passwordHash  String         @map("password_hash")
-  role          Role           @default(CUSTOMER)
-  mfaEnabled    Boolean        @default(false) @map("mfa_enabled")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  
+  id                  String         @id @default(uuid())
+  email               String         @unique
+  phone               String         @unique
+  passwordHash        String         @map("password_hash")
+  role                Role           @default(CUSTOMER)
+  // Email verification — required before a customer can log in
+  emailVerified       Boolean        @default(false) @map("email_verified")
+  verificationToken   String?        @unique @map("verification_token")
+  // Password reset — token expires after 1 hour
+  resetToken          String?        @unique @map("reset_token")
+  resetTokenExpiry    DateTime?      @map("reset_token_expiry")
+  mfaEnabled          Boolean        @default(false) @map("mfa_enabled")
+  // Stores the TOTP secret for ADMIN/STAFF MFA. Null until MFA setup is complete.
+  // Never expose this field via any API response — sanitize all User objects before returning.
+  mfaSecret           String?        @map("mfa_secret")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
   addresses     Address[]
   orders        Order[]
   reviews       Review[]

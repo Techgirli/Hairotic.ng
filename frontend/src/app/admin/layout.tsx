@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LayoutDashboard, ShoppingBag, Box, ClipboardList, Users, LogOut, Loader, BarChart3 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -64,9 +65,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="space-y-8">
           {/* Logo */}
           <div className="flex items-center gap-2 border-b border-[#222222]/5 pb-4">
-            <span className="font-display text-[22px] tracking-wider uppercase font-bold text-[#E56717]">
-              Hairotic
-            </span>
+            <Image
+              src="/Logo/photo_2023-09-25_16-13-56.jpg"
+              alt="Hairotic Logo"
+              width={40}
+              height={40}
+              className="h-10 w-auto object-contain"
+              priority
+            />
             <span className="text-[9px] font-extrabold bg-[#E56717]/10 text-[#E56717] px-2 py-0.5 rounded-[4px] uppercase tracking-wider">
               Staff
             </span>

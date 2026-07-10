@@ -6,6 +6,7 @@ import {
   Headers,
   Req,
   Param,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 
@@ -34,4 +35,20 @@ export class PaymentsController {
   async verify(@Param('reference') reference: string) {
     return this.paymentsService.verifyTransaction(reference);
   }
+
+  /**
+   * Reconciliation endpoint — called by GitHub Actions cron every 10 minutes.
+   * Protected by a shared secret (RECONCILE_SECRET env var) in the
+   * x-reconcile-secret header. Do NOT add JWT auth here — the cron job runs
+   * without a user session.
+   */
+  @Post('reconcile')
+  async reconcile(@Headers('x-reconcile-secret') secret: string) {
+    const expectedSecret = process.env.RECONCILE_SECRET;
+    if (!expectedSecret || secret !== expectedSecret) {
+      throw new UnauthorizedException('Invalid reconcile secret');
+    }
+    return this.paymentsService.reconcileStuckOrders();
+  }
 }
+

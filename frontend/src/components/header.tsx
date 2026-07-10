@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { ShoppingBag, User, Heart, Menu, X } from 'lucide-react';
@@ -24,8 +25,15 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
         
         {/* Brand identity logo */}
-        <Link href="/" className="font-display text-[32px] tracking-wider text-[#222222] uppercase select-none">
-          Hairotic
+        <Link href="/" className="flex items-center select-none">
+          <Image
+            src="/Logo/photo_2023-09-25_16-13-56.jpg"
+            alt="Hairotic Logo"
+            width={56}
+            height={56}
+            className="h-14 w-auto object-contain"
+            priority
+          />
         </Link>
 
         {/* Desktop Navigation Links */}

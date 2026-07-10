@@ -222,4 +222,116 @@ export class NotificationsService {
       }
     }
   }
+
+  async sendVerificationEmail(email: string, token: string) {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const verifyUrl = `${appUrl}/account/verify-email?token=${token}`;
+
+    const htmlContent = `
+      <div style="font-family: sans-serif; color: #222; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22222210; border-radius: 12px;">
+        <h2 style="color: #E56717; text-transform: uppercase; letter-spacing: 1px;">Hairotic.ng</h2>
+        <h3 style="border-bottom: 2px solid #E56717; padding-bottom: 10px;">Verify Your Email Address</h3>
+        <p>Thanks for signing up! Please confirm your email address to activate your account.</p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="${verifyUrl}"
+            style="background-color: #E56717; color: white; padding: 14px 32px; border-radius: 8px;
+                   text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block;">
+            Verify Email Address
+          </a>
+        </div>
+        <p style="font-size: 13px; color: #6B7280;">
+          This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.
+        </p>
+        <p style="font-size: 13px; color: #6B7280;">
+          Or copy this link into your browser: <br/>
+          <a href="${verifyUrl}" style="color: #E56717;">${verifyUrl}</a>
+        </p>
+        <p style="margin-top: 30px; font-size: 12px; color: #6B7280; text-align: center;">
+          © 2026 Hairotic.ng. Lekki Phase 1, Lagos, Nigeria.
+        </p>
+      </div>
+    `;
+
+    if (!resendApiKey) {
+      this.logger.warn('RESEND_API_KEY not set — verification email console fallback:');
+      this.logger.log(`\n--- VERIFY EMAIL TO: ${email} ---\nLink: ${verifyUrl}\n------------------------`);
+      return { success: true };
+    }
+
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
+        body: JSON.stringify({
+          from: 'Hairotic.ng <no-reply@hairotic.ng>',
+          to: [email],
+          subject: 'Verify your Hairotic.ng email address',
+          html: htmlContent,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      this.logger.log(`Verification email sent to ${email}`);
+      return { success: true };
+    } catch (err: any) {
+      this.logger.error(`Failed to send verification email: ${err.message}`);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async sendPasswordResetEmail(email: string, token: string) {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const resetUrl = `${appUrl}/account/reset-password?token=${token}`;
+
+    const htmlContent = `
+      <div style="font-family: sans-serif; color: #222; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22222210; border-radius: 12px;">
+        <h2 style="color: #E56717; text-transform: uppercase; letter-spacing: 1px;">Hairotic.ng</h2>
+        <h3 style="border-bottom: 2px solid #E56717; padding-bottom: 10px;">Reset Your Password</h3>
+        <p>We received a request to reset the password for your account. Click the button below to set a new password.</p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="${resetUrl}"
+            style="background-color: #E56717; color: white; padding: 14px 32px; border-radius: 8px;
+                   text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block;">
+            Reset Password
+          </a>
+        </div>
+        <p style="font-size: 13px; color: #6B7280;">
+          This link expires in <strong>1 hour</strong>. If you didn't request a password reset, you can safely ignore this email — your password won't change.
+        </p>
+        <p style="font-size: 13px; color: #6B7280;">
+          Or copy this link: <br/>
+          <a href="${resetUrl}" style="color: #E56717;">${resetUrl}</a>
+        </p>
+        <p style="margin-top: 30px; font-size: 12px; color: #6B7280; text-align: center;">
+          © 2026 Hairotic.ng. Lekki Phase 1, Lagos, Nigeria.
+        </p>
+      </div>
+    `;
+
+    if (!resendApiKey) {
+      this.logger.warn('RESEND_API_KEY not set — password reset email console fallback:');
+      this.logger.log(`\n--- RESET EMAIL TO: ${email} ---\nLink: ${resetUrl}\n------------------------`);
+      return { success: true };
+    }
+
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
+        body: JSON.stringify({
+          from: 'Hairotic.ng <no-reply@hairotic.ng>',
+          to: [email],
+          subject: 'Reset your Hairotic.ng password',
+          html: htmlContent,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      this.logger.log(`Password reset email sent to ${email}`);
+      return { success: true };
+    } catch (err: any) {
+      this.logger.error(`Failed to send password reset email: ${err.message}`);
+      return { success: false, error: err.message };
+    }
+  }
 }

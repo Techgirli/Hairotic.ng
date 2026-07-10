@@ -2,12 +2,15 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as bcrypt from 'bcrypt';
 import { generateSecret, generateURI, verify } from 'otplib';
 import * as QRCode from 'qrcode';
+import { randomUUID } from 'crypto';
 import { User, Role } from '@prisma/client';
 
 @Injectable()
@@ -15,13 +18,12 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async register(email: string, phone: string, password: string) {
     const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { phone }],
-      },
+      where: { OR: [{ email }, { phone }] },
     });
 
     if (existingUser) {
@@ -33,22 +35,142 @@ export class AuthService {
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const user = await this.prisma.user.create({
+    // Generate a one-time email verification token (UUID — unguessable)
+    const verificationToken = randomUUID();
+
+    const user = await (this.prisma.user as any).create({
       data: {
         email,
         phone,
         passwordHash,
         role: Role.CUSTOMER,
+        emailVerified: false,
+        verificationToken,
       },
     });
 
-    return this.sanitizeUser(user);
+    // Send verification email asynchronously — don't block registration
+    this.notificationsService
+      .sendVerificationEmail(email, verificationToken)
+      .catch(() => {}); // Errors are logged inside the service
+
+    return {
+      ...this.sanitizeUser(user),
+      message: 'Registration successful. Please check your email to verify your account.',
+    };
+  }
+
+  async verifyEmail(token: string) {
+    if (!token) {
+      throw new BadRequestException('Verification token is required');
+    }
+
+    const user = await (this.prisma.user as any).findUnique({
+      where: { verificationToken: token },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired verification token');
+    }
+
+    await (this.prisma.user as any).update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null, // Consume the token — one-time use
+      },
+    });
+
+    return { success: true, message: 'Email verified successfully. You can now log in.' };
+  }
+
+  async resendVerification(email: string) {
+    const user = await (this.prisma.user as any).findUnique({ where: { email } });
+
+    if (!user) {
+      // Return success anyway to prevent email enumeration
+      return { success: true, message: 'If that email exists, a verification link has been sent.' };
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('This email is already verified');
+    }
+
+    const verificationToken = randomUUID();
+    await (this.prisma.user as any).update({
+      where: { id: user.id },
+      data: { verificationToken },
+    });
+
+    this.notificationsService
+      .sendVerificationEmail(email, verificationToken)
+      .catch(() => {});
+
+    return { success: true, message: 'If that email exists, a verification link has been sent.' };
+  }
+
+  async requestPasswordReset(email: string) {
+    // Always return the same message to prevent email enumeration
+    const genericResponse = {
+      success: true,
+      message: 'If that email is registered, a reset link has been sent.',
+    };
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return genericResponse;
+
+    const resetToken = randomUUID();
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+    await (this.prisma.user as any).update({
+      where: { id: user.id },
+      data: { resetToken, resetTokenExpiry },
+    });
+
+    this.notificationsService
+      .sendPasswordResetEmail(email, resetToken)
+      .catch(() => {});
+
+    return genericResponse;
+  }
+
+  async confirmPasswordReset(token: string, newPassword: string) {
+    if (!token || !newPassword) {
+      throw new BadRequestException('Token and new password are required');
+    }
+
+    if (newPassword.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters');
+    }
+
+    const user = await (this.prisma.user as any).findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: { gt: new Date() }, // Must not be expired
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await (this.prisma.user as any).update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetToken: null,       // Consume the token — one-time use
+        resetTokenExpiry: null,
+      },
+    });
+
+    return { success: true, message: 'Password reset successfully. You can now log in.' };
   }
 
   async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
@@ -59,45 +181,30 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Check if user is Admin/Staff (MFA is mandatory)
-    const isAdminOrStaff = user.role === Role.ADMIN || user.role === Role.STAFF;
+    // Customers must verify their email before they can log in
+    const isCustomer = user.role === Role.CUSTOMER;
+    const userAny = user as any;
+    if (isCustomer && !userAny.emailVerified) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        message: 'Please verify your email address before logging in. Check your inbox for the verification link.',
+        error: 'EMAIL_NOT_VERIFIED',
+      });
+    }
 
+    // ADMIN/STAFF — mandatory MFA
+    const isAdminOrStaff = user.role === Role.ADMIN || user.role === Role.STAFF;
     if (isAdminOrStaff) {
-      if (!user.mfaEnabled) {
-        // MFA setup is required (first-time login)
-        const tempToken = this.jwtService.sign(
-          {
-            sub: user.id,
-            email: user.email,
-            role: user.role,
-            mfaVerified: false,
-          },
-          { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
-        );
-        return {
-          mfaRequired: true,
-          mfaSetup: true,
-          tempToken,
-          user: this.sanitizeUser(user),
-        };
-      } else {
-        // MFA challenge required
-        const tempToken = this.jwtService.sign(
-          {
-            sub: user.id,
-            email: user.email,
-            role: user.role,
-            mfaVerified: false,
-          },
-          { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
-        );
-        return {
-          mfaRequired: true,
-          mfaSetup: false,
-          tempToken,
-          user: this.sanitizeUser(user),
-        };
-      }
+      const tempToken = this.jwtService.sign(
+        { sub: user.id, email: user.email, role: user.role, mfaVerified: false },
+        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
+      );
+      return {
+        mfaRequired: true,
+        mfaSetup: !user.mfaEnabled,
+        tempToken,
+        user: this.sanitizeUser(user),
+      };
     }
 
     // Customers proceed without MFA
@@ -135,12 +242,8 @@ export class AuthService {
       const payload = this.jwtService.verify(token, {
         secret: process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret_key',
       });
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-      });
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
+      const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+      if (!user) throw new UnauthorizedException('User not found');
       return { user, mfaVerified: payload.mfaVerified };
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
@@ -149,25 +252,18 @@ export class AuthService {
 
   async setupMfa(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
+    if (!user) throw new BadRequestException('User not found');
 
     const secret = generateSecret();
-    const otpauthUrl = generateURI({
-      secret,
-      label: user.email,
-      issuer: 'Hairotic.ng',
-    });
+    const otpauthUrl = generateURI({ secret, label: user.email, issuer: 'Hairotic.ng' });
     const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
-    // Save temporary secret (we will finalize it on verify)
-    await this.prisma.customerNote.create({
-      data: {
-        customerId: userId,
-        adminId: userId, // self-reference for system temporary variables
-        note: `TEMP_MFA_SECRET:${secret}`,
-      },
+    // Store the pending secret temporarily on the user row.
+    // It becomes the "live" secret only after verifyMfa succeeds.
+    // TODO: Remove cast after `npx prisma generate` runs against the migrated DB
+    await (this.prisma.user as any).update({
+      where: { id: userId },
+      data: { mfaSecret: secret },
     });
 
     return { secret, qrCodeDataUrl };
@@ -175,87 +271,34 @@ export class AuthService {
 
   async verifyMfa(userId: string, code: string, isSetupFlow: boolean) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      throw new BadRequestException('User not found');
+    if (!user) throw new BadRequestException('User not found');
+
+    // TODO: Remove cast after `npx prisma generate` runs against the migrated DB
+    const userWithMfa = user as any;
+    if (!userWithMfa.mfaSecret) {
+      throw new BadRequestException('MFA configuration missing. Please restart setup.');
     }
 
-    let secret = '';
+    const isValid = await verify({ token: code, secret: userWithMfa.mfaSecret });
+    if (!isValid) throw new BadRequestException('Invalid authentication code');
 
     if (isSetupFlow) {
-      // Fetch temporary secret from customer notes
-      const tempNote = await this.prisma.customerNote.findFirst({
-        where: {
-          customerId: userId,
-          note: { startsWith: 'TEMP_MFA_SECRET:' },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-
-      if (!tempNote) {
-        throw new BadRequestException(
-          'MFA setup session expired or not initialized',
-        );
-      }
-
-      secret = tempNote.note.replace('TEMP_MFA_SECRET:', '');
-
-      // Verify token
-      const isValid = await verify({ token: code, secret });
-      if (!isValid) {
-        throw new BadRequestException('Invalid authentication code');
-      }
-
-      // Save secret permanently into user's admin notes or update role security context
       await this.prisma.user.update({
         where: { id: userId },
         data: { mfaEnabled: true },
       });
-
-      await this.prisma.customerNote.create({
-        data: {
-          customerId: userId,
-          adminId: userId,
-          note: `MFA_SECRET:${secret}`,
-        },
-      });
-
-      // Cleanup temp notes
-      await this.prisma.customerNote.deleteMany({
-        where: {
-          customerId: userId,
-          note: { startsWith: 'TEMP_MFA_SECRET:' },
-        },
-      });
-    } else {
-      // Verify using active secret
-      const activeNote = await this.prisma.customerNote.findFirst({
-        where: {
-          customerId: userId,
-          note: { startsWith: 'MFA_SECRET:' },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-
-      if (!activeNote) {
-        throw new BadRequestException(
-          'MFA configuration missing. Please reset setup.',
-        );
-      }
-
-      secret = activeNote.note.replace('MFA_SECRET:', '');
-      const isValid = await verify({ token: code, secret });
-      if (!isValid) {
-        throw new BadRequestException('Invalid authentication code');
-      }
     }
 
-    // Return final tokens
     return this.generateTokens(user, true);
   }
 
   private sanitizeUser(user: User) {
     const sanitized = { ...user };
     delete (sanitized as any).passwordHash;
+    delete (sanitized as any).mfaSecret;         // Never expose TOTP secret
+    delete (sanitized as any).verificationToken; // Never expose auth tokens
+    delete (sanitized as any).resetToken;        // Never expose auth tokens
+    delete (sanitized as any).resetTokenExpiry;
     return sanitized;
   }
 }

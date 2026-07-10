@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { OrderStatus, Role } from '@prisma/client';
+import { Prisma, OrderStatus, Role } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
@@ -153,6 +153,18 @@ export class AdminService {
           status,
           note: note || `Order status updated to ${status} by admin/staff.`,
           changedBy,
+        },
+      });
+
+      // Audit log every order status transition
+      await tx.auditLog.create({
+        data: {
+          actorId: changedBy,
+          action: 'ORDER_STATUS_UPDATE',
+          entity: 'order',
+          entityId: orderId,
+          before: { status: order.status },
+          after: { status, note },
         },
       });
 
@@ -385,6 +397,17 @@ export class AdminService {
         },
       });
 
+      await tx.auditLog.create({
+        data: {
+          actorId: body.actorId || 'SYSTEM',
+          action: 'PRODUCT_CREATE',
+          entity: 'product',
+          entityId: product.id,
+          before: Prisma.JsonNull,
+          after: { name, slug, status: status || 'DRAFT', categoryId },
+        },
+      });
+
       if (variants && Array.isArray(variants)) {
         for (const v of variants) {
           const variant = await tx.productVariant.create({
@@ -482,11 +505,27 @@ export class AdminService {
         }
       }
 
+      // Audit log product update
+      await tx.auditLog.create({
+        data: {
+          actorId: body.actorId || 'SYSTEM',
+          action: 'PRODUCT_UPDATE',
+          entity: 'product',
+          entityId: id,
+          before: {
+            name: product.name,
+            status: product.status,
+            categoryId: product.categoryId,
+          },
+          after: data,
+        },
+      });
+
       return updated;
     });
   }
 
-  async deleteProduct(id: string) {
+  async deleteProduct(id: string, actorId = 'SYSTEM') {
     const product = await this.prisma.product.findUnique({
       where: { id },
     });
@@ -495,8 +534,22 @@ export class AdminService {
       throw new NotFoundException('Product not found');
     }
 
-    return this.prisma.product.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      // Audit log the deletion before it happens, capturing the before-state
+      await tx.auditLog.create({
+        data: {
+          actorId,
+          action: 'PRODUCT_DELETE',
+          entity: 'product',
+          entityId: id,
+          before: { name: product.name, slug: product.slug, status: product.status },
+          after: Prisma.JsonNull,
+        },
+      });
+
+      return tx.product.delete({
+        where: { id },
+      });
     });
   }
 }

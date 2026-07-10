@@ -36,18 +36,13 @@ export class ReviewsService {
       throw new NotFoundException('Product not found');
     }
 
-    // 2. Verified purchase enforcement: Check for paid/fulfilled orders containing this product
+    // 2. Verified purchase enforcement: The PRD requires reviews to be tied
+    //    to a DELIVERED order specifically — the customer must have received
+    //    the item before they can review it. PAID/SHIPPED is not sufficient.
     const orders = await this.prisma.order.findFirst({
       where: {
         customerId: userId,
-        status: {
-          in: [
-            OrderStatus.PAID,
-            OrderStatus.PROCESSING,
-            OrderStatus.SHIPPED,
-            OrderStatus.DELIVERED,
-          ],
-        },
+        status: OrderStatus.DELIVERED,
         items: {
           some: {
             variant: {
