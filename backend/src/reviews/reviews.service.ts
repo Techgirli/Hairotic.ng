@@ -21,11 +21,22 @@ export class ReviewsService {
       throw new BadRequestException('Rating must be between 1 and 5');
     }
 
+    const escapeHtml = (text: string) => {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+    };
+
     if (!body || body.trim().length < 5) {
       throw new BadRequestException(
         'Review body must be at least 5 characters long',
       );
     }
+    const cleanBody = escapeHtml(body);
 
     // 1. Verify the product exists
     const product = await this.prisma.product.findUnique({
@@ -82,7 +93,7 @@ export class ReviewsService {
           customerId: userId,
           orderId: orders.id,
           rating,
-          body,
+          body: cleanBody,
           verifiedPurchase: true,
         },
       });

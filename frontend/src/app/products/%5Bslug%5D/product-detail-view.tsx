@@ -255,7 +255,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               Get real-time advice from our stylist. Ask about density, lace types, and care on WhatsApp.
             </p>
             <a
-              href={`https://wa.me/2348000000000?text=Hello,%20I%20have%20questions%20about%20the%20${product.name}%20(SKU:%20${selectedVariant.sku})`}
+              href={`https://wa.me/2348087794441?text=Hello,%20I%20have%20questions%20about%20the%20${product.name}%20(SKU:%20${selectedVariant.sku})`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block text-[13px] font-bold text-[#E56717] hover:text-[#C65A12] uppercase tracking-wide pt-1"

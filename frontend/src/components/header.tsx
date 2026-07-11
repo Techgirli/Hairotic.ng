@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
-import { ShoppingBag, User, Heart, Menu, X } from 'lucide-react';
+import { ShoppingBag, User, Heart, Menu, X, ChevronDown } from 'lucide-react';
 
 export default function Header() {
   const { items, toggleDrawer } = useCartStore();
@@ -25,13 +25,13 @@ export default function Header() {
       <div className="w-full px-8 h-full flex items-center justify-between">
         
         {/* Brand identity logo */}
-        <Link href="/" className="flex items-center gap-2 select-none">
+        <Link href="/" className="flex items-center gap-2 select-none relative">
           <Image
             src="/Logo/logo.svg"
             alt="Hairotic Logo"
-            width={56}
-            height={56}
-            className="h-14 w-auto object-contain"
+            width={96}
+            height={96}
+            className="h-20 md:h-24 w-auto object-contain relative -bottom-2 z-20 hover:scale-105 transition-transform duration-200"
             priority
           />
           <span className="font-display text-[22px] tracking-wider text-[#222222] font-black uppercase">
@@ -41,11 +41,28 @@ export default function Header() {
 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 text-[15px] font-semibold text-[#222222] uppercase tracking-wider">
-          <Link href="/shop" className="hover:text-[#E56717] transition-colors duration-200">Shop All</Link>
-          <Link href="/collections/best-sellers" className="hover:text-[#E56717] transition-colors duration-200">Bestsellers</Link>
-          <Link href="/collections/new-drops" className="hover:text-[#E56717] transition-colors duration-200">New Drops</Link>
+          <Link href="/" className="hover:text-[#E56717] transition-colors duration-200">Home</Link>
+          <Link href="/shop?categorySlug=wigs" className="hover:text-[#E56717] transition-colors duration-200">Wigs</Link>
+          
+          {/* Interactive Collections Dropdown */}
+          <div className="relative group py-2">
+            <button className="hover:text-[#E56717] transition-colors duration-200 flex items-center gap-1 uppercase tracking-wider font-semibold text-[15px] cursor-pointer">
+              <span>Collections</span>
+              <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
+            </button>
+            {/* Hover bridge container — eliminates the gap so the dropdown doesn't disappear */}
+            <div className="absolute top-[80%] left-0 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="bg-white border border-[#222222]/5 shadow-2xl rounded-[16px] py-3 px-5 min-w-[200px] flex flex-col gap-2">
+                <Link href="/shop?categorySlug=wigs" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block">Wigs</Link>
+                <Link href="/shop?categorySlug=bundle" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block">Bundles</Link>
+                <Link href="/shop?categorySlug=extensions" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block">Extensions</Link>
+                <Link href="/styling" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block">Styling</Link>
+              </div>
+            </div>
+          </div>
+
           <Link href="/styling" className="hover:text-[#E56717] transition-colors duration-200">Styling</Link>
-          <Link href="/admin/login" className="hover:text-[#E56717] transition-colors duration-200">Admin</Link>
+          <Link href="/contact" className="hover:text-[#E56717] transition-colors duration-200">Contact</Link>
         </nav>
 
         {/* Action Controls & Icons */}
@@ -101,26 +118,55 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-[#222222]/5 py-6 px-6 space-y-4 shadow-lg animate-fadeIn z-40 select-none">
           <Link 
-            href="/shop" 
+            href="/" 
             onClick={() => setMobileMenuOpen(false)}
             className="block text-[15px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
           >
-            Shop All
+            Home
           </Link>
           <Link 
-            href="/collections/best-sellers" 
+            href="/shop?categorySlug=wigs" 
             onClick={() => setMobileMenuOpen(false)}
             className="block text-[15px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
           >
-            Bestsellers
+            Wigs
           </Link>
-          <Link 
-            href="/collections/new-drops" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-[15px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
-          >
-            New Drops
-          </Link>
+          {/* Expandable Mobile Collections Submenu */}
+          <div className="space-y-2">
+            <span className="block text-[13px] font-bold uppercase tracking-wider text-[#6B7280]">
+              Collections
+            </span>
+            <div className="pl-4 flex flex-col gap-2.5">
+              <Link 
+                href="/shop?categorySlug=wigs" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-[14px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
+              >
+                Wigs
+              </Link>
+              <Link 
+                href="/shop?categorySlug=bundle" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-[14px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
+              >
+                Bundles
+              </Link>
+              <Link 
+                href="/shop?categorySlug=extensions" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-[14px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
+              >
+                Extensions
+              </Link>
+              <Link 
+                href="/styling" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-[14px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
+              >
+                Styling
+              </Link>
+            </div>
+          </div>
           <Link 
             href="/styling" 
             onClick={() => setMobileMenuOpen(false)}
@@ -129,11 +175,11 @@ export default function Header() {
             Styling
           </Link>
           <Link 
-            href="/admin/login" 
+            href="/contact" 
             onClick={() => setMobileMenuOpen(false)}
             className="block text-[15px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
           >
-            Admin Panel
+            Contact
           </Link>
         </div>
       )}

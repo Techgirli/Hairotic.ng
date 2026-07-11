@@ -88,7 +88,7 @@ export default function AnimatedWhatsApp() {
 
         <a
           ref={buttonRef}
-          href="https://wa.me/2348000000000?text=Hello,%20I'm%20interested%20in%20custom%20hair%20units!"
+          href="https://wa.me/2348087794441?text=Hello,%20I'm%20interested%20in%20custom%20hair%20units!"
           target="_blank"
           rel="noopener noreferrer"
           className="relative flex items-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white px-5 py-3 rounded-full shadow-2xl font-semibold text-[14px] cursor-pointer"

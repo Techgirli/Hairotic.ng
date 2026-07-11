@@ -14,6 +14,8 @@ import {
 } from '@/components/animations-shell';
 import MagneticProductCard from '@/components/magnetic-product-card';
 import CategorySlider from '@/components/category-slider';
+import Testimonials from '@/components/testimonials';
+import CtaSection from '@/components/cta-section';
 
 
 interface ProductImage {
@@ -37,6 +39,68 @@ interface Product {
   variants: ProductVariant[];
 }
 
+const MOCK_HOMEPAGE_PRODUCTS: Product[] = [
+  {
+    id: 'prod-1',
+    name: 'Signature Straight Bob Wig',
+    slug: 'straight-bob-wig',
+    description: '100% premium Vietnamese raw donor hair bob wig. Cuticle aligned, sleek look, flat melt lace.',
+    variants: [
+      {
+        id: 'var-1',
+        price: 15000000,
+        compareAtPrice: 18000000,
+        attributes: { length: '12', texture: 'Straight' },
+        images: [{ id: 'img-1', url: '/wigs/2d0454f23e05f4a8e3b6c76ff466b580.jpg' }]
+      }
+    ]
+  },
+  {
+    id: 'prod-2',
+    name: 'Luxury Bone Straight Frontal Wig',
+    slug: 'frontal-straight-wig',
+    description: 'Super double drawn bone straight frontal wig. Natural luster, holds styles, pre-plucked hairline.',
+    variants: [
+      {
+        id: 'var-2',
+        price: 28000000,
+        compareAtPrice: 32000000,
+        attributes: { length: '24', texture: 'Straight' },
+        images: [{ id: 'img-2', url: '/wigs/02ab823d3a0c332042b5a6c3b3f99282.jpg' }]
+      }
+    ]
+  },
+  {
+    id: 'prod-3',
+    name: 'Bouncy Curly Lace closure Wig',
+    slug: 'bouncy-curly-closure',
+    description: 'Vibrant bouncy curls. Rich raw density that defines luxury. High definition Swiss lace.',
+    variants: [
+      {
+        id: 'var-3',
+        price: 22000000,
+        compareAtPrice: 25000000,
+        attributes: { length: '16', texture: 'Curly' },
+        images: [{ id: 'img-3', url: '/wigs/3bf3e64b450bd319f4877f68089f9406.jpg' }]
+      }
+    ]
+  },
+  {
+    id: 'prod-4',
+    name: 'Vietnamese Raw Body Wave Bundles',
+    slug: 'body-wave-bundles',
+    description: 'Thick, healthy bundles with soft waves. Natural black color. Can be bleached to blonde.',
+    variants: [
+      {
+        id: 'var-4',
+        price: 18000000,
+        attributes: { length: '22', texture: 'Body Wave' },
+        images: [{ id: 'img-4', url: '/curly/IMG_5218.JPG' }]
+      }
+    ]
+  }
+];
+
 async function getFeaturedProducts(): Promise<Product[]> {
   try {
     const controller = new AbortController();
@@ -46,12 +110,12 @@ async function getFeaturedProducts(): Promise<Product[]> {
       signal: controller.signal,
     });
     clearTimeout(timeout);
-    if (!res.ok) return [];
+    if (!res.ok) throw new Error('API response not ok');
     const data = await res.json();
     return data.products || [];
   } catch {
-    // Backend offline or timed out — render page without products
-    return [];
+    // Backend offline or timed out — return mock homepage products
+    return MOCK_HOMEPAGE_PRODUCTS;
   }
 }
 
@@ -213,6 +277,7 @@ export default async function Homepage() {
                     imageUrl={mainImage}
                     price={priceInNgn}
                     comparePrice={comparePriceInNgn}
+                    variantId={defaultVariant?.id}
                   />
                 );
               })}
@@ -220,6 +285,12 @@ export default async function Homepage() {
           </div>
         </section>
       )}
+
+      {/* Testimonials section */}
+      <Testimonials />
+
+      {/* Catchy CTA section */}
+      <CtaSection />
 
       {/* Animated WhatsApp CTA */}
       <AnimatedWhatsApp />

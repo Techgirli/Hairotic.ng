@@ -97,6 +97,28 @@ export class AuthController {
     };
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Post('google')
+  async googleLogin(
+    @Body() body: { email: string; name?: string },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.loginWithGoogle(body.email, body.name);
+
+    this.setCookie(res, 'access_token', result.accessToken, 15 * 60 * 1000); // 15m
+    this.setCookie(
+      res,
+      'refresh_token',
+      result.refreshToken,
+      7 * 24 * 60 * 60 * 1000,
+    ); // 7d
+
+    return {
+      success: true,
+      user: result.user,
+    };
+  }
+
   @Post('refresh')
   async refresh(
     @Req() req: Request,

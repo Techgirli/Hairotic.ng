@@ -19,9 +19,27 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async register(email: string, phone: string, password: string) {
+    if (!email || !phone || !password) {
+      throw new BadRequestException('Email, phone number, and password are required');
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      throw new BadRequestException('Invalid email address format');
+    }
+
+    const phoneRegex = /^\+?[0-9]{10,15}$/;
+    if (!phoneRegex.test(phone)) {
+      throw new BadRequestException('Invalid phone number format. Must be 10-15 digits.');
+    }
+
+    if (password.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters long');
+    }
+
     const existingUser = await this.prisma.user.findFirst({
       where: { OR: [{ email }, { phone }] },
     });
@@ -52,7 +70,7 @@ export class AuthService {
     // Send verification email asynchronously — don't block registration
     this.notificationsService
       .sendVerificationEmail(email, verificationToken)
-      .catch(() => {}); // Errors are logged inside the service
+      .catch(() => { }); // Errors are logged inside the service
 
     return {
       ...this.sanitizeUser(user),
@@ -104,7 +122,7 @@ export class AuthService {
 
     this.notificationsService
       .sendVerificationEmail(email, verificationToken)
-      .catch(() => {});
+      .catch(() => { });
 
     return { success: true, message: 'If that email exists, a verification link has been sent.' };
   }
@@ -129,7 +147,7 @@ export class AuthService {
 
     this.notificationsService
       .sendPasswordResetEmail(email, resetToken)
-      .catch(() => {});
+      .catch(() => { });
 
     return genericResponse;
   }
@@ -290,6 +308,58 @@ export class AuthService {
     }
 
     return this.generateTokens(user, true);
+  }
+
+  async loginWithGoogle(email: string, name?: string) {
+    if (!email) {
+      throw new BadRequestException('Email is required for Google login');
+    }
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Register new user via Google
+      let phone = '';
+      let phoneExists = true;
+      while (phoneExists) {
+        const rand = Math.floor(10000000 + Math.random() * 90000000); // 8 digits
+        phone = `+234803${rand}`;
+        const existingPhone = await this.prisma.user.findUnique({ where: { phone } });
+        if (!existingPhone) {
+          phoneExists = false;
+        }
+      }
+
+      // Generate a random password hash
+      const randomPassword = randomUUID();
+      const salt = await bcrypt.genSalt(12);
+      const passwordHash = await bcrypt.hash(randomPassword, salt);
+
+      user = await (this.prisma.user as any).create({
+        data: {
+          email,
+          phone,
+          passwordHash,
+          role: Role.CUSTOMER,
+          emailVerified: true, // Google accounts are pre-verified
+        },
+      });
+    } else {
+      // User exists, make sure email is verified
+      if (!(user as any).emailVerified) {
+        user = await (this.prisma.user as any).update({
+          where: { id: user.id },
+          data: { emailVerified: true },
+        });
+      }
+    }
+
+    const tokens = this.generateTokens(user!, false);
+    return {
+      success: true,
+      ...tokens,
+      user: this.sanitizeUser(user!),
+    };
   }
 
   private sanitizeUser(user: User) {

@@ -38,7 +38,7 @@ function CheckoutSuccessContent() {
   }, [orderNumber]);
 
   const whatsappMessage = `Hello Hairotic! I just placed an order on the store. Order Reference: ${orderNumber}. Please confirm my order details!`;
-  const whatsappUrl = `https://wa.me/2348000000000?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappUrl = `https://wa.me/2348087794441?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div className="max-w-md w-full bg-white border border-[#222222]/5 p-8 rounded-[28px] shadow-sm text-center space-y-6">

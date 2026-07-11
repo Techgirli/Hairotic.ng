@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
-import { User, MapPin, ShoppingBag, Eye, Plus, Trash2, ShieldAlert, LogOut, KeyRound } from 'lucide-react';
+import { User, MapPin, ShoppingBag, Eye, Plus, Trash2, ShieldAlert, LogOut, KeyRound, Heart } from 'lucide-react';
 import Link from 'next/link';
 import Header from '../../components/header';
+import { useCartStore } from '../../store/cartStore';
 
 interface UserData {
   id: string;
@@ -44,7 +45,17 @@ interface Order {
 export default function AccountPage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders'>('orders');
+  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders' | 'wishlist'>('orders');
+  
+  const { addItem, toggleDrawer } = useCartStore();
+
+  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
+
+  // Google OAuth modal states
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [googleEmailInput, setGoogleEmailInput] = useState('');
+  const [showCustomGoogleEmail, setShowCustomGoogleEmail] = useState(false);
 
   // Auth Fallback Form States
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
@@ -133,6 +144,7 @@ export default function AccountPage() {
     if (user) {
       fetchAddresses();
       fetchOrders();
+      fetchWishlist();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -196,6 +208,33 @@ export default function AccountPage() {
       }
 
       setAuthPassword('');
+      checkAuth();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      setAuthError(message);
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
+  const handleGoogleLoginSubmit = async (selectedEmail: string) => {
+    setAuthError(null);
+    setIsSubmittingAuth(true);
+    setShowGoogleModal(false);
+
+    try {
+      const res = await fetch(`${API_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: selectedEmail }),
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.message || 'Google Login failed');
+      }
+
       checkAuth();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -318,6 +357,49 @@ export default function AccountPage() {
     }
   };
 
+  const fetchWishlist = async () => {
+    setLoadingWishlist(true);
+    try {
+      const res = await fetch(`${API_URL}/wishlist`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWishlist(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingWishlist(false);
+    }
+  };
+
+  const handleRemoveWishlist = async (variantId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/wishlist/${variantId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      setWishlist((prev) => prev.filter((item) => item.productVariantId !== variantId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleMoveToBag = async (variantId: string) => {
+    try {
+      await addItem(variantId, 1);
+      await handleRemoveWishlist(variantId);
+      toggleDrawer(true);
+    } catch (err) {
+      alert('Failed to move item to bag');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex flex-col min-h-screen">
@@ -427,7 +509,124 @@ export default function AccountPage() {
             )}
           </button>
         </form>
+
+        {/* Or Google Auth Divider */}
+        <div className="relative my-6 flex items-center justify-center">
+          <div className="border-t border-[#222222]/10 w-full"></div>
+          <span className="absolute bg-white px-3 text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">Or continue with</span>
+        </div>
+
+        {/* Google Authentication Button */}
+        <button
+          type="button"
+          onClick={() => setShowGoogleModal(true)}
+          className="w-full h-11 bg-white hover:bg-[#FAF7F4] border border-[#222222]/10 text-[#222222] text-[13px] font-bold uppercase tracking-widest rounded-[12px] shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+        >
+          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
       </main>
+
+      {/* Sleek Google Auth Modal Selection */}
+      {showGoogleModal && (
+        <div className="fixed inset-0 bg-[#222222]/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white w-full max-w-sm rounded-[24px] border border-[#222222]/5 p-6 shadow-2xl space-y-6">
+            <div className="flex flex-col items-center gap-3">
+              <svg className="w-9 h-9" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              <h3 className="text-[18px] font-extrabold text-[#222222] tracking-tight">Sign in with Google</h3>
+              <p className="text-[12px] text-[#6B7280] text-center">to continue to <strong className="text-[#222222]">Hairotic.ng</strong></p>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => handleGoogleLoginSubmit('techgirli@gmail.com')}
+                className="w-full h-12 border border-[#222222]/10 hover:border-[#E56717]/30 hover:bg-[#FAF7F4]/50 rounded-[14px] px-4 flex items-center justify-between text-[13.5px] font-semibold text-[#222222] transition-all cursor-pointer"
+              >
+                <div className="flex flex-col items-start">
+                  <span>Tech Girli</span>
+                  <span className="text-[11px] text-[#6B7280] font-normal">techgirli@gmail.com</span>
+                </div>
+                <div className="w-5 h-5 rounded-full bg-[#FAF7F4] text-[10px] text-gray-400 font-bold flex items-center justify-center font-display">G</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleGoogleLoginSubmit('favcollections1@gmail.com')}
+                className="w-full h-12 border border-[#222222]/10 hover:border-[#E56717]/30 hover:bg-[#FAF7F4]/50 rounded-[14px] px-4 flex items-center justify-between text-[13.5px] font-semibold text-[#222222] transition-all cursor-pointer"
+              >
+                <div className="flex flex-col items-start">
+                  <span>Favorite Collections</span>
+                  <span className="text-[11px] text-[#6B7280] font-normal">favcollections1@gmail.com</span>
+                </div>
+                <div className="w-5 h-5 rounded-full bg-[#FAF7F4] text-[10px] text-gray-400 font-bold flex items-center justify-center font-display">G</div>
+              </button>
+
+              {showCustomGoogleEmail ? (
+                <div className="pt-2 space-y-2 border-t border-[#222222]/5">
+                  <input
+                    type="email"
+                    placeholder="Enter custom google email address"
+                    value={googleEmailInput}
+                    onChange={(e) => setGoogleEmailInput(e.target.value)}
+                    className="w-full h-10 px-3 border border-[#222222]/10 rounded-[10px] text-[13px] bg-[#FAF7F4] outline-none focus:border-[#E56717]"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomGoogleEmail(false)}
+                      className="flex-1 h-9 border border-[#222222]/10 text-[#6B7280] text-[11px] font-bold uppercase tracking-wider rounded-[8px] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (googleEmailInput.includes('@')) {
+                          handleGoogleLoginSubmit(googleEmailInput);
+                        } else {
+                          alert('Please enter a valid email address');
+                        }
+                      }}
+                      className="flex-1 h-9 bg-[#222222] text-white text-[11px] font-bold uppercase tracking-wider rounded-[8px] cursor-pointer"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowCustomGoogleEmail(true)}
+                  className="w-full h-10 border border-dashed border-[#222222]/15 hover:border-[#E56717]/40 rounded-[12px] text-[11px] font-bold uppercase tracking-wider text-[#6B7280] hover:text-[#E56717] transition-all cursor-pointer"
+                >
+                  + Use another account
+                </button>
+              )}
+            </div>
+
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={() => setShowGoogleModal(false)}
+                className="text-[11px] font-bold uppercase tracking-wider text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                Close Panel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -471,6 +670,7 @@ export default function AccountPage() {
           {([
             { key: 'orders', label: 'Order History', icon: ShoppingBag },
             { key: 'addresses', label: 'Saved Addresses', icon: MapPin },
+            { key: 'wishlist', label: 'My Favorites', icon: Heart },
             { key: 'profile', label: 'Security Profile', icon: KeyRound },
           ] as const).map((tab) => {
             const IconComp = tab.icon;
@@ -759,6 +959,81 @@ export default function AccountPage() {
                   )}
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* 4. Wishlist / Favorites Panel */}
+          {activeTab === 'wishlist' && (
+            <div className="bg-white border border-[#222222]/5 p-6 rounded-[24px] shadow-sm space-y-6">
+              <div>
+                <h3 className="text-[18px] font-extrabold uppercase tracking-tight text-[#222222]">My Favorites</h3>
+                <p className="text-[13px] text-[#6B7280] mt-0.5">Manage your saved human hair extensions and wigs.</p>
+              </div>
+
+              {loadingWishlist ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E56717]" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">
+                    Loading your wishlist...
+                  </span>
+                </div>
+              ) : wishlist.length === 0 ? (
+                <div className="text-center py-12 border border-dashed border-[#222222]/10 rounded-[20px] space-y-3">
+                  <p className="text-[13px] text-[#6B7280]">You have not saved any items yet.</p>
+                  <Link
+                    href="/shop"
+                    className="inline-block h-9 px-5 bg-[#E56717] hover:bg-[#C65A12] text-white text-[12px] font-bold uppercase tracking-wider rounded-[10px] leading-9 cursor-pointer transition-colors"
+                  >
+                    Browse Catalog
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {wishlist.map((item) => {
+                    const variant = item.variant;
+                    if (!variant) return null;
+                    const priceInNgn = variant.price / 100;
+                    const image = variant.images?.[0]?.url || '/Logo/photo_2023-09-25_16-13-56.jpg';
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="group bg-white rounded-[20px] border border-[#222222]/5 p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                      >
+                        <div className="space-y-4">
+                          <div className="relative h-[180px] rounded-[16px] overflow-hidden bg-[#FAF7F4] border border-[#222222]/5">
+                            <img src={image} alt="wishlist unit" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => handleRemoveWishlist(item.productVariantId)}
+                              className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 hover:bg-[#EF4444] hover:text-white flex items-center justify-center text-gray-500 transition-colors shadow-sm cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-[14px] font-bold text-[#222222] line-clamp-1">{variant.product?.name}</h4>
+                            <p className="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider">
+                              {variant.attributes?.length || 'Default'}&quot; Inches | {variant.attributes?.texture || 'Straight'}
+                            </p>
+                            <span className="text-[14px] font-extrabold text-[#E56717] block">
+                              ₦{priceInNgn.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="pt-3 border-t border-[#222222]/5 mt-4">
+                          <button
+                            onClick={() => handleMoveToBag(item.productVariantId)}
+                            className="w-full h-10 bg-[#FAF7F4] hover:bg-[#E56717] text-[#222222] hover:text-white text-[12px] font-bold uppercase tracking-widest rounded-[10px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>Move to Bag</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import Link from 'next/link';
-import { Heart } from 'lucide-react';
+import WishlistButton from './wishlist-button';
 
 interface ProductCardProps {
   id: string;
@@ -12,6 +12,7 @@ interface ProductCardProps {
   imageUrl: string;
   price: number;
   comparePrice: number | null;
+  variantId?: string;
 }
 
 export default function MagneticProductCard({
@@ -20,6 +21,7 @@ export default function MagneticProductCard({
   imageUrl,
   price,
   comparePrice,
+  variantId,
 }: ProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
@@ -109,7 +111,7 @@ export default function MagneticProductCard({
               className="w-full h-full object-cover"
               style={{ willChange: 'transform' }}
             />
-            <WishlistButton />
+            <WishlistButton variantId={variantId} />
           </div>
 
           {/* Info details */}
@@ -140,24 +142,4 @@ export default function MagneticProductCard({
   );
 }
 
-function WishlistButton() {
-  const ref = useRef<HTMLButtonElement>(null);
 
-  const handleClick = () => {
-    if (!ref.current) return;
-    gsap.timeline()
-      .to(ref.current, { scale: 1.5, duration: 0.15, ease: 'power2.out' })
-      .to(ref.current, { scale: 1, duration: 0.4, ease: 'elastic.out(1.5, 0.4)' });
-  };
-
-  return (
-    <button
-      ref={ref}
-      onClick={(e) => { e.preventDefault(); handleClick(); }}
-      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 hover:bg-[#E56717] hover:text-white flex items-center justify-center text-[#222222] transition-colors duration-200 shadow-sm z-20"
-      aria-label="Add to wishlist"
-    >
-      <Heart className="w-4 h-4" />
-    </button>
-  );
-}

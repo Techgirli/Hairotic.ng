@@ -75,9 +75,8 @@ export default function ContactPage() {
                 <Phone className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">call/text support</span>
-                <a href="tel:+2348000000000" className="font-extrabold text-[13.5px] text-[#222222] hover:text-[#E56717] transition-colors font-mono">
-                  +234 800 000 0000
+                <a href="tel:+2348087794441" className="font-extrabold text-[13.5px] text-[#222222] hover:text-[#E56717] transition-colors font-mono">
+                  +234 808 779 4441
                 </a>
               </div>
             </div>
@@ -88,9 +87,8 @@ export default function ContactPage() {
                 <Mail className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">support mail</span>
-                <a href="mailto:support@hairotic.ng" className="font-extrabold text-[13.5px] text-[#222222] hover:text-[#E56717] transition-colors">
-                  support@hairotic.ng
+                <a href="mailto:favcollections1@gmail.com" className="font-extrabold text-[13.5px] text-[#222222] hover:text-[#E56717] transition-colors">
+                  favcollections1@gmail.com
                 </a>
               </div>
             </div>
@@ -124,7 +122,7 @@ export default function ContactPage() {
               Connect immediately with a sales stylist for live consults or custom wig fitting adjustments.
             </p>
             <a
-              href="https://wa.me/2348000000000?text=Hello%20Hairotic,%20I'd%20like%20to%20consult%20regarding%20custom%20hair%20orders."
+              href="https://wa.me/2348087794441?text=Hello%20Hairotic,%20I'd%20like%20to%20consult%20regarding%20custom%20hair%20orders."
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block h-10 px-5 bg-[#25D366] hover:bg-[#20ba59] text-white text-[12px] font-bold uppercase tracking-wider rounded-[12px] leading-10 shadow-sm transition-colors text-center cursor-pointer"

@@ -88,7 +88,7 @@ export default function StylingPage() {
             </p>
             <div className="pt-4">
               <a 
-                href="https://wa.me/2348000000000" 
+                href="https://wa.me/2348087794441" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="inline-flex items-center gap-2 bg-[#E56717] hover:bg-[#D4560F] text-[#FFFFFF] px-8 py-4 rounded-full font-bold uppercase tracking-wider text-[14px] shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-xl cursor-pointer"
@@ -198,7 +198,7 @@ export default function StylingPage() {
           </p>
           <div className="pt-2 flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a 
-              href="https://wa.me/2348000000000" 
+              href="https://wa.me/2348087794441" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#E56717] hover:bg-[#D4560F] text-[#FFFFFF] px-8 py-4 rounded-full font-bold uppercase tracking-wider text-[14px] shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"

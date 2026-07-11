@@ -8,6 +8,8 @@ import { Trash2, ShoppingBag, Heart, LogIn } from 'lucide-react';
 import Header from '../../components/header';
 import Footer from '@/components/footer';
 
+import { useRouter } from 'next/navigation';
+
 interface ProductImage {
   id: string;
   url: string;
@@ -37,6 +39,7 @@ interface WishlistItem {
 }
 
 export default function WishlistPage() {
+  const router = useRouter();
   const { user, checkMe } = useAuthStore();
   const { addItem } = useCartStore();
 
@@ -48,26 +51,11 @@ export default function WishlistPage() {
     checkMe().finally(() => setIsLoading(false));
   }, [checkMe]);
 
-  // Fetch wishlist if user is authenticated
-  const fetchWishlist = async () => {
-    try {
-      const res = await fetch('http://localhost:3001/api/v1/wishlist', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok) throw new Error('Failed to load wishlist');
-      const data = await res.json();
-      setWishlist(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
     if (user) {
-      fetchWishlist();
+      router.push('/account');
     }
-  }, [user]);
+  }, [user, router]);
 
   const handleRemove = async (variantId: string) => {
     try {
