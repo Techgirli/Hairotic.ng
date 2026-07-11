@@ -19,8 +19,8 @@ export default function Footer() {
             <li><Link href="/shop" className="hover:text-[#E56717] transition-colors duration-200">Shop All</Link></li>
             <li><Link href="/shop?categorySlug=wigs" className="hover:text-[#E56717] transition-colors duration-200">Wigs</Link></li>
             <li><Link href="/shop?categorySlug=extensions" className="hover:text-[#E56717] transition-colors duration-200">Extensions</Link></li>
-            <li><Link href="/shop?categorySlug=bundle" className="hover:text-[#E56717] transition-colors duration-200">Bundle</Link></li>
-            <li><Link href="/shop?categorySlug=styling" className="hover:text-[#E56717] transition-colors duration-200">Styling</Link></li>
+            <li><Link href="/shop?categorySlug=bundle" className="hover:text-[#E56717] transition-colors duration-200">Bundles</Link></li>
+            <li><Link href="/styling" className="hover:text-[#E56717] transition-colors duration-200">Styling Services</Link></li>
             <li><Link href="/admin/login" className="hover:text-[#E56717] transition-colors duration-200">Admin Portal</Link></li>
           </ul>
         </div>

@@ -44,6 +44,7 @@ export default function Header() {
           <Link href="/shop" className="hover:text-[#E56717] transition-colors duration-200">Shop All</Link>
           <Link href="/collections/best-sellers" className="hover:text-[#E56717] transition-colors duration-200">Bestsellers</Link>
           <Link href="/collections/new-drops" className="hover:text-[#E56717] transition-colors duration-200">New Drops</Link>
+          <Link href="/styling" className="hover:text-[#E56717] transition-colors duration-200">Styling</Link>
           <Link href="/admin/login" className="hover:text-[#E56717] transition-colors duration-200">Admin</Link>
         </nav>
 
@@ -119,6 +120,13 @@ export default function Header() {
             className="block text-[15px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
           >
             New Drops
+          </Link>
+          <Link 
+            href="/styling" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-[15px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
+          >
+            Styling
           </Link>
           <Link 
             href="/admin/login" 
