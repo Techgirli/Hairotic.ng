@@ -54,3 +54,29 @@ body {
   color: var(--foreground);
   font-family: var(--font-outfit), sans-serif;
 }
+
+/* Utility: hide scrollbar cross-browser */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* GSAP: clip-path reveal needs overflow visible on parent */
+.section-header-reveal {
+  display: inline-block;
+}
+
+/* Smooth scroll for the whole page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent layout shift while GSAP animates */
+.hero-title-word {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+

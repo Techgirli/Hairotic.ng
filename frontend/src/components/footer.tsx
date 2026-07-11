@@ -7,13 +7,13 @@ export default function Footer() {
   return (
     <footer className="bg-[#222222] text-[#FAF7F4] pt-16 pb-12 select-none border-t border-[#FFFFFF]/10 mt-auto">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
-        <div className="space-y-4">
+        <div className="footer-col space-y-4">
           <h3 className="font-display text-[32px] tracking-wider text-[#FFFFFF] uppercase">Hairotic</h3>
           <p className="text-[14px] text-[#6B7280] leading-relaxed">
             Nigeria&apos;s premium hair drop destination. Authentic donor hair units that represent your energy.
           </p>
         </div>
-        <div>
+        <div className="footer-col">
           <h5 className="text-[15px] font-bold uppercase tracking-wider text-[#FFFFFF] mb-4">Quick Links</h5>
           <ul className="space-y-2 text-[14px] text-[#6B7280]">
             <li><Link href="/shop" className="hover:text-[#E56717] transition-colors duration-200">Shop All</Link></li>

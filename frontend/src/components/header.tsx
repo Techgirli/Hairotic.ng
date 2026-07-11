@@ -21,20 +21,20 @@ export default function Header() {
   const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <header className="sticky top-0 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#222222]/5 z-50 h-56 transition-all duration-300">
+    <header className="sticky top-0 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#222222]/5 z-50 h-16 transition-all duration-300">
       <div className="w-full px-8 h-full flex items-center justify-between">
         
         {/* Brand identity logo */}
-        <Link href="/" className="flex items-center gap-0 select-none -ml-6">
+        <Link href="/" className="flex items-center gap-2 select-none">
           <Image
             src="/Logo/logo.svg"
             alt="Hairotic Logo"
-            width={220}
-            height={220}
-            className="h-52 w-auto object-contain -mr-10"
+            width={56}
+            height={56}
+            className="h-14 w-auto object-contain"
             priority
           />
-          <span className="font-display text-[36px] tracking-wider text-[#222222] font-black uppercase">
+          <span className="font-display text-[22px] tracking-wider text-[#222222] font-black uppercase">
             Hairotic
           </span>
         </Link>

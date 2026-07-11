@@ -1,8 +1,20 @@
 import React from 'react';
 import Link from 'next/link';
-import { Truck, ShieldCheck, CreditCard, Sparkles, MessageCircle, Heart } from 'lucide-react';
+import { Truck, ShieldCheck, CreditCard, Sparkles } from 'lucide-react';
 import Header from '../components/header';
 import Footer from '@/components/footer';
+// Animation components — all lazy-loaded through a 'use client' shell
+// (next/dynamic with ssr:false is only legal inside client components)
+import {
+  GSAPAnimations,
+  HeroParticles,
+  PromoTicker,
+  AnimatedWhatsApp,
+  ScrollHint,
+} from '@/components/animations-shell';
+import MagneticProductCard from '@/components/magnetic-product-card';
+import CategorySlider from '@/components/category-slider';
+
 
 interface ProductImage {
   id: string;
@@ -27,14 +39,18 @@ interface Product {
 
 async function getFeaturedProducts(): Promise<Product[]> {
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000); // 3s max wait
     const res = await fetch('http://localhost:3001/api/v1/products?limit=4', {
       cache: 'no-store',
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (!res.ok) return [];
     const data = await res.json();
     return data.products || [];
-  } catch (err) {
-    console.error('Failed to fetch featured products', err);
+  } catch {
+    // Backend offline or timed out — render page without products
     return [];
   }
 }
@@ -42,7 +58,6 @@ async function getFeaturedProducts(): Promise<Product[]> {
 export default async function Homepage() {
   const products = await getFeaturedProducts();
 
-  // Categories list with representative images copied to public/
   const categories = [
     { name: 'Wigs', slug: 'wigs', image: '/wigs/2d0454f23e05f4a8e3b6c76ff466b580.jpg' },
     { name: 'Extensions', slug: 'extensions', image: '/extensions/IMG_5204.JPG' },
@@ -52,166 +67,153 @@ export default async function Homepage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      {/* Promotion Announcement Bar */}
-      <div className="w-full bg-[#E56717] h-10 flex items-center justify-center text-[13px] font-semibold text-[#FFFFFF] uppercase tracking-widest select-none">
-        ✨ Free delivery within Lagos on orders above ₦250,000! ✨
-      </div>
+      {/* GSAP orchestrator (client, no UI output) */}
+      <GSAPAnimations />
+
+      {/* Promotion Announcement Bar – animated ticker */}
+      <PromoTicker />
 
       {/* Sticky Premium Header */}
       <Header />
 
-      {/* Hero Banner Section */}
-      <section className="relative h-[80vh] flex items-center justify-center bg-[#222222] text-[#FFFFFF] overflow-hidden select-none">
-        <div className="absolute inset-0 bg-cover bg-center opacity-40 bg-[url('/wigs/07f51f04c30a9ecd6659cb058a95859f.jpg')]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#222222] via-[#222222]/50 to-transparent" />
-        <div className="relative max-w-4xl mx-auto px-6 text-center z-10 space-y-6">
-          <span className="text-[#FFFFFF] text-[14px] uppercase tracking-[0.3em] font-bold block animate-pulse">
-            Hey Hairotic Baddie!! <br /> Shop Your Premium Vietnamese Human Hair
+      {/* ── Hero Banner ─────────────────────────────────────────────── */}
+      <section
+        className="hero-section relative h-[90vh] flex items-center justify-center bg-[#222222] text-white overflow-hidden select-none"
+      >
+        {/* Parallax BG */}
+        <div
+          className="hero-bg-image absolute inset-0 bg-cover bg-center opacity-45"
+          style={{ backgroundImage: "url('/wigs/07f51f04c30a9ecd6659cb058a95859f.jpg')" }}
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#222222] via-[#222222]/55 to-transparent" />
+
+        {/* Floating particles */}
+        <HeroParticles />
+
+        {/* Hero content */}
+        <div className="relative max-w-4xl mx-auto px-6 text-center z-10 space-y-6"
+          style={{ perspective: '1200px' }}
+        >
+          <span className="hero-badge text-white text-[13px] uppercase tracking-[0.32em] font-bold block
+            bg-[#E56717]/20 border border-[#E56717]/40 rounded-full px-6 py-2 inline-block
+            backdrop-blur-sm shadow-lg shadow-[#E56717]/10">
+            Hey Hairotic Baddie!! · Shop Premium Vietnamese Human Hair
           </span>
-          <h2 className="font-display text-[48px] md:text-[76px] leading-[1.05] uppercase tracking-tight drop-shadow-md">
-            Empower Your <br /> Boldest Self
-          </h2>
-          <p className="text-[18px] text-[#FAF7F4] max-w-xl mx-auto font-light leading-relaxed">
+
+          <h1 className="font-display leading-[1.0] uppercase tracking-tight drop-shadow-lg"
+            style={{ fontSize: 'clamp(52px, 8vw, 86px)' }}
+          >
+            <span className="hero-title-word inline-block">Empower</span>{' '}
+            <span className="hero-title-word inline-block text-[#E56717]">Your</span>
+            <br />
+            <span className="hero-title-word inline-block">Boldest</span>{' '}
+            <span className="hero-title-word inline-block">Self</span>
+          </h1>
+
+          <p className="hero-subtitle text-[18px] text-[#FAF7F4] max-w-xl mx-auto font-light leading-relaxed">
             Hair that turns heads and never holds you back. Crafted for the young, confident, and trend-driven woman.
           </p>
-          <div className="pt-4">
+
+          <div className="hero-cta pt-4 flex items-center justify-center gap-4 flex-wrap">
             <Link
               href="/shop"
-              className="inline-flex h-[52px] px-8 bg-[#E56717] hover:bg-[#C65A12] text-[#FFFFFF] text-[15px] font-bold uppercase tracking-widest rounded-[12px] shadow-lg active:scale-95 transition-all duration-200 items-center justify-center gap-2 cursor-pointer"
+              id="hero-cta-primary"
+              className="inline-flex h-[54px] px-10 bg-[#E56717] hover:bg-[#C65A12] text-white text-[15px] font-bold uppercase tracking-widest rounded-[14px] shadow-xl shadow-[#E56717]/30 active:scale-95 transition-all duration-200 items-center justify-center gap-2 cursor-pointer"
             >
               <span>Explore The Drop</span>
               <Sparkles className="w-5 h-5" />
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust bar */}
-      <section className="bg-[#FFF8F2] border-y border-[#222222]/5 py-8 select-none">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#E56717]/10 flex items-center justify-center text-[#E56717]">
-              <Truck className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-[16px] font-bold text-[#222222]">Nationwide Delivery</h4>
-              <p className="text-[14px] text-[#6B7280]">Same-day Lagos, 48 hours nationwide.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#E56717]/10 flex items-center justify-center text-[#E56717]">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-[16px] font-bold text-[#222222]">100% Authenticity</h4>
-              <p className="text-[14px] text-[#6B7280]">Vietnamese donor extensions that hold curls.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#E56717]/10 flex items-center justify-center text-[#E56717]">
-              <CreditCard className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-[16px] font-bold text-[#222222]">Secure Paystack Payments</h4>
-              <p className="text-[14px] text-[#6B7280]">Card, USSD, and bank transfers safely.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Shop Categories Grid */}
-      <section className="max-w-[1600px] mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <h3 className="text-[32px] font-bold text-[#222222] uppercase tracking-wide">
-            Shop By Texture
-          </h3>
-          <div className="w-12 h-1 bg-[#E56717] mx-auto mt-2" />
-        </div>
-        <div className="flex gap-8 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory scroll-smooth">
-          {categories.map((cat) => (
             <Link
-              key={cat.slug}
-              href={cat.customUrl || `/shop?categorySlug=${cat.slug}`}
-              className="group relative h-[320px] w-[420px] md:w-[560px] shrink-0 rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-xl transition-all duration-300 block snap-start"
+              href="/collections/new-drops"
+              id="hero-cta-secondary"
+              className="inline-flex h-[54px] px-8 bg-white/10 hover:bg-white/20 text-white text-[15px] font-semibold uppercase tracking-widest rounded-[14px] border border-white/20 backdrop-blur-sm active:scale-95 transition-all duration-200 items-center justify-center gap-2 cursor-pointer"
             >
-              <div
-                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700"
-                style={{ backgroundImage: `url('${cat.image}')` }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#222222]/95 via-[#222222]/35 to-transparent" />
-              <div className="absolute bottom-8 left-8 right-8">
-                <div className="space-y-1">
-                  <h4 className="text-[24px] font-extrabold text-[#FFFFFF] uppercase tracking-wider group-hover:text-[#E56717] transition-colors duration-200">{cat.name}</h4>
-                  <span className="text-[13px] text-[#E56717] uppercase tracking-widest font-bold block opacity-90 group-hover:opacity-100 transition-opacity">View Collection</span>
-                </div>
-              </div>
+              New Drops
             </Link>
+          </div>
+        </div>
+
+        {/* Scroll hint */}
+        <ScrollHint />
+      </section>
+
+      {/* ── Trust Bar ───────────────────────────────────────────────── */}
+      <section className="trust-section bg-[#FFF8F2] border-y border-[#222222]/5 py-10 select-none">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: <Truck className="w-6 h-6" />,
+              title: 'Nationwide Delivery',
+              sub: 'Same-day Lagos, 48 hours nationwide.',
+            },
+            {
+              icon: <ShieldCheck className="w-6 h-6" />,
+              title: '100% Authenticity',
+              sub: 'Vietnamese donor extensions that hold curls.',
+            },
+            {
+              icon: <CreditCard className="w-6 h-6" />,
+              title: 'Secure Paystack Payments',
+              sub: 'Card, USSD, and bank transfers safely.',
+            },
+          ].map((item, i) => (
+            <div key={i} className="trust-item flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-[#E56717]/10 flex items-center justify-center text-[#E56717] flex-shrink-0 shadow-sm">
+                {item.icon}
+              </div>
+              <div>
+                <h4 className="text-[16px] font-bold text-[#222222]">{item.title}</h4>
+                <p className="text-[14px] text-[#6B7280]">{item.sub}</p>
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Featured Bestsellers */}
+      {/* ── Shop Categories Grid ─────────────────────────────────────── */}
+      <section className="categories-section max-w-[1600px] mx-auto px-6 py-20">
+        <div className="text-center mb-14">
+          <h2 className="section-header-reveal text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
+            Shop By Texture
+          </h2>
+          <div className="section-divider w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
+        </div>
+        <CategorySlider categories={categories} />
+      </section>
+
+      {/* ── Featured Bestsellers ─────────────────────────────────────── */}
       {products.length > 0 && (
-        <section className="bg-[#FAF7F4] py-16">
+        <section className="products-section bg-[#FAF7F4] py-20">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h3 className="text-[32px] font-bold text-[#222222] uppercase tracking-wide">
+            <div className="text-center mb-14">
+              <h2 className="section-header-reveal text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
                 Bestselling Units
-              </h3>
-              <p className="text-[#6B7280] text-[15px] mt-1">Lagos favorites that turn heads.</p>
-              <div className="w-12 h-1 bg-[#E56717] mx-auto mt-2" />
+              </h2>
+              <p className="text-[#6B7280] text-[15px] mt-2">Lagos favorites that turn heads.</p>
+              <div className="section-divider w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {products.map((product) => {
                 const defaultVariant = product.variants[0];
                 const priceInNgn = defaultVariant ? defaultVariant.price / 100 : 0;
-                const comparePriceInNgn = defaultVariant?.compareAtPrice ? defaultVariant.compareAtPrice / 100 : null;
-                const mainImage = defaultVariant?.images[0]?.url || '/Logo/photo_2023-09-25_16-13-56.jpg';
+                const comparePriceInNgn = defaultVariant?.compareAtPrice
+                  ? defaultVariant.compareAtPrice / 100
+                  : null;
+                const mainImage =
+                  defaultVariant?.images[0]?.url || '/Logo/photo_2023-09-25_16-13-56.jpg';
 
                 return (
-                  <Link
+                  <MagneticProductCard
                     key={product.id}
-                    href={`/products/${product.slug}`}
-                    className="group bg-white rounded-[24px] border border-[#222222]/5 p-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
-                  >
-                    <div className="space-y-4">
-                      {/* Product image container */}
-                      <div className="relative h-[240px] rounded-[20px] overflow-hidden bg-[#FAF7F4] border border-[#222222]/5">
-                        <img
-                          src={mainImage}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
-                        />
-                        <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 hover:bg-[#E56717] hover:text-white flex items-center justify-center text-[#222222] transition-colors duration-200 shadow-sm">
-                          <Heart className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Info details */}
-                      <div className="space-y-1 px-1">
-                        <h4 className="text-[16px] font-bold text-[#222222] group-hover:text-[#E56717] transition-colors duration-200 line-clamp-1">
-                          {product.name}
-                        </h4>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[16px] font-extrabold text-[#E56717]">
-                            ₦{priceInNgn.toLocaleString()}
-                          </span>
-                          {comparePriceInNgn && (
-                            <span className="text-[13px] text-[#6B7280] line-through">
-                              ₦{comparePriceInNgn.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 px-1">
-                      <span className="w-full h-11 bg-[#FAF7F4] group-hover:bg-[#E56717] text-[#222222] group-hover:text-white text-[13px] font-bold uppercase tracking-widest rounded-[12px] transition-all duration-300 flex items-center justify-center">
-                        Select Length
-                      </span>
-                    </div>
-                  </Link>
+                    id={product.id}
+                    name={product.name}
+                    slug={product.slug}
+                    imageUrl={mainImage}
+                    price={priceInNgn}
+                    comparePrice={comparePriceInNgn}
+                  />
                 );
               })}
             </div>
@@ -219,18 +221,8 @@ export default async function Homepage() {
         </section>
       )}
 
-      {/* Floating WhatsApp CTA */}
-      <div className="fixed bottom-6 right-6 z-40 select-none">
-        <a
-          href="https://wa.me/2348000000000?text=Hello,%20I'm%20interested%20in%20custom%20hair%20units!"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-[#FFFFFF] px-5 py-3 rounded-full shadow-lg active:scale-95 transition-all duration-200 font-semibold text-[14px]"
-        >
-          <MessageCircle className="w-5 h-5 fill-white text-[#25D366]" />
-          <span>Consult Hair Expert</span>
-        </a>
-      </div>
+      {/* Animated WhatsApp CTA */}
+      <AnimatedWhatsApp />
 
       {/* Premium Footer */}
       <Footer />
