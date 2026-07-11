@@ -66,20 +66,20 @@ async function main() {
   });
 
   // 3. Create Categories
-  const catBob = await prisma.category.create({
-    data: { name: 'Bob Hairs', slug: 'bob-hairs', description: 'Blunt cuts, closures, and classic bob wigs.' },
+  const catWigs = await prisma.category.create({
+    data: { name: 'Wigs', slug: 'wigs', description: 'Blunt cuts, closures, and classic wigs.' },
   });
 
-  const catStraight = await prisma.category.create({
-    data: { name: 'Straight Hairs', slug: 'straight-hairs', description: 'Premium silky bone straight hair bundles and wigs.' },
+  const catExtensions = await prisma.category.create({
+    data: { name: 'Extensions', slug: 'extensions', description: 'Premium silky bone straight extensions.' },
   });
 
-  const catCurly = await prisma.category.create({
-    data: { name: 'Curly Hairs', slug: 'curly-hairs', description: 'Bounce, volume, and luxurious curly wigs.' },
+  const catBundle = await prisma.category.create({
+    data: { name: 'Bundle', slug: 'bundle', description: 'Bounce, volume, and luxurious curly bundles.' },
   });
 
-  const catCoily = await prisma.category.create({
-    data: { name: 'Coily Hairs', slug: 'coily-hairs', description: 'Authentic afro kinky coils and protective extensions.' },
+  const catStyling = await prisma.category.create({
+    data: { name: 'Styling', slug: 'styling', description: 'Authentic coils, kinky hairs, and styling protection.' },
   });
 
   // 4. Create Collections
@@ -166,12 +166,12 @@ async function main() {
   };
 
   // 5. Seed Products
-  // Bob Hairs
+  // Bob Hairs (now Wigs)
   await createProductHelper(
     'Lola Blunt Cut Bob Wig',
     'lola-blunt-bob',
     'A sharp, premium cut closure wig made from 100% Vietnamese human hair. Lays flat, feels soft, and holds shine all day.',
-    catBob.id,
+    catWigs.id,
     colBestsellers.id,
     ['/bob-hairs/02ab823d3a0c332042b5a6c3b3f99282.jpg', '/bob-hairs/2d0454f23e05f4a8e3b6c76ff466b580.jpg'],
     ['10', '12', '14'],
@@ -183,7 +183,7 @@ async function main() {
     'Classic Chic Closure Bob',
     'classic-chic-bob',
     'Perfect everyday wig with zero glue needed. Pre-plucked closure with soft natural volume bob shape.',
-    catBob.id,
+    catWigs.id,
     colNewDrops.id,
     ['/bob-hairs/deb96943abdd8693bc7cd6910ff8a879.jpg', '/bob-hairs/e5ada6a44b4cee068499cac637d48d2a.jpg'],
     ['12', '14'],
@@ -191,12 +191,12 @@ async function main() {
     95000
   );
 
-  // Straight Hairs
+  // Straight Hairs (now Extensions)
   await createProductHelper(
     'Premium Bone Straight Bundles',
     'premium-bone-straight',
     'Super double drawn luxury bone straight hair. Lays completely flat, super silky touch, no shedding or tangles.',
-    catStraight.id,
+    catExtensions.id,
     colBestsellers.id,
     ['/straight-hairs/07f51f04c30a9ecd6659cb058a95859f.jpg', '/straight-hairs/13f4b3f9d1e25df2f6a74d4600cb5766.jpg'],
     ['18', '20', '22', '24'],
@@ -208,7 +208,7 @@ async function main() {
     'Sleek Silk Straight Wig',
     'sleek-silk-straight',
     'Glueless frontal wig giving you the ultimate scalp illusion. Can be heat styled, colored, and parted anywhere.',
-    catStraight.id,
+    catExtensions.id,
     null,
     ['/straight-hairs/185fe686f5da0947e75f3bff9adfe1dc.jpg', '/straight-hairs/31e8670dd3cc32374263cef8f046e791.jpg'],
     ['20', '22', '24'],
@@ -216,12 +216,12 @@ async function main() {
     210000
   );
 
-  // Curly Hairs
+  // Curly Hairs (now Bundle)
   await createProductHelper(
     'Deep Wave Luxury Curly',
     'deep-wave-luxury-curly',
     'High definition bouncy curls. Retains pattern effortlessly when wet, minimal maintenance, premium styling.',
-    catCurly.id,
+    catBundle.id,
     colBestsellers.id,
     ['/curly/0443d651affacccaf4e669a72ffc5247.jpg', '/curly/05fc97c545a00c437884cdf4cfb5c082.jpg'],
     ['18', '20', '22'],
@@ -233,7 +233,7 @@ async function main() {
     'Water Wave HD Lace Wig',
     'water-wave-hd-lace',
     'Wet and wavy look with premium definition. HD lace gives completely invisible hairline transition.',
-    catCurly.id,
+    catBundle.id,
     colNewDrops.id,
     ['/curly/0f8a601422862360393536d6b810f2e0.jpg', '/curly/131a5b0c507705120a8fb52fddd7c6a2.jpg'],
     ['22', '24', '26'],
@@ -241,12 +241,12 @@ async function main() {
     165000
   );
 
-  // Coily Hairs
+  // Coily Hairs (now Styling)
   await createProductHelper(
     'Afro Kinky Coils Bundles',
     'afro-kinky-coils',
     'Raw kinky texture mimicking natural 4C coils. Full from root to tip, takes dye perfectly, premium raw grade.',
-    catCoily.id,
+    catStyling.id,
     colNewDrops.id,
     ['/coily-hairs/061b881e9eb397ca7e74298a5a2bb46f.jpg', '/coily-hairs/07c47b76fed43496e3e9520dd7cbf54c.jpg'],
     ['14', '16', '18'],
