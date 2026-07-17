@@ -10,33 +10,34 @@ export default function GSAPAnimations() {
   useEffect(() => {
     // Small delay so the DOM is fully painted before GSAP reads it
     const timer = setTimeout(() => {
-      const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
 
-        // ── 1. HERO: Cinematic entrance ────────────────────────────────────
-        const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      // ── 1. HERO: Cinematic entrance (runs on all screens on load)
+      const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      heroTl
+        .fromTo('.hero-badge',
+          { y: 40, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1, delay: 0.3 }
+        )
+        .fromTo('.hero-title-word',
+          { y: 100, opacity: 0, rotateX: -70 },
+          { y: 0, opacity: 1, rotateX: 0, stagger: 0.15, duration: 1.3, ease: 'expo.out' },
+          '-=0.5'
+        )
+        .fromTo('.hero-subtitle',
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1 },
+          '-=0.7'
+        )
+        .fromTo('.hero-cta',
+          { scale: 0.75, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.9, ease: 'back.out(2)' },
+          '-=0.6'
+        );
 
-        heroTl
-          .fromTo('.hero-badge',
-            { y: 40, opacity: 0 },
-            { y: 0, opacity: 1, duration: 1, delay: 0.3 }
-          )
-          .fromTo('.hero-title-word',
-            { y: 100, opacity: 0, rotateX: -70 },
-            { y: 0, opacity: 1, rotateX: 0, stagger: 0.15, duration: 1.3, ease: 'expo.out' },
-            '-=0.5'
-          )
-          .fromTo('.hero-subtitle',
-            { y: 30, opacity: 0 },
-            { y: 0, opacity: 1, duration: 1 },
-            '-=0.7'
-          )
-          .fromTo('.hero-cta',
-            { scale: 0.75, opacity: 0 },
-            { scale: 1, opacity: 1, duration: 0.9, ease: 'back.out(2)' },
-            '-=0.6'
-          );
-
-        // ── 2. HERO BG: Slow parallax zoom on scroll ───────────────────────
+      // ── 2. DESKTOP ANIMATIONS (768px and up) ──────────────────────────────
+      mm.add("(min-width: 768px)", () => {
+        // HERO BG: Slow parallax zoom on scroll
         gsap.to('.hero-bg-image', {
           scale: 1.12,
           scrollTrigger: {
@@ -47,7 +48,7 @@ export default function GSAPAnimations() {
           },
         });
 
-        // ── 3. TRUST BAR: Slide up ─────────────────────────────────────────
+        // TRUST BAR: Slide up
         gsap.fromTo('.trust-item',
           { y: 50, opacity: 0 },
           {
@@ -63,7 +64,7 @@ export default function GSAPAnimations() {
           }
         );
 
-        // ── 4. SECTION HEADERS: Wipe reveal ───────────────────────────────
+        // SECTION HEADERS: Wipe reveal
         gsap.utils.toArray<HTMLElement>('.section-header-reveal').forEach((el) => {
           gsap.fromTo(el,
             { clipPath: 'inset(0 100% 0 0)', opacity: 0 },
@@ -98,9 +99,7 @@ export default function GSAPAnimations() {
           );
         });
 
-        // ── 5. CATEGORY CARDS: Stagger reveal ─────────────────────────────
-        // Use a direct selector loop so each card triggers independently —
-        // avoids the horizontal-scroll container hiding cards from ScrollTrigger
+        // CATEGORY CARDS: Stagger reveal
         const categoryCards = gsap.utils.toArray<HTMLElement>('.category-card');
         categoryCards.forEach((card, i) => {
           gsap.fromTo(card,
@@ -119,7 +118,7 @@ export default function GSAPAnimations() {
           );
         });
 
-        // ── 6. PRODUCT CARDS: Stagger fade-up ─────────────────────────────
+        // PRODUCT CARDS: Stagger fade-up
         gsap.fromTo('.product-card',
           { y: 60, opacity: 0 },
           {
@@ -135,7 +134,7 @@ export default function GSAPAnimations() {
           }
         );
 
-        // ── 7. FOOTER REVEAL ────────────────────────────────────────────────
+        // FOOTER REVEAL
         gsap.fromTo('.footer-col',
           { y: 40, opacity: 0 },
           {
@@ -150,10 +149,19 @@ export default function GSAPAnimations() {
             },
           }
         );
-
       });
 
-      return () => ctx.revert();
+      // ── 3. MOBILE/TABLET FALLBACK (under 768px): Instant reveal ──────────
+      mm.add("(max-width: 767px)", () => {
+        gsap.set('.section-header-reveal', { clipPath: 'inset(0 0% 0 0)', opacity: 1 });
+        gsap.set('.section-divider', { scaleX: 1 });
+        gsap.set('.category-card', { y: 0, opacity: 1, scale: 1 });
+        gsap.set('.trust-item', { y: 0, opacity: 1 });
+        gsap.set('.product-card', { y: 0, opacity: 1 });
+        gsap.set('.footer-col', { y: 0, opacity: 1 });
+      });
+
+      return () => mm.revert();
     }, 100);
 
     return () => clearTimeout(timer);

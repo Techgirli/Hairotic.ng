@@ -17,23 +17,34 @@ export default function CtaSection() {
     const el = containerRef.current;
     if (!el) return;
 
-    // Fade-in layout elements with scale and ease
-    gsap.fromTo(
-      el.querySelectorAll('.cta-fade'),
-      { y: 40, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        stagger: 0.15,
-        duration: 1,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: el,
-          start: 'top 85%',
-          once: true,
-        },
-      }
-    );
+    const mm = gsap.matchMedia();
+    const targets = el.querySelectorAll('.cta-fade');
+
+    mm.add("(min-width: 768px)", () => {
+      // Fade-in layout elements with scale and ease
+      gsap.fromTo(
+        targets,
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          stagger: 0.15,
+          duration: 1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 85%',
+            once: true,
+          },
+        }
+      );
+    });
+
+    mm.add("(max-width: 767px)", () => {
+      gsap.set(targets, { y: 0, opacity: 1 });
+    });
+
+    return () => mm.revert();
   }, []);
 
   return (

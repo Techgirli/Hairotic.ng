@@ -38,25 +38,35 @@ export default function Testimonials() {
     const el = containerRef.current;
     if (!el) return;
 
-    // Slide-up stagger reveal for testimonial cards on scroll
+    const mm = gsap.matchMedia();
     const cards = el.querySelectorAll('.testimonial-card');
-    gsap.fromTo(
-      cards,
-      { y: 50, opacity: 0, scale: 0.96 },
-      {
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        stagger: 0.15,
-        duration: 1,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: el,
-          start: 'top 85%',
-          once: true,
-        },
-      }
-    );
+
+    mm.add("(min-width: 768px)", () => {
+      // Slide-up stagger reveal for testimonial cards on scroll
+      gsap.fromTo(
+        cards,
+        { y: 50, opacity: 0, scale: 0.96 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          stagger: 0.15,
+          duration: 1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 85%',
+            once: true,
+          },
+        }
+      );
+    });
+
+    mm.add("(max-width: 767px)", () => {
+      gsap.set(cards, { y: 0, opacity: 1, scale: 1 });
+    });
+
+    return () => mm.revert();
   }, []);
 
   return (
