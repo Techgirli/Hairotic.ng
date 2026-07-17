@@ -5,6 +5,7 @@ import { ShoppingBag, MessageCircle, Heart, Star, CheckCircle2 } from 'lucide-re
 import Link from 'next/link';
 import { trackEvent } from '../../../lib/analytics';
 import { useCartStore } from '../../../store/cartStore';
+import { useToastStore } from '../../../store/toastStore';
 
 interface ProductImage {
   id: string;
@@ -76,7 +77,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
       toggleDrawer(true);
     } catch (e) {
       console.error('Failed to add item to cart', e);
-      alert('Failed to add item to bag. Please try again.');
+      useToastStore.getState().showToast('Failed to add item to bag. Please try again.', 'error');
     }
   };
 

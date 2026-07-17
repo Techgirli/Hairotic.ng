@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
+import { useToastStore } from '../../store/toastStore';
 import { Trash2, ShoppingBag, Heart, LogIn } from 'lucide-react';
 import Header from '../../components/header';
 import Footer from '@/components/footer';
@@ -79,7 +80,7 @@ export default function WishlistPage() {
       await handleRemove(item.productVariantId);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
-      alert(message || 'Failed to move to bag');
+      useToastStore.getState().showToast(message || 'Failed to move to bag', 'error');
     }
   };
 

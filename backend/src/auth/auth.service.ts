@@ -56,14 +56,15 @@ export class AuthService {
     // Generate a one-time email verification token (UUID — unguessable)
     const verificationToken = randomUUID();
 
+    const isDev = process.env.NODE_ENV !== 'production';
     const user = await (this.prisma.user as any).create({
       data: {
         email,
         phone,
         passwordHash,
         role: Role.CUSTOMER,
-        emailVerified: false,
-        verificationToken,
+        emailVerified: isDev,
+        verificationToken: isDev ? null : verificationToken,
       },
     });
 
@@ -199,10 +200,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Customers must verify their email before they can log in
+    // Customers must verify their email before they can log in (skipped in development)
     const isCustomer = user.role === Role.CUSTOMER;
     const userAny = user as any;
-    if (isCustomer && !userAny.emailVerified) {
+    if (isCustomer && !userAny.emailVerified && process.env.NODE_ENV === 'production') {
       throw new UnauthorizedException({
         statusCode: 401,
         message: 'Please verify your email address before logging in. Check your inbox for the verification link.',

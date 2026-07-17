@@ -5,6 +5,7 @@ import { User, MapPin, ShoppingBag, Eye, Plus, Trash2, ShieldAlert, LogOut, KeyR
 import Link from 'next/link';
 import Header from '../../components/header';
 import { useCartStore } from '../../store/cartStore';
+import { useToastStore } from '../../store/toastStore';
 
 interface UserData {
   id: string;
@@ -272,11 +273,11 @@ export default function AccountPage() {
         throw new Error(d.message || 'Failed to update profile settings');
       }
 
-      alert('Profile updated successfully!');
+      useToastStore.getState().showToast('Profile updated successfully!', 'success');
       checkAuth();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
-      alert(message);
+      useToastStore.getState().showToast(message, 'error');
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -313,7 +314,7 @@ export default function AccountPage() {
       fetchAddresses();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
-      alert(message);
+      useToastStore.getState().showToast(message, 'error');
     } finally {
       setIsAddingAddress(false);
     }
@@ -335,7 +336,7 @@ export default function AccountPage() {
       fetchAddresses();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
-      alert(message);
+      useToastStore.getState().showToast(message, 'error');
     }
   };
 
@@ -353,7 +354,7 @@ export default function AccountPage() {
       fetchAddresses();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
-      alert(message);
+      useToastStore.getState().showToast(message, 'error');
     }
   };
 
@@ -396,7 +397,7 @@ export default function AccountPage() {
       await handleRemoveWishlist(variantId);
       toggleDrawer(true);
     } catch (err) {
-      alert('Failed to move item to bag');
+      useToastStore.getState().showToast('Failed to move item to bag', 'error');
     }
   };
 
@@ -595,7 +596,7 @@ export default function AccountPage() {
                         if (googleEmailInput.includes('@')) {
                           handleGoogleLoginSubmit(googleEmailInput);
                         } else {
-                          alert('Please enter a valid email address');
+                          useToastStore.getState().showToast('Please enter a valid email address', 'error');
                         }
                       }}
                       className="flex-1 h-9 bg-[#222222] text-white text-[11px] font-bold uppercase tracking-wider rounded-[8px] cursor-pointer"

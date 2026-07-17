@@ -91,11 +91,13 @@ export default function AnimatedWhatsApp() {
           href="https://wa.me/2348087794441?text=Hello,%20I'm%20interested%20in%20custom%20hair%20units!"
           target="_blank"
           rel="noopener noreferrer"
-          className="relative flex items-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white px-5 py-3 rounded-full shadow-2xl font-semibold text-[14px] cursor-pointer"
+          className="group relative flex items-center justify-center bg-[#25D366] hover:bg-[#20BA5A] text-white p-3 hover:px-5 rounded-full shadow-2xl font-semibold text-[14px] cursor-pointer transition-all duration-300 ease-in-out"
           style={{ opacity: 0, willChange: 'transform' }}
         >
-          <MessageCircle className="w-5 h-5 fill-white text-[#25D366]" />
-          <span>Consult Hair Expert</span>
+          <MessageCircle className="w-5 h-5 fill-white text-[#25D366] shrink-0" />
+          <span className="max-w-0 overflow-hidden opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 ease-in-out whitespace-nowrap">
+            Consult Hair Expert
+          </span>
         </a>
       </div>
     </div>

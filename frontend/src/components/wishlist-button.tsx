@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuthStore } from '../store/authStore';
+import { useToastStore } from '../store/toastStore';
 
 interface WishlistButtonProps {
   variantId?: string;
@@ -47,7 +48,7 @@ export default function WishlistButton({ variantId }: WishlistButtonProps) {
     e.stopPropagation();
 
     if (!user) {
-      alert('Please create a profile or sign in to save favorites!');
+      useToastStore.getState().showToast('Please create a profile or sign in to save favorites!', 'info');
       window.location.href = '/account';
       return;
     }
@@ -86,7 +87,7 @@ export default function WishlistButton({ variantId }: WishlistButtonProps) {
         if (res.ok) {
           setIsFavorited(true);
           // Show quick alert
-          alert('Added to favorites! You can manage it from your Dashboard.');
+          useToastStore.getState().showToast('Added to favorites! You can manage it from your Dashboard.', 'success');
         }
       }
     } catch (err) {

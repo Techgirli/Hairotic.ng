@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import Link from 'next/link';
 import { ArrowUp, Send, MapPin, Mail, Phone, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
+import { useToastStore } from '../store/toastStore';
 
 export default function Footer() {
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +49,7 @@ export default function Footer() {
           .to(newsletterBtnRef.current, { scale: 1.1, color: '#E56717', duration: 0.2 })
           .to(newsletterBtnRef.current, { scale: 1, color: '#FFFFFF', duration: 0.3, ease: 'power2.out' });
       }
-      alert('Welcome to the Hairotic Baddie club! ✨ Check your inbox soon.');
+      useToastStore.getState().showToast('Welcome to the Hairotic Baddie club! ✨ Check your inbox soon.', 'success');
       emailInputRef.current.value = '';
     }
   };
