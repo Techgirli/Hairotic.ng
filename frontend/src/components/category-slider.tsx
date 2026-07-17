@@ -142,6 +142,34 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
           </Link>
         ))}
       </div>
+
+      {/* Mobile Navigation Buttons (Centered below the slider, visible only on Mobile) */}
+      <div className="flex sm:hidden justify-center items-center gap-4 mt-4">
+        <button
+          onClick={() => scroll('left')}
+          disabled={!canScrollLeft}
+          className={`w-11 h-11 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
+            canScrollLeft
+              ? 'bg-white text-[#222222] active:bg-[#E56717] active:text-white active:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
+              : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+          }`}
+          aria-label="Scroll left"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => scroll('right')}
+          disabled={!canScrollRight}
+          className={`w-11 h-11 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
+            canScrollRight
+              ? 'bg-white text-[#222222] active:bg-[#E56717] active:text-white active:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
+              : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+          }`}
+          aria-label="Scroll right"
+        >
+          <ArrowRight className="w-5 h-5" />
+        </button>
+      </div>
     </div>
   );
 }
