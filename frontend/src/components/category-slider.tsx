@@ -55,11 +55,11 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    // Responsive scroll amount: scroll by one mobile card width (~304px) on small screens, or desktop card width (~460px)
+    // Responsive scroll amount: scroll by one mobile card width (~204px) on small screens, or desktop card width (~460px)
     const isMobile = container.clientWidth < 640;
     const scrollAmount = direction === 'left' 
-      ? -(isMobile ? 304 : 460) 
-      : (isMobile ? 304 : 460);
+      ? -(isMobile ? 204 : 460) 
+      : (isMobile ? 204 : 460);
 
     const targetScroll = container.scrollLeft + scrollAmount;
 
@@ -113,7 +113,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
           <Link
             key={cat.slug}
             href={cat.customUrl || `/shop?categorySlug=${cat.slug}`}
-            className="category-card group relative h-[380px] w-[280px] sm:w-[380px] md:w-[440px] shrink-0 rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
+            className="category-card group relative h-[260px] sm:h-[320px] md:h-[380px] w-[180px] sm:w-[300px] md:w-[380px] lg:w-[440px] shrink-0 rounded-[20px] sm:rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
             style={{ flexShrink: 0 }}
           >
             {/* Background image container for smooth parallax slide */}
@@ -128,12 +128,12 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-tr from-transparent via-white/5 to-white/10 transition-opacity duration-700 pointer-events-none" />
 
             {/* Bottom info section with subtle slide up */}
-            <div className="absolute bottom-8 left-8 right-8 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500 ease-out">
-              <div className="space-y-2">
-                <h3 className="text-[26px] font-extrabold text-white uppercase tracking-wider group-hover:text-[#E56717] transition-colors duration-300 drop-shadow-md">
+            <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500 ease-out">
+              <div className="space-y-1 sm:space-y-2">
+                <h3 className="text-[18px] sm:text-[22px] md:text-[26px] font-extrabold text-white uppercase tracking-wider group-hover:text-[#E56717] transition-colors duration-300 drop-shadow-md">
                   {cat.name}
                 </h3>
-                <span className="text-[13px] text-[#E56717] uppercase tracking-widest font-bold flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
+                <span className="text-[11px] sm:text-[13px] text-[#E56717] uppercase tracking-widest font-bold flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
                   View Collection 
                   <span className="transform translate-x-0 group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
