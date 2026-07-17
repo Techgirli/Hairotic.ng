@@ -100,14 +100,14 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
       {/* Slider Track Container */}
       <div
         ref={containerRef}
-        className="flex gap-8 overflow-x-auto pb-8 pt-2 scrollbar-hide snap-x snap-mandatory scroll-smooth px-2"
+        className="flex flex-row flex-nowrap gap-6 md:gap-8 overflow-x-auto pb-8 pt-2 scrollbar-hide snap-x snap-mandatory scroll-smooth px-2 max-w-full"
         style={{ scrollbarWidth: 'none' }}
       >
         {categories.map((cat) => (
           <Link
             key={cat.slug}
             href={cat.customUrl || `/shop?categorySlug=${cat.slug}`}
-            className="category-card group relative h-[380px] w-[320px] sm:w-[420px] md:w-[480px] shrink-0 rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block snap-start"
+            className="category-card group relative h-[380px] w-[280px] sm:w-[380px] md:w-[440px] shrink-0 rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block snap-start"
             style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
           >
             {/* Background image container for smooth parallax slide */}
