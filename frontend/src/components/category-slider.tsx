@@ -99,14 +99,21 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
 
       <div
         ref={containerRef}
-        className="flex flex-row flex-nowrap gap-6 md:gap-8 overflow-x-auto overflow-y-hidden pb-8 pt-2 scrollbar-hide px-2 w-full touch-pan-x"
-        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', display: 'flex', flexWrap: 'nowrap' }}
+        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 scrollbar-hide px-2 w-full"
+        style={{
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
+          display: 'flex',
+          flexWrap: 'nowrap',
+          overflowX: 'auto',
+          overflowY: 'hidden',
+        }}
       >
         {categories.map((cat) => (
           <Link
             key={cat.slug}
             href={cat.customUrl || `/shop?categorySlug=${cat.slug}`}
-            className="category-card group relative h-[380px] w-[280px] sm:w-[380px] md:w-[440px] shrink-0 rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
+            className="category-card group relative h-[380px] w-[280px] sm:w-[380px] md:w-[440px] shrink-0 rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block select-none"
             style={{ flexShrink: 0 }}
           >
             {/* Background image container for smooth parallax slide */}
