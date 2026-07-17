@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
+import * as crypto from 'crypto';
 
 @Controller('payments')
 export class PaymentsController {
@@ -45,7 +46,13 @@ export class PaymentsController {
   @Post('reconcile')
   async reconcile(@Headers('x-reconcile-secret') secret: string) {
     const expectedSecret = process.env.RECONCILE_SECRET;
-    if (!expectedSecret || secret !== expectedSecret) {
+    const isSecretValid =
+      expectedSecret &&
+      secret &&
+      secret.length === expectedSecret.length &&
+      crypto.timingSafeEqual(Buffer.from(secret), Buffer.from(expectedSecret));
+
+    if (!isSecretValid) {
       throw new UnauthorizedException('Invalid reconcile secret');
     }
     return this.paymentsService.reconcileStuckOrders();

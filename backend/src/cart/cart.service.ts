@@ -153,16 +153,16 @@ export class CartService {
     }
   }
 
-  async updateQuantity(itemId: string, quantity: number) {
+  async updateQuantity(itemId: string, quantity: number, cartId: string) {
     if (quantity <= 0) {
-      return this.removeItem(itemId);
+      return this.removeItem(itemId, cartId);
     }
 
     const item = await this.prisma.cartItem.findUnique({
       where: { id: itemId },
     });
 
-    if (!item) {
+    if (!item || item.cartId !== cartId) {
       throw new NotFoundException('Cart item not found');
     }
 
@@ -183,11 +183,11 @@ export class CartService {
     });
   }
 
-  async removeItem(itemId: string) {
+  async removeItem(itemId: string, cartId: string) {
     const item = await this.prisma.cartItem.findUnique({
       where: { id: itemId },
     });
-    if (!item) {
+    if (!item || item.cartId !== cartId) {
       throw new NotFoundException('Cart item not found');
     }
 

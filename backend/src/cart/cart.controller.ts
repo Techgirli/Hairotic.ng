@@ -46,7 +46,8 @@ export class CartController {
     @Body() body: { quantity: number; sessionId?: string },
   ) {
     const userId = this.getUserIdFromCookie(req);
-    await this.cartService.updateQuantity(itemId, body.quantity);
+    const cart = await this.cartService.getOrCreateCart(userId, body.sessionId);
+    await this.cartService.updateQuantity(itemId, body.quantity, cart.id);
     return this.cartService.getOrCreateCart(userId, body.sessionId);
   }
 
@@ -57,7 +58,8 @@ export class CartController {
     @Query('sessionId') sessionId?: string,
   ) {
     const userId = this.getUserIdFromCookie(req);
-    await this.cartService.removeItem(itemId);
+    const cart = await this.cartService.getOrCreateCart(userId, sessionId);
+    await this.cartService.removeItem(itemId, cart.id);
     return this.cartService.getOrCreateCart(userId, sessionId);
   }
 

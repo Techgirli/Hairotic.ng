@@ -164,13 +164,14 @@ export class PaymentsService {
       return { status: 'ignored' };
     }
 
-    // Verify webhook signature
-    const hash = crypto
-      .createHmac('sha512', paystackSecret)
-      .update(rawBody)
-      .digest('hex');
+    // Verify webhook signature in constant time to prevent timing attacks
+    const hashBuffer = Buffer.from(hash, 'hex');
+    const sigBuffer = Buffer.from(signature, 'hex');
 
-    if (hash !== signature) {
+    if (
+      hashBuffer.length !== sigBuffer.length ||
+      !crypto.timingSafeEqual(hashBuffer, sigBuffer)
+    ) {
       throw new UnauthorizedException('Invalid signature');
     }
 
