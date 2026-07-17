@@ -70,7 +70,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
   return (
     <div className="relative group/slider w-full" ref={sliderRef}>
       {/* Navigation Buttons */}
-      <div className="absolute -top-20 right-6 flex items-center gap-3 z-20">
+      <div className="absolute -top-20 right-6 hidden sm:flex items-center gap-3 z-20">
         <button
           onClick={() => scroll('left')}
           disabled={!canScrollLeft}

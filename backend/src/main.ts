@@ -16,8 +16,20 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Enable CORS with credentials support
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ];
+  if (process.env.APP_URL) {
+    allowedOrigins.push(process.env.APP_URL);
+    const sanitizedUrl = process.env.APP_URL.replace(/\/$/, '');
+    if (!allowedOrigins.includes(sanitizedUrl)) {
+      allowedOrigins.push(sanitizedUrl);
+    }
+  }
+
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: allowedOrigins,
     credentials: true,
   });
 

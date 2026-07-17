@@ -200,20 +200,22 @@ export class AuthController {
     token: string,
     maxAge: number,
   ) {
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie(name, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge,
       path: '/',
     });
   }
 
   private clearCookie(res: Response, name: string) {
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie(name, '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       expires: new Date(0),
       path: '/',
     });

@@ -60,7 +60,7 @@ export default function CartDrawer() {
       {/* Dark blur overlay backdrop */}
       <div className="absolute inset-0 bg-[#222222]/60 backdrop-blur-sm transition-opacity duration-300" />
 
-      <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="absolute inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
         <div
           ref={drawerRef}
           className="w-screen max-w-md bg-white flex flex-col shadow-2xl h-full"

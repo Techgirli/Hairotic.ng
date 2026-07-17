@@ -116,7 +116,7 @@ export default function Header() {
 
       {/* Mobile Navigation Dropdown Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-[#222222]/5 py-6 px-6 space-y-4 shadow-lg animate-fadeIn z-40 select-none">
+        <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-[#222222]/5 py-6 px-6 space-y-4 shadow-lg animate-fadeIn z-40 select-none">
           <Link 
             href="/" 
             onClick={() => setMobileMenuOpen(false)}
