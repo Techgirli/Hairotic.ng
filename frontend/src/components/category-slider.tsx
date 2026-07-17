@@ -69,31 +69,57 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
 
   return (
     <div className="relative group/slider w-full" ref={sliderRef}>
-      {/* Navigation Buttons */}
-      <div className="absolute -top-16 sm:-top-20 right-2 sm:right-6 flex items-center gap-2 sm:gap-3 z-20">
+      {/* Desktop Navigation Buttons (Top Right, Hidden on Mobile) */}
+      <div className="absolute -top-20 right-6 hidden sm:flex items-center gap-3 z-20">
         <button
           onClick={() => scroll('left')}
           disabled={!canScrollLeft}
-          className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
+          className={`w-12 h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
             canScrollLeft
               ? 'bg-white text-[#222222] hover:bg-[#E56717] hover:text-white hover:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
           }`}
           aria-label="Scroll left"
         >
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
         <button
           onClick={() => scroll('right')}
           disabled={!canScrollRight}
-          className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
+          className={`w-12 h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
             canScrollRight
               ? 'bg-white text-[#222222] hover:bg-[#E56717] hover:text-white hover:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
           }`}
           aria-label="Scroll right"
         >
-          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ArrowRight className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Mobile Navigation Buttons (Floating on Left & Right Sides, Visible only on Mobile) */}
+      <div className="absolute -left-2 top-[190px] -translate-y-1/2 z-25 flex sm:hidden">
+        <button
+          onClick={() => scroll('left')}
+          disabled={!canScrollLeft}
+          className={`w-10 h-10 rounded-full border border-[#222222]/10 flex items-center justify-center bg-white text-[#222222] shadow-lg transition-all duration-300 ${
+            canScrollLeft ? 'opacity-90 scale-100' : 'opacity-0 scale-75 pointer-events-none'
+          }`}
+          aria-label="Scroll left"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+      </div>
+      <div className="absolute -right-2 top-[190px] -translate-y-1/2 z-25 flex sm:hidden">
+        <button
+          onClick={() => scroll('right')}
+          disabled={!canScrollRight}
+          className={`w-10 h-10 rounded-full border border-[#222222]/10 flex items-center justify-center bg-white text-[#222222] shadow-lg transition-all duration-300 ${
+            canScrollRight ? 'opacity-90 scale-100' : 'opacity-0 scale-75 pointer-events-none'
+          }`}
+          aria-label="Scroll right"
+        >
+          <ArrowRight className="w-5 h-5" />
         </button>
       </div>
 

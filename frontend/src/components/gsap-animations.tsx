@@ -35,115 +35,45 @@ export default function GSAPAnimations() {
           '-=0.6'
         );
 
-      // ── 2. DESKTOP ANIMATIONS (768px and up) ──────────────────────────────
-      mm.add("(min-width: 768px)", () => {
-        // HERO BG: Slow parallax zoom on scroll
-        gsap.to('.hero-bg-image', {
-          scale: 1.12,
+      // ── 2. RESPONSIVE SCROLL TRIGGER ANIMATIONS (All Screens) ──────────────
+      // HERO BG: Slow parallax zoom on scroll
+      gsap.to('.hero-bg-image', {
+        scale: 1.12,
+        scrollTrigger: {
+          trigger: '.hero-section',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
+
+      // TRUST BAR: Slide up
+      gsap.fromTo('.trust-item',
+        { y: 35, opacity: 0 },
+        {
+          y: 0, opacity: 1,
+          stagger: 0.12,
+          duration: 0.8,
+          ease: 'power2.out',
           scrollTrigger: {
-            trigger: '.hero-section',
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 2,
+            trigger: '.trust-section',
+            start: 'top 92%',
+            once: true,
           },
-        });
+        }
+      );
 
-        // TRUST BAR: Slide up
-        gsap.fromTo('.trust-item',
-          { y: 50, opacity: 0 },
+      // SECTION HEADERS: Elegant fade-up reveal (highly compatible with mobile/tablet)
+      gsap.utils.toArray<HTMLElement>('.section-header-reveal').forEach((el) => {
+        gsap.fromTo(el,
+          { y: 30, opacity: 0 },
           {
-            y: 0, opacity: 1,
-            stagger: 0.2,
-            duration: 1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: '.trust-section',
-              start: 'top 88%',
-              once: true,
-            },
-          }
-        );
-
-        // SECTION HEADERS: Wipe reveal
-        gsap.utils.toArray<HTMLElement>('.section-header-reveal').forEach((el) => {
-          gsap.fromTo(el,
-            { clipPath: 'inset(0 100% 0 0)', opacity: 0 },
-            {
-              clipPath: 'inset(0 0% 0 0)',
-              opacity: 1,
-              duration: 1.4,
-              ease: 'power4.inOut',
-              scrollTrigger: {
-                trigger: el,
-                start: 'top 90%',
-                once: true,
-              },
-            }
-          );
-        });
-
-        gsap.utils.toArray<HTMLElement>('.section-divider').forEach((el) => {
-          gsap.fromTo(el,
-            { scaleX: 0 },
-            {
-              scaleX: 1,
-              transformOrigin: 'left center',
-              duration: 1.2,
-              ease: 'expo.out',
-              scrollTrigger: {
-                trigger: el,
-                start: 'top 92%',
-                once: true,
-              },
-            }
-          );
-        });
-
-        // CATEGORY CARDS: Stagger reveal
-        const categoryCards = gsap.utils.toArray<HTMLElement>('.category-card');
-        categoryCards.forEach((card, i) => {
-          gsap.fromTo(card,
-            { y: 70, opacity: 0, scale: 0.94 },
-            {
-              y: 0, opacity: 1, scale: 1,
-              duration: 1.1,
-              delay: i * 0.12,
-              ease: 'power3.out',
-              scrollTrigger: {
-                trigger: '.categories-section',
-                start: 'top 85%',
-                once: true,
-              },
-            }
-          );
-        });
-
-        // PRODUCT CARDS: Stagger fade-up
-        gsap.fromTo('.product-card',
-          { y: 60, opacity: 0 },
-          {
-            y: 0, opacity: 1,
-            stagger: 0.13,
-            duration: 1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: '.products-section',
-              start: 'top 85%',
-              once: true,
-            },
-          }
-        );
-
-        // FOOTER REVEAL
-        gsap.fromTo('.footer-col',
-          { y: 40, opacity: 0 },
-          {
-            y: 0, opacity: 1,
-            stagger: 0.12,
+            y: 0,
+            opacity: 1,
             duration: 0.9,
             ease: 'power2.out',
             scrollTrigger: {
-              trigger: 'footer',
+              trigger: el,
               start: 'top 92%',
               once: true,
             },
@@ -151,17 +81,75 @@ export default function GSAPAnimations() {
         );
       });
 
-      // ── 3. MOBILE/TABLET FALLBACK (under 768px): Instant reveal ──────────
-      mm.add("(max-width: 767px)", () => {
-        gsap.set('.section-header-reveal', { clipPath: 'inset(0 0% 0 0)', opacity: 1 });
-        gsap.set('.section-divider', { scaleX: 1 });
-        gsap.set('.category-card', { y: 0, opacity: 1, scale: 1 });
-        gsap.set('.trust-item', { y: 0, opacity: 1 });
-        gsap.set('.product-card', { y: 0, opacity: 1 });
-        gsap.set('.footer-col', { y: 0, opacity: 1 });
+      // SECTION DIVIDER LINES: Horizontal reveal from center
+      gsap.utils.toArray<HTMLElement>('.section-divider').forEach((el) => {
+        gsap.fromTo(el,
+          { scaleX: 0 },
+          {
+            scaleX: 1,
+            transformOrigin: 'center center',
+            duration: 0.8,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 94%',
+              once: true,
+            },
+          }
+        );
       });
 
-      return () => mm.revert();
+      // CATEGORY CARDS: Stagger reveal
+      gsap.fromTo('.category-card',
+        { y: 40, opacity: 0, scale: 0.96 },
+        {
+          y: 0, opacity: 1, scale: 1,
+          stagger: 0.1,
+          duration: 0.9,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '.categories-section',
+            start: 'top 88%',
+            once: true,
+          },
+        }
+      );
+
+      // PRODUCT CARDS: Stagger fade-up
+      gsap.fromTo('.product-card',
+        { y: 40, opacity: 0 },
+        {
+          y: 0, opacity: 1,
+          stagger: 0.08,
+          duration: 0.8,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '.products-section',
+            start: 'top 88%',
+            once: true,
+          },
+        }
+      );
+
+      // FOOTER REVEAL: Stagger fade-up
+      gsap.fromTo('.footer-col',
+        { y: 30, opacity: 0 },
+        {
+          y: 0, opacity: 1,
+          stagger: 0.08,
+          duration: 0.7,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: 'footer',
+            start: 'top 95%',
+            once: true,
+          },
+        }
+      );
+
+      return () => {
+        ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      };
     }, 100);
 
     return () => clearTimeout(timer);
