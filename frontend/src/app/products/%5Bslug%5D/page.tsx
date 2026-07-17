@@ -6,6 +6,8 @@ import { Star, ShieldCheck } from 'lucide-react';
 import Header from '../../../components/header';
 import Footer from '@/components/footer';
 
+export const dynamic = 'force-dynamic';
+
 interface ProductImage {
   id: string;
   url: string;
