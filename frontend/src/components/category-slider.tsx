@@ -101,36 +101,9 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
           <ArrowRight className="w-5 h-5" />
         </button>
       </div>
-
-      {/* Mobile Navigation Buttons (Floating on Left & Right Sides, Visible only on Mobile) */}
-      <div className="absolute -left-2 top-[190px] -translate-y-1/2 z-25 flex sm:hidden">
-        <button
-          onClick={() => scroll('left')}
-          disabled={!canScrollLeft}
-          className={`w-10 h-10 rounded-full border border-[#222222]/10 flex items-center justify-center bg-white text-[#222222] shadow-lg transition-all duration-300 ${
-            canScrollLeft ? 'opacity-90 scale-100' : 'opacity-0 scale-75 pointer-events-none'
-          }`}
-          aria-label="Scroll left"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-      </div>
-      <div className="absolute -right-2 top-[190px] -translate-y-1/2 z-25 flex sm:hidden">
-        <button
-          onClick={() => scroll('right')}
-          disabled={!canScrollRight}
-          className={`w-10 h-10 rounded-full border border-[#222222]/10 flex items-center justify-center bg-white text-[#222222] shadow-lg transition-all duration-300 ${
-            canScrollRight ? 'opacity-90 scale-100' : 'opacity-0 scale-75 pointer-events-none'
-          }`}
-          aria-label="Scroll right"
-        >
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
-
       <div
         ref={containerRef}
-        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 overflow-x-auto overflow-y-hidden scrollbar-hide px-2 w-full touch-pan-x"
+        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 overflow-x-scroll overflow-y-hidden scrollbar-hide px-2 w-full touch-pan-x"
         style={{
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',

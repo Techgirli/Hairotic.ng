@@ -240,7 +240,7 @@ export default async function Homepage() {
       {/* ── Shop Categories Grid ─────────────────────────────────────── */}
       <section className="categories-section max-w-[1600px] mx-auto px-6 py-20">
         <div className="text-center mb-14">
-          <h2 className="section-header-reveal text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
+          <h2 className="text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
             Shop By Texture
           </h2>
           <div className="section-divider w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
@@ -253,7 +253,7 @@ export default async function Homepage() {
         <section className="products-section bg-[#FAF7F4] py-20">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-14">
-              <h2 className="section-header-reveal text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
+              <h2 className="text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
                 Bestselling Units
               </h2>
               <p className="text-[#6B7280] text-[15px] mt-2">Lagos favorites that turn heads.</p>
