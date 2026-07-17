@@ -8,9 +8,11 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function GSAPAnimations() {
   useEffect(() => {
+    let mm: any = null;
+
     // Small delay so the DOM is fully painted before GSAP reads it
     const timer = setTimeout(() => {
-      const mm = gsap.matchMedia();
+      mm = gsap.matchMedia();
 
       // ── 1. HERO: Cinematic entrance (runs on all screens on load)
       const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -148,14 +150,15 @@ export default function GSAPAnimations() {
           }
         );
       });
-
-      return () => {
-        mm.revert();
-        ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-      };
     }, 100);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (mm) {
+        mm.revert();
+      }
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
   }, []);
 
   return null;
