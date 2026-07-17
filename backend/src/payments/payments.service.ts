@@ -165,6 +165,11 @@ export class PaymentsService {
     }
 
     // Verify webhook signature in constant time to prevent timing attacks
+    const hash = crypto
+      .createHmac('sha512', paystackSecret)
+      .update(rawBody)
+      .digest('hex');
+
     const hashBuffer = Buffer.from(hash, 'hex');
     const sigBuffer = Buffer.from(signature, 'hex');
 
