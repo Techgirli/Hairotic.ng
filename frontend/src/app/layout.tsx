@@ -23,6 +23,11 @@ export const metadata: Metadata = {
     default: 'Hairotic.ng | Premium Nigerian Hair Store',
     template: '%s | Hairotic.ng',
   },
+  icons: {
+    icon: '/Logo/photo_2023-09-25_16-13-56.jpg',
+    shortcut: '/Logo/photo_2023-09-25_16-13-56.jpg',
+    apple: '/Logo/photo_2023-09-25_16-13-56.jpg',
+  },
   description: 'Hey! Hairotic Baddies!! Empower your boldest self with premium, high-quality wigs and hair bundles. Shopped like a fashion drop.',
   keywords: ['premium hair', 'human hair wigs', 'Nigerian hair store', 'Lagos hair', 'bundles', 'closures', 'frontals'],
   openGraph: {

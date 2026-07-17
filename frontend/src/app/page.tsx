@@ -239,11 +239,11 @@ export default async function Homepage() {
 
       {/* ── Shop Categories Grid ─────────────────────────────────────── */}
       <section className="categories-section max-w-[1600px] mx-auto px-6 py-20">
-        <div className="text-center mb-14">
-          <h2 className="section-header-reveal text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
+        <div className="text-left mb-14 max-w-7xl mx-auto">
+          <h2 className="section-header-reveal text-[28px] sm:text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
             Shop By Texture
           </h2>
-          <div className="section-divider w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
+          <div className="section-divider w-14 h-1 bg-[#E56717] mt-3 rounded-full" />
         </div>
         <CategorySlider categories={categories} />
       </section>

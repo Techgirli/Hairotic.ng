@@ -70,36 +70,36 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
   return (
     <div className="relative group/slider w-full" ref={sliderRef}>
       {/* Navigation Buttons */}
-      <div className="absolute -top-20 right-6 hidden sm:flex items-center gap-3 z-20">
+      <div className="absolute -top-16 sm:-top-20 right-2 sm:right-6 flex items-center gap-2 sm:gap-3 z-20">
         <button
           onClick={() => scroll('left')}
           disabled={!canScrollLeft}
-          className={`w-12 h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
+          className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
             canScrollLeft
               ? 'bg-white text-[#222222] hover:bg-[#E56717] hover:text-white hover:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
           }`}
           aria-label="Scroll left"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => scroll('right')}
           disabled={!canScrollRight}
-          className={`w-12 h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
+          className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
             canScrollRight
               ? 'bg-white text-[#222222] hover:bg-[#E56717] hover:text-white hover:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
           }`}
           aria-label="Scroll right"
         >
-          <ArrowRight className="w-5 h-5" />
+          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
       <div
         ref={containerRef}
-        className="flex flex-row flex-nowrap gap-6 md:gap-8 overflow-x-scroll pb-8 pt-2 scrollbar-hide scroll-smooth px-2 w-full"
+        className="flex flex-row flex-nowrap gap-6 md:gap-8 overflow-x-auto overflow-y-hidden pb-8 pt-2 scrollbar-hide px-2 w-full touch-pan-x"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', display: 'flex', flexWrap: 'nowrap' }}
       >
         {categories.map((cat) => (
