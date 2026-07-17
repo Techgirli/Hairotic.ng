@@ -61,7 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }));
     }
   } catch (err) {
-    console.error('sitemap: failed to fetch product list', err);
+    console.warn(`sitemap: failed to fetch products from ${API_URL} (backend offline or unreachable). Only static routes will be included.`);
   }
 
   return [...staticRoutes, ...productRoutes];
