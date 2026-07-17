@@ -49,6 +49,8 @@ export interface CartState {
   clearCart: () => void;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 const generateUUID = () => {
   return (
     Math.random().toString(36).substring(2, 15) +
@@ -82,7 +84,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/cart?sessionId=${sessionId}`, {
+      const res = await fetch(`${API_URL}/cart?sessionId=${sessionId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -103,7 +105,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/cart/items`, {
+      const res = await fetch(`${API_URL}/cart/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ variantId, quantity, sessionId }),
@@ -129,7 +131,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/cart/items/${itemId}`, {
+      const res = await fetch(`${API_URL}/cart/items/${itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quantity, sessionId }),
@@ -155,7 +157,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/cart/items/${itemId}?sessionId=${sessionId}`, {
+      const res = await fetch(`${API_URL}/cart/items/${itemId}?sessionId=${sessionId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -177,7 +179,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/cart/merge`, {
+      const res = await fetch(`${API_URL}/cart/merge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId }),

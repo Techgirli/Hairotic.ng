@@ -39,6 +39,8 @@ const NIGERIAN_STATES_LGAS: Record<string, string[]> = {
   Kaduna: ['Kaduna North', 'Kaduna South', 'Chikun', 'Zaria'],
 };
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, sessionId, clearCart } = useCartStore();
@@ -110,7 +112,7 @@ export default function CheckoutPage() {
     const idempotencyKey = `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     try {
-      const res = await fetch('http://localhost:3001/api/v1/checkout', {
+      const res = await fetch(`${API_URL}/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -128,7 +130,7 @@ export default function CheckoutPage() {
       const order = await res.json();
 
       // Initialize Paystack Payment
-      const payRes = await fetch('http://localhost:3001/api/v1/payments/initialize', {
+      const payRes = await fetch(`${API_URL}/payments/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId: order.id }),

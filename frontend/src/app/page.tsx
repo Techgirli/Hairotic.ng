@@ -101,11 +101,13 @@ const MOCK_HOMEPAGE_PRODUCTS: Product[] = [
   }
 ];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 async function getFeaturedProducts(): Promise<Product[]> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000); // 3s max wait
-    const res = await fetch('http://localhost:3001/api/v1/products?limit=4', {
+    const res = await fetch(`${API_URL}/products?limit=4`, {
       cache: 'no-store',
       signal: controller.signal,
     });

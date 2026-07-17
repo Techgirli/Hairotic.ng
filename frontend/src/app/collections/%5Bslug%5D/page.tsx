@@ -43,9 +43,11 @@ interface Category {
   slug: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 async function getCategories(): Promise<Category[]> {
   try {
-    const res = await fetch('http://localhost:3001/api/v1/categories', { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/categories`, { cache: 'no-store' });
     if (!res.ok) return [];
     return await res.json();
   } catch {
@@ -55,7 +57,7 @@ async function getCategories(): Promise<Category[]> {
 
 async function getCollection(slug: string): Promise<Collection | null> {
   try {
-    const res = await fetch(`http://localhost:3001/api/v1/collections/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/collections/${slug}`, { cache: 'no-store' });
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -90,7 +92,7 @@ async function getCollectionProducts(slug: string, searchParams: Record<string, 
       }
     }
 
-    const res = await fetch(`http://localhost:3001/api/v1/products?${query.toString()}`, {
+    const res = await fetch(`${API_URL}/products?${query.toString()}`, {
       cache: 'no-store',
     });
     if (!res.ok) return [];

@@ -197,10 +197,12 @@ const MOCK_PRODUCTS: ProductWithCategory[] = [
   })
 ];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 // Fetch categories for sidebar
 async function getCategories(): Promise<Category[]> {
   try {
-    const res = await fetch('http://localhost:3001/api/v1/categories', { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/categories`, { cache: 'no-store' });
     if (!res.ok) throw new Error('API response not ok');
     return await res.json();
   } catch {
@@ -244,7 +246,7 @@ async function getFilteredProducts(searchParams: Record<string, string | string[
       }
     }
 
-    const res = await fetch(`http://localhost:3001/api/v1/products?${query.toString()}`, {
+    const res = await fetch(`${API_URL}/products?${query.toString()}`, {
       cache: 'no-store',
     });
     if (!res.ok) throw new Error('API response not ok');

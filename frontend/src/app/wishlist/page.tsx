@@ -38,6 +38,8 @@ interface WishlistItem {
   variant: ProductVariant;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 export default function WishlistPage() {
   const router = useRouter();
   const { user, checkMe } = useAuthStore();
@@ -59,7 +61,7 @@ export default function WishlistPage() {
 
   const handleRemove = async (variantId: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/wishlist/${variantId}`, {
+      const res = await fetch(`${API_URL}/wishlist/${variantId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
