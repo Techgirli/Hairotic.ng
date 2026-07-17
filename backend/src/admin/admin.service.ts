@@ -60,11 +60,10 @@ export class AdminService {
     });
 
     // 4. Low stock variants count
-    const lowStockVariantsCount = await this.prisma.inventory.count({
-      where: {
-        quantity: { lte: this.prisma.inventory.fields.lowStockThreshold },
-      },
-    });
+    const lowStockResult = await this.prisma.$queryRaw<Array<{ count: number }>>`
+      SELECT COUNT(*)::int as count FROM inventory WHERE quantity <= low_stock_threshold
+    `;
+    const lowStockVariantsCount = Number(lowStockResult[0]?.count ?? 0);
 
     // 5. Recent orders (past 5)
     const recentOrders = await this.prisma.order.findMany({
