@@ -55,7 +55,12 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    const scrollAmount = direction === 'left' ? -460 : 460;
+    // Responsive scroll amount: scroll by one mobile card width (~304px) on small screens, or desktop card width (~460px)
+    const isMobile = container.clientWidth < 640;
+    const scrollAmount = direction === 'left' 
+      ? -(isMobile ? 304 : 460) 
+      : (isMobile ? 304 : 460);
+
     const targetScroll = container.scrollLeft + scrollAmount;
 
     // Animate the scrollLeft property smoothly
@@ -125,14 +130,10 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
 
       <div
         ref={containerRef}
-        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 scrollbar-hide px-2 w-full"
+        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 overflow-x-auto overflow-y-hidden scrollbar-hide px-2 w-full touch-pan-x"
         style={{
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          display: 'flex',
-          flexWrap: 'nowrap',
-          overflowX: 'auto',
-          overflowY: 'hidden',
         }}
       >
         {categories.map((cat) => (

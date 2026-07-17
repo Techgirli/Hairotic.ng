@@ -35,119 +35,122 @@ export default function GSAPAnimations() {
           '-=0.6'
         );
 
-      // ── 2. RESPONSIVE SCROLL TRIGGER ANIMATIONS (All Screens) ──────────────
-      // HERO BG: Slow parallax zoom on scroll
-      gsap.to('.hero-bg-image', {
-        scale: 1.12,
-        scrollTrigger: {
-          trigger: '.hero-section',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: true,
-        },
-      });
-
-      // TRUST BAR: Slide up
-      gsap.fromTo('.trust-item',
-        { y: 35, opacity: 0 },
-        {
-          y: 0, opacity: 1,
-          stagger: 0.12,
-          duration: 0.8,
-          ease: 'power2.out',
+      // ── 2. RESPONSIVE SCROLL TRIGGER ANIMATIONS (Desktop/Tablet Only, >=768px) ──
+      mm.add("(min-width: 768px)", () => {
+        // HERO BG: Slow parallax zoom on scroll
+        gsap.to('.hero-bg-image', {
+          scale: 1.12,
           scrollTrigger: {
-            trigger: '.trust-section',
-            start: 'top 92%',
-            once: true,
+            trigger: '.hero-section',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: true,
           },
-        }
-      );
+        });
 
-      // SECTION HEADERS: Elegant fade-up reveal (highly compatible with mobile/tablet)
-      gsap.utils.toArray<HTMLElement>('.section-header-reveal').forEach((el) => {
-        gsap.fromTo(el,
-          { y: 30, opacity: 0 },
+        // TRUST BAR: Slide up
+        gsap.fromTo('.trust-item',
+          { y: 35, opacity: 0 },
           {
-            y: 0,
-            opacity: 1,
-            duration: 0.9,
+            y: 0, opacity: 1,
+            stagger: 0.12,
+            duration: 0.8,
             ease: 'power2.out',
             scrollTrigger: {
-              trigger: el,
+              trigger: '.trust-section',
               start: 'top 92%',
               once: true,
             },
           }
         );
-      });
 
-      // SECTION DIVIDER LINES: Horizontal reveal from center
-      gsap.utils.toArray<HTMLElement>('.section-divider').forEach((el) => {
-        gsap.fromTo(el,
-          { scaleX: 0 },
+        // SECTION HEADERS: Elegant fade-up reveal
+        gsap.utils.toArray<HTMLElement>('.section-header-reveal').forEach((el) => {
+          gsap.fromTo(el,
+            { y: 30, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.9,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: el,
+                start: 'top 92%',
+                once: true,
+              },
+            }
+          );
+        });
+
+        // SECTION DIVIDER LINES: Horizontal reveal from center
+        gsap.utils.toArray<HTMLElement>('.section-divider').forEach((el) => {
+          gsap.fromTo(el,
+            { scaleX: 0 },
+            {
+              scaleX: 1,
+              transformOrigin: 'center center',
+              duration: 0.8,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: el,
+                start: 'top 94%',
+                once: true,
+              },
+            }
+          );
+        });
+
+        // CATEGORY CARDS: Stagger reveal
+        gsap.fromTo('.category-card',
+          { y: 40, opacity: 0, scale: 0.96 },
           {
-            scaleX: 1,
-            transformOrigin: 'center center',
+            y: 0, opacity: 1, scale: 1,
+            stagger: 0.1,
+            duration: 0.9,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: '.categories-section',
+              start: 'top 88%',
+              once: true,
+            },
+          }
+        );
+
+        // PRODUCT CARDS: Stagger fade-up
+        gsap.fromTo('.product-card',
+          { y: 40, opacity: 0 },
+          {
+            y: 0, opacity: 1,
+            stagger: 0.08,
             duration: 0.8,
             ease: 'power2.out',
             scrollTrigger: {
-              trigger: el,
-              start: 'top 94%',
+              trigger: '.products-section',
+              start: 'top 88%',
+              once: true,
+            },
+          }
+        );
+
+        // FOOTER REVEAL: Stagger fade-up
+        gsap.fromTo('.footer-col',
+          { y: 30, opacity: 0 },
+          {
+            y: 0, opacity: 1,
+            stagger: 0.08,
+            duration: 0.7,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: 'footer',
+              start: 'top 95%',
               once: true,
             },
           }
         );
       });
 
-      // CATEGORY CARDS: Stagger reveal
-      gsap.fromTo('.category-card',
-        { y: 40, opacity: 0, scale: 0.96 },
-        {
-          y: 0, opacity: 1, scale: 1,
-          stagger: 0.1,
-          duration: 0.9,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.categories-section',
-            start: 'top 88%',
-            once: true,
-          },
-        }
-      );
-
-      // PRODUCT CARDS: Stagger fade-up
-      gsap.fromTo('.product-card',
-        { y: 40, opacity: 0 },
-        {
-          y: 0, opacity: 1,
-          stagger: 0.08,
-          duration: 0.8,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.products-section',
-            start: 'top 88%',
-            once: true,
-          },
-        }
-      );
-
-      // FOOTER REVEAL: Stagger fade-up
-      gsap.fromTo('.footer-col',
-        { y: 30, opacity: 0 },
-        {
-          y: 0, opacity: 1,
-          stagger: 0.08,
-          duration: 0.7,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: 'footer',
-            start: 'top 95%',
-            once: true,
-          },
-        }
-      );
-
       return () => {
+        mm.revert();
         ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
       };
     }, 100);
