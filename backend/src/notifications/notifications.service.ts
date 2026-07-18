@@ -334,4 +334,57 @@ export class NotificationsService {
       return { success: false, error: err.message };
     }
   }
+
+  async sendOtpEmail(email: string, name: string, otp: string) {
+    const resendApiKey = process.env.RESEND_API_KEY;
+
+    const htmlContent = `
+      <div style="font-family: sans-serif; color: #222; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22222210; border-radius: 12px;">
+        <h2 style="color: #E56717; text-transform: uppercase; letter-spacing: 1px;">Hairotic.ng</h2>
+        <h3 style="border-bottom: 2px solid #E56717; padding-bottom: 10px;">Verify your login</h3>
+        <p>Hello ${name || 'Customer'},</p>
+        <p>Use the code below to verify your login.</p>
+        <div style="margin: 30px 0; text-align: center;">
+          <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #E56717;
+                       background-color: #FAF7F4; padding: 12px 24px; border-radius: 8px; border: 1px dashed #E56717; display: inline-block;">
+            ${otp}
+          </span>
+        </div>
+        <p style="font-size: 13px; color: #6B7280;">
+          Expires in 10 minutes.
+        </p>
+        <p style="font-size: 13px; color: #6B7280; margin-top: 20px;">
+          If this wasn't you, ignore this email.
+        </p>
+        <p style="margin-top: 30px; font-size: 12px; color: #6B7280; text-align: center;">
+          © 2026 Hairotic.ng. Lekki Phase 1, Lagos, Nigeria.
+        </p>
+      </div>
+    `;
+
+    if (!resendApiKey) {
+      this.logger.warn('RESEND_API_KEY not set — OTP email console fallback:');
+      this.logger.log(`\n--- OTP EMAIL TO: ${email} ---\nOTP: ${otp}\n------------------------`);
+      return { success: true };
+    }
+
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
+        body: JSON.stringify({
+          from: 'Hairotic.ng <no-reply@hairotic.ng>',
+          to: [email],
+          subject: 'Verify your login',
+          html: htmlContent,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      this.logger.log(`OTP email sent to ${email}`);
+      return { success: true };
+    } catch (err: any) {
+      this.logger.error(`Failed to send OTP email: ${err.message}`);
+      return { success: false, error: err.message };
+    }
+  }
 }

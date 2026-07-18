@@ -11,6 +11,8 @@ enum Role {
   CUSTOMER
   STAFF
   ADMIN
+  SUPER_ADMIN
+  VENDOR
 }
 
 enum ProductStatus {
@@ -38,8 +40,12 @@ enum PaymentStatus {
 model User {
   id                  String         @id @default(uuid())
   email               String         @unique
-  phone               String         @unique
-  passwordHash        String         @map("password_hash")
+  name                String?
+  avatar              String?
+  provider            String         @default("local") // "local" or "google"
+  googleId            String?        @unique @map("google_id")
+  phone               String?        @unique
+  passwordHash        String?        @map("password_hash")
   role                Role           @default(CUSTOMER)
   // Email verification — required before a customer can log in
   emailVerified       Boolean        @default(false) @map("email_verified")
@@ -60,8 +66,37 @@ model User {
   wishlist      Wishlist[]
   adminNotes    CustomerNote[] @relation("AdminNotes")
   customerNotes CustomerNote[] @relation("CustomerNotes")
+  otps          Otp[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  codeHash  String   @map("code_hash")
+  expiresAt DateTime @map("expires_at")
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otps")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  device    String?
+  ip        String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }
 
 model Address {

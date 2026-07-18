@@ -3,23 +3,32 @@ import {
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { OtpService } from './otp.service';
+import { RefreshTokenService } from './refresh-token.service';
 import * as bcrypt from 'bcrypt';
 import { generateSecret, generateURI, verify } from 'otplib';
 import * as QRCode from 'qrcode';
 import { randomUUID } from 'crypto';
 import { User, Role } from '@prisma/client';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private notificationsService: NotificationsService,
-  ) { }
+    private otpService: OtpService,
+    private refreshTokenService: RefreshTokenService,
+  ) {}
 
   async register(email: string, phone: string, password: string) {
     if (!email || !phone || !password) {
@@ -53,10 +62,9 @@ export class AuthService {
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Generate a one-time email verification token (UUID — unguessable)
     const verificationToken = randomUUID();
-
     const isDev = process.env.NODE_ENV !== 'production';
+    
     const user = await (this.prisma.user as any).create({
       data: {
         email,
@@ -68,10 +76,9 @@ export class AuthService {
       },
     });
 
-    // Send verification email asynchronously — don't block registration
     this.notificationsService
       .sendVerificationEmail(email, verificationToken)
-      .catch(() => { }); // Errors are logged inside the service
+      .catch(() => {});
 
     return {
       ...this.sanitizeUser(user),
@@ -96,7 +103,7 @@ export class AuthService {
       where: { id: user.id },
       data: {
         emailVerified: true,
-        verificationToken: null, // Consume the token — one-time use
+        verificationToken: null,
       },
     });
 
@@ -107,7 +114,6 @@ export class AuthService {
     const user = await (this.prisma.user as any).findUnique({ where: { email } });
 
     if (!user) {
-      // Return success anyway to prevent email enumeration
       return { success: true, message: 'If that email exists, a verification link has been sent.' };
     }
 
@@ -123,13 +129,12 @@ export class AuthService {
 
     this.notificationsService
       .sendVerificationEmail(email, verificationToken)
-      .catch(() => { });
+      .catch(() => {});
 
     return { success: true, message: 'If that email exists, a verification link has been sent.' };
   }
 
   async requestPasswordReset(email: string) {
-    // Always return the same message to prevent email enumeration
     const genericResponse = {
       success: true,
       message: 'If that email is registered, a reset link has been sent.',
@@ -139,7 +144,7 @@ export class AuthService {
     if (!user) return genericResponse;
 
     const resetToken = randomUUID();
-    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
     await (this.prisma.user as any).update({
       where: { id: user.id },
@@ -148,7 +153,7 @@ export class AuthService {
 
     this.notificationsService
       .sendPasswordResetEmail(email, resetToken)
-      .catch(() => { });
+      .catch(() => {});
 
     return genericResponse;
   }
@@ -165,7 +170,7 @@ export class AuthService {
     const user = await (this.prisma.user as any).findFirst({
       where: {
         resetToken: token,
-        resetTokenExpiry: { gt: new Date() }, // Must not be expired
+        resetTokenExpiry: { gt: new Date() },
       },
     });
 
@@ -180,7 +185,7 @@ export class AuthService {
       where: { id: user.id },
       data: {
         passwordHash,
-        resetToken: null,       // Consume the token — one-time use
+        resetToken: null,
         resetTokenExpiry: null,
       },
     });
@@ -195,12 +200,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (!user.passwordHash) {
+      throw new BadRequestException('This account uses Google login. Please sign in with Google.');
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Customers must verify their email before they can log in (skipped in development)
     const isCustomer = user.role === Role.CUSTOMER;
     const userAny = user as any;
     if (isCustomer && !userAny.emailVerified && process.env.NODE_ENV === 'production') {
@@ -211,7 +219,6 @@ export class AuthService {
       });
     }
 
-    // ADMIN/STAFF — mandatory MFA
     const isAdminOrStaff = user.role === Role.ADMIN || user.role === Role.STAFF;
     if (isAdminOrStaff) {
       const tempToken = this.jwtService.sign(
@@ -226,8 +233,7 @@ export class AuthService {
       };
     }
 
-    // Customers proceed without MFA
-    const tokens = this.generateTokens(user, false);
+    const tokens = await this.generateSession(user);
     return {
       mfaRequired: false,
       ...tokens,
@@ -235,12 +241,11 @@ export class AuthService {
     };
   }
 
-  generateTokens(user: User, mfaVerified: boolean) {
+  async generateSession(user: User, device?: string, ip?: string) {
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
-      mfaVerified,
     };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -250,8 +255,11 @@ export class AuthService {
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret_key',
-      expiresIn: '7d',
+      expiresIn: '30d',
     });
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await this.refreshTokenService.createRefreshToken(user.id, refreshToken, expiresAt, device, ip);
 
     return { accessToken, refreshToken };
   }
@@ -269,6 +277,46 @@ export class AuthService {
     }
   }
 
+  async refreshSession(oldRefreshToken: string, device?: string, ip?: string) {
+    const { user } = await this.verifyRefresh(oldRefreshToken);
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const newAccessToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
+      expiresIn: '15m',
+    });
+
+    const newRefreshToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret_key',
+      expiresIn: '30d',
+    });
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await this.refreshTokenService.rotateRefreshToken(
+      user.id,
+      oldRefreshToken,
+      newRefreshToken,
+      expiresAt,
+      device,
+      ip,
+    );
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      user: this.sanitizeUser(user),
+    };
+  }
+
+  async logoutSession(userId: string, refreshToken: string) {
+    await this.refreshTokenService.revokeRefreshToken(userId, refreshToken);
+  }
+
   async setupMfa(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
@@ -277,9 +325,6 @@ export class AuthService {
     const otpauthUrl = generateURI({ secret, label: user.email, issuer: 'Hairotic.ng' });
     const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
-    // Store the pending secret temporarily on the user row.
-    // It becomes the "live" secret only after verifyMfa succeeds.
-    // TODO: Remove cast after `npx prisma generate` runs against the migrated DB
     await (this.prisma.user as any).update({
       where: { id: userId },
       data: { mfaSecret: secret },
@@ -292,7 +337,6 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
 
-    // TODO: Remove cast after `npx prisma generate` runs against the migrated DB
     const userWithMfa = user as any;
     if (!userWithMfa.mfaSecret) {
       throw new BadRequestException('MFA configuration missing. Please restart setup.');
@@ -308,67 +352,128 @@ export class AuthService {
       });
     }
 
-    return this.generateTokens(user, true);
+    const tokens = await this.generateSession(user);
+    return tokens;
   }
 
-  async loginWithGoogle(email: string, name?: string) {
-    if (!email) {
-      throw new BadRequestException('Email is required for Google login');
+  async loginWithGoogle(idToken: string, deviceId?: string) {
+    if (!idToken) {
+      throw new BadRequestException('Google ID Token is required');
     }
 
+    let payload: any;
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        throw new Error('Google ID token did not contain email field');
+      }
+    } catch (err: any) {
+      this.logger.error(`Google token verification failed: ${err.message}`);
+      throw new UnauthorizedException('Invalid Google ID Token');
+    }
+
+    const { email, name, picture, sub: googleId } = payload;
     let user = await this.prisma.user.findUnique({ where: { email } });
 
+    let isNewUser = false;
     if (!user) {
-      // Register new user via Google
-      let phone = '';
-      let phoneExists = true;
-      while (phoneExists) {
-        const rand = Math.floor(10000000 + Math.random() * 90000000); // 8 digits
-        phone = `+234803${rand}`;
-        const existingPhone = await this.prisma.user.findUnique({ where: { phone } });
-        if (!existingPhone) {
-          phoneExists = false;
-        }
-      }
-
-      // Generate a random password hash
-      const randomPassword = randomUUID();
-      const salt = await bcrypt.genSalt(12);
-      const passwordHash = await bcrypt.hash(randomPassword, salt);
-
+      isNewUser = true;
       user = await (this.prisma.user as any).create({
         data: {
           email,
-          phone,
-          passwordHash,
+          name,
+          avatar: picture,
+          provider: 'google',
+          googleId,
+          emailVerified: true,
           role: Role.CUSTOMER,
-          emailVerified: true, // Google accounts are pre-verified
         },
       });
     } else {
-      // User exists, make sure email is verified
-      if (!(user as any).emailVerified) {
-        user = await (this.prisma.user as any).update({
-          where: { id: user.id },
-          data: { emailVerified: true },
-        });
+      const updateData: any = { emailVerified: true };
+      const userAny = user as any;
+      if (!userAny.name && name) updateData.name = name;
+      if (!userAny.avatar && picture) updateData.avatar = picture;
+      if (userAny.provider === 'local') {
+        updateData.provider = 'google';
+        updateData.googleId = googleId;
+      }
+      user = await (this.prisma.user as any).update({
+        where: { id: user.id },
+        data: updateData,
+      });
+    }
+
+    const activeUser = user as any;
+
+    // Check device recognition strategy
+    let deviceRecognized = false;
+    if (deviceId) {
+      const recognized = await (this.prisma as any).refreshToken.findFirst({
+        where: {
+          userId: activeUser.id,
+          device: deviceId,
+        },
+      });
+      if (recognized) {
+        deviceRecognized = true;
       }
     }
 
-    const tokens = this.generateTokens(user!, false);
+    // Bypass OTP for returning users on a recognized device
+    if (!isNewUser && deviceRecognized) {
+      this.logger.log(`Bypassing OTP: user ${activeUser.id} logged in from recognized device ${deviceId}`);
+      return {
+        mfaRequired: false,
+        user: this.sanitizeUser(activeUser),
+      };
+    }
+
+    // Otherwise, generate 6-digit OTP and send verify email
+    const otp = await this.otpService.createOtp(activeUser.id);
+    await this.notificationsService.sendOtpEmail(activeUser.email, activeUser.name || '', otp);
+
     return {
-      success: true,
-      ...tokens,
-      user: this.sanitizeUser(user!),
+      mfaRequired: true,
+      email: activeUser.email,
     };
+  }
+
+  async verifyOtpAndCreateSession(email: string, otp: string, device?: string, ip?: string) {
+    const userId = await this.otpService.verifyOtp(email, otp);
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const tokens = await this.generateSession(user, device, ip);
+    return {
+      ...tokens,
+      user: this.sanitizeUser(user),
+    };
+  }
+
+  async resendOtp(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const userAny = user as any;
+    const otp = await this.otpService.createOtp(userAny.id);
+    await this.notificationsService.sendOtpEmail(userAny.email, userAny.name || '', otp);
+
+    return { success: true, message: 'A new 6-digit code has been sent to your email.' };
   }
 
   private sanitizeUser(user: User) {
     const sanitized = { ...user };
     delete (sanitized as any).passwordHash;
-    delete (sanitized as any).mfaSecret;         // Never expose TOTP secret
-    delete (sanitized as any).verificationToken; // Never expose auth tokens
-    delete (sanitized as any).resetToken;        // Never expose auth tokens
+    delete (sanitized as any).mfaSecret;
+    delete (sanitized as any).verificationToken;
+    delete (sanitized as any).resetToken;
     delete (sanitized as any).resetTokenExpiry;
     return sanitized;
   }

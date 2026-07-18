@@ -5,6 +5,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { OtpService } from './otp.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Module({
   imports: [
@@ -13,8 +15,8 @@ import { NotificationsModule } from '../notifications/notifications.module';
     NotificationsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService, PassportModule],
+  providers: [AuthService, JwtStrategy, OtpService, RefreshTokenService],
+  exports: [AuthService, PassportModule, OtpService, RefreshTokenService],
 })
 export class AuthModule {}
 

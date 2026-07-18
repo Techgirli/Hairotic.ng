@@ -30,28 +30,24 @@ export class AuthController {
     return { success: true, user };
   }
 
-  // Email verification — called when user clicks the link in their inbox
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('verify-email')
   async verifyEmail(@Body('token') token: string) {
     return this.authService.verifyEmail(token);
   }
 
-  // Resend verification email (e.g. link expired)
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('resend-verification')
   async resendVerification(@Body('email') email: string) {
     return this.authService.resendVerification(email);
   }
 
-  // Password reset — step 1: request a reset link
-  @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 per 15 min
+  @Throttle({ default: { limit: 5, ttl: 900000 } })
   @Post('password-reset/request')
   async requestPasswordReset(@Body('email') email: string) {
     return this.authService.requestPasswordReset(email);
   }
 
-  // Password reset — step 2: submit new password with the token
   @Throttle({ default: { limit: 5, ttl: 900000 } })
   @Post('password-reset/confirm')
   async confirmPasswordReset(
@@ -67,8 +63,7 @@ export class AuthController {
     const result = await this.authService.login(body.email, body.password);
 
     if (result.mfaRequired) {
-      // If MFA is required, we set a temporary access token so they can access the verify route
-      this.setCookie(res, 'access_token', result.tempToken!, 15 * 60 * 1000); // 15m
+      this.setCookie(res, 'access_token', result.tempToken!, 15 * 60 * 1000);
       return {
         mfaRequired: true,
         mfaSetup: result.mfaSetup,
@@ -76,19 +71,18 @@ export class AuthController {
       };
     }
 
-    // Since mfaRequired is false, we have access and refresh tokens
     const tokens = result as {
       accessToken: string;
       refreshToken: string;
       user: any;
     };
-    this.setCookie(res, 'access_token', tokens.accessToken, 15 * 60 * 1000); // 15m
+    this.setCookie(res, 'access_token', tokens.accessToken, 15 * 60 * 1000);
     this.setCookie(
       res,
       'refresh_token',
       tokens.refreshToken,
-      7 * 24 * 60 * 60 * 1000,
-    ); // 7d
+      30 * 24 * 60 * 60 * 1000,
+    );
 
     return {
       success: true,
@@ -100,23 +94,90 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('google')
   async googleLogin(
-    @Body() body: { email: string; name?: string },
+    @Body() body: { idToken: string; deviceId?: string },
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.loginWithGoogle(body.email, body.name);
+    const result = await this.authService.loginWithGoogle(body.idToken, body.deviceId);
 
-    this.setCookie(res, 'access_token', result.accessToken, 15 * 60 * 1000); // 15m
+    if (result.mfaRequired) {
+      return {
+        success: true,
+        mfaRequired: true,
+        email: result.email,
+      };
+    }
+
+    const tokens = result as any;
+
+    const ip = req.ip || (req.headers['x-forwarded-for'] as string) || '';
+    const userAgent = req.headers['user-agent'] || '';
+    const session = await this.authService.generateSession(
+      tokens.user,
+      body.deviceId,
+      `${userAgent} (${ip})`,
+    );
+
+    this.setCookie(res, 'access_token', session.accessToken, 15 * 60 * 1000);
+    this.setCookie(
+      res,
+      'refresh_token',
+      session.refreshToken,
+      30 * 24 * 60 * 60 * 1000,
+    );
+
+    if (body.deviceId) {
+      this.setCookie(res, 'device_id', body.deviceId, 365 * 24 * 60 * 60 * 1000);
+    }
+
+    return {
+      success: true,
+      mfaRequired: false,
+      user: tokens.user,
+    };
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('otp/verify')
+  async verifyOtp(
+    @Body() body: { email: string; otp: string; deviceId?: string },
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const ip = req.ip || (req.headers['x-forwarded-for'] as string) || '';
+    const userAgent = req.headers['user-agent'] || '';
+
+    const result = await this.authService.verifyOtpAndCreateSession(
+      body.email,
+      body.otp,
+      body.deviceId,
+      `${userAgent} (${ip})`,
+    );
+
+    this.setCookie(res, 'access_token', result.accessToken, 15 * 60 * 1000);
     this.setCookie(
       res,
       'refresh_token',
       result.refreshToken,
-      7 * 24 * 60 * 60 * 1000,
-    ); // 7d
+      30 * 24 * 60 * 60 * 1000,
+    );
+
+    if (body.deviceId) {
+      this.setCookie(res, 'device_id', body.deviceId, 365 * 24 * 60 * 60 * 1000);
+    }
 
     return {
       success: true,
       user: result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
     };
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('otp/resend')
+  async resendOtp(@Body('email') email: string) {
+    return this.authService.resendOtp(email);
   }
 
   @Post('refresh')
@@ -129,26 +190,44 @@ export class AuthController {
       return { success: false, message: 'Refresh token missing' };
     }
 
-    const { user, mfaVerified } =
-      await this.authService.verifyRefresh(refreshToken);
-    const tokens = this.authService.generateTokens(user, mfaVerified);
+    const ip = req.ip || (req.headers['x-forwarded-for'] as string) || '';
+    const userAgent = req.headers['user-agent'] || '';
+    const deviceId = req.cookies['device_id'];
 
-    this.setCookie(res, 'access_token', tokens.accessToken, 15 * 60 * 1000);
+    const result = await this.authService.refreshSession(
+      refreshToken,
+      deviceId,
+      `${userAgent} (${ip})`,
+    );
+
+    this.setCookie(res, 'access_token', result.accessToken, 15 * 60 * 1000);
     this.setCookie(
       res,
       'refresh_token',
-      tokens.refreshToken,
-      7 * 24 * 60 * 60 * 1000,
+      result.refreshToken,
+      30 * 24 * 60 * 60 * 1000,
     );
 
     return {
       success: true,
-      user: { id: user.id, email: user.email, role: user.role },
+      user: result.user,
+      accessToken: result.accessToken,
     };
   }
 
   @Post('logout')
-  logout(@Res({ passthrough: true }) res: Response) {
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (refreshToken) {
+      try {
+        const resolved = await this.authService.verifyRefresh(refreshToken);
+        await this.authService.logoutSession(resolved.user.id, refreshToken);
+      } catch {}
+    }
+
     this.clearCookie(res, 'access_token');
     this.clearCookie(res, 'refresh_token');
     return { success: true, message: 'Logged out successfully' };
@@ -181,13 +260,12 @@ export class AuthController {
       res,
       'refresh_token',
       tokens.refreshToken,
-      7 * 24 * 60 * 60 * 1000,
+      30 * 24 * 60 * 60 * 1000,
     );
 
     return { success: true, mfaVerified: true };
   }
 
-  // Helper route to check current login state
   @UseGuards(JwtAuthGuard)
   @Get('me')
   getProfile(@Req() req: any) {

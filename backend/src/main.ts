@@ -42,7 +42,26 @@ async function bootstrap() {
   }
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow if no origin (e.g. server-to-server) or matches allowedOrigins list
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow local network IP addresses (useful for local mobile testing)
+      const isLocalOrNetwork = 
+        /^http:\/\/localhost:\d+$/.test(origin) || 
+        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin) || 
+        /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) || 
+        /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin) || 
+        /^http:\/\/172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+(:\d+)?$/.test(origin);
+
+      if (isLocalOrNetwork) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   });
 
