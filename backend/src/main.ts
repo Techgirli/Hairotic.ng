@@ -15,10 +15,22 @@ async function bootstrap() {
   // Register cookie parser
   app.use(cookieParser());
 
+  // Handle Chrome's Private Network Access preflight checks (Access-Control-Allow-Private-Network)
+  app.use((req, res, next) => {
+    if (req.headers['access-control-request-private-network'] === 'true') {
+      res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+    next();
+  });
+
   // Enable CORS with credentials support
   const allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://hairotic-ng.vercel.app',
   ];
   if (process.env.APP_URL) {
     allowedOrigins.push(process.env.APP_URL);

@@ -22,12 +22,15 @@ jobs:
 
     steps:
       - name: Call reconcile endpoint
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          RECONCILE_SECRET: ${{ secrets.RECONCILE_SECRET }}
         run: |
           RESPONSE=$(curl --silent --max-time 30 \
             --write-out "\nHTTP_STATUS:%{http_code}" \
-            --request POST "${{ secrets.API_URL }}/api/v1/payments/reconcile" \
+            --request POST "$API_URL/api/v1/payments/reconcile" \
             --header "Content-Type: application/json" \
-            --header "x-reconcile-secret: ${{ secrets.RECONCILE_SECRET }}")
+            --header "x-reconcile-secret: $RECONCILE_SECRET")
 
           HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | sed 's/.*HTTP_STATUS://')
           BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")
