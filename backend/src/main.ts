@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { RequestMethod } from '@nestjs/common';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
@@ -16,7 +17,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Handle Chrome's Private Network Access preflight checks (Access-Control-Allow-Private-Network)
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.headers['access-control-request-private-network'] === 'true') {
       res.setHeader('Access-Control-Allow-Private-Network', 'true');
     }
