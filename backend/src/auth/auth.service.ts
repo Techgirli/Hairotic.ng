@@ -20,7 +20,7 @@ import { OAuth2Client } from 'google-auth-library';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  private googleClient = new OAuth2Client((process.env.GOOGLE_CLIENT_ID || '').replace(/^["']|["']$/g, ''));
 
   constructor(
     private prisma: PrismaService,

@@ -20,7 +20,7 @@ export default function GoogleLoginButton({ onSuccess, onError, isLoading }: Goo
     const initGoogle = () => {
       if (typeof window !== 'undefined' && window.google) {
         try {
-          const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+          const clientId = (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '').replace(/^["']|["']$/g, '');
           if (!clientId) {
             console.warn('Google client ID is missing in frontend env.');
           }
