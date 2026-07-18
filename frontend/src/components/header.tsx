@@ -181,6 +181,18 @@ export default function Header() {
           >
             Contact
           </Link>
+
+          {/* Mobile Login / Account CTA */}
+          <div className="pt-4 border-t border-[#222222]/5">
+            <Link
+              href="/account"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-2 w-full h-11 bg-[#222222] text-white hover:bg-[#E56717] rounded-[10px] text-[13px] font-bold uppercase tracking-wider transition-all"
+            >
+              <User className="w-4.5 h-4.5" />
+              <span>{user ? 'My Account' : 'Log In / Sign Up'}</span>
+            </Link>
+          </div>
         </div>
       )}
     </header>
