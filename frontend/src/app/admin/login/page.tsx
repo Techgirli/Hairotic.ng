@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { KeyRound, Mail, Lock, ShieldAlert, CheckCircle2, QrCode } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
+  const router = useRouter();
   const {
     login,
     verifyMfa,
@@ -15,6 +17,7 @@ export default function AdminLoginPage() {
     mfaSecret,
     loading,
     error,
+    user,
     clearError,
   } = useAuthStore();
 
@@ -30,6 +33,13 @@ export default function AdminLoginPage() {
   const [resetError, setResetError] = useState('');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+  // Redirect if already logged in as Admin or Staff
+  useEffect(() => {
+    if (user && (user.role === 'ADMIN' || user.role === 'STAFF') && !mfaRequired) {
+      router.push('/admin/dashboard');
+    }
+  }, [user, mfaRequired, router]);
 
   // Clear errors on load
   useEffect(() => {
@@ -50,6 +60,7 @@ export default function AdminLoginPage() {
       const result = await login(email, password);
       if (!result.mfaRequired) {
         setSuccessMsg('Login successful! Redirecting...');
+        setTimeout(() => router.push('/admin/dashboard'), 500);
       }
     } catch {
       // Handled by store error state
@@ -85,6 +96,7 @@ export default function AdminLoginPage() {
     try {
       await verifyMfa(mfaCode, mfaSetup);
       setSuccessMsg('Authentication verified successfully! Redirecting...');
+      setTimeout(() => router.push('/admin/dashboard'), 500);
     } catch {
       // Handled by store error state
     }
