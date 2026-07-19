@@ -10,27 +10,32 @@ import { LayoutDashboard, ShoppingBag, Box, ClipboardList, Users, LogOut, Loader
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading, checkMe, logout } = useAuthStore();
+  const { user, checkMe, logout } = useAuthStore();
+  const [isChecking, setIsChecking] = React.useState(true);
 
   const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
-    if (!isLoginPage) {
-      checkMe();
-    }
+    const initAuth = async () => {
+      if (!isLoginPage) {
+        await checkMe();
+      }
+      setIsChecking(false);
+    };
+    initAuth();
   }, [pathname, isLoginPage, checkMe]);
 
   useEffect(() => {
-    if (!isLoginPage && !loading && (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF'))) {
+    if (!isLoginPage && !isChecking && (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF'))) {
       router.push('/admin/login');
     }
-  }, [user, loading, isLoginPage, router]);
+  }, [user, isChecking, isLoginPage, router]);
 
   if (isLoginPage) {
     return <>{children}</>;
   }
 
-  if (loading || (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF'))) {
+  if (isChecking || (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF'))) {
     return (
       <div className="min-h-screen bg-[#FAF7F4] flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-3">
