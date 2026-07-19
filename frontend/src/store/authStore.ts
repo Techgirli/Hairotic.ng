@@ -155,6 +155,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   verifyMfa: async (code, isSetupFlow) => {
     set({ loading: true, error: null });
     try {
+      console.log('[Zustand verifyMfa] Verifying code:', code, 'isSetupFlow:', isSetupFlow);
       const res = await fetch(`${API_URL}/auth/mfa/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,13 +164,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
 
       const data = await res.json();
+      console.log('[Zustand verifyMfa] Response:', data);
       if (!res.ok) {
         throw new Error(data.message || 'Invalid verification code');
       }
 
       await get().checkMe();
+      console.log('[Zustand verifyMfa] checkMe completed. Current state user:', get().user);
       set({ mfaRequired: false, mfaSetup: false, mfaQrCode: null, mfaSecret: null, loading: false });
     } catch (err) {
+      console.error('[Zustand verifyMfa] Error:', err);
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
       set({ error: message, loading: false });
       throw err;
@@ -218,16 +222,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   checkMe: async () => {
     try {
+      console.log('[Zustand checkMe] Fetching /auth/me...');
       const res = await fetch(`${API_URL}/auth/me`, {
         credentials: 'include',
       });
+      console.log('[Zustand checkMe] Response status:', res.status);
       if (res.ok) {
         const data = await res.json();
+        console.log('[Zustand checkMe] User data loaded:', data.user);
         set({ user: data.user });
       } else {
+        console.warn('[Zustand checkMe] Not authenticated (non-200 response)');
         set({ user: null });
       }
-    } catch {
+    } catch (e) {
+      console.error('[Zustand checkMe] Fetch error:', e);
       set({ user: null });
     }
   },

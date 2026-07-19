@@ -36,7 +36,12 @@ export default function AdminLoginPage() {
 
   // Redirect if already logged in as Admin or Staff
   useEffect(() => {
+    console.log('[Admin Auth Check] user:', user, 'mfaRequired:', mfaRequired);
+    if (user) {
+      console.log('[Admin Auth Check] user role is:', user.role);
+    }
     if (user && (user.role === 'ADMIN' || user.role === 'STAFF') && !mfaRequired) {
+      console.log('[Admin Auth Check] Redirecting to dashboard...');
       router.push('/admin/dashboard');
     }
   }, [user, mfaRequired, router]);
