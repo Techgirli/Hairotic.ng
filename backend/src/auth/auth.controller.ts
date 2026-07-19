@@ -117,6 +117,7 @@ export class AuthController {
       tokens.user,
       body.deviceId,
       `${userAgent} (${ip})`,
+      tokens.user.mfaEnabled, // Preserve MFA status if they have it enabled
     );
 
     this.setCookie(res, 'access_token', session.accessToken, 15 * 60 * 1000);

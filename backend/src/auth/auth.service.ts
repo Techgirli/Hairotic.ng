@@ -242,11 +242,12 @@ export class AuthService {
     };
   }
 
-  async generateSession(user: User, device?: string, ip?: string) {
+  async generateSession(user: User, device?: string, ip?: string, mfaVerified = false) {
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
+      mfaVerified,
     };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -353,7 +354,7 @@ export class AuthService {
       });
     }
 
-    const tokens = await this.generateSession(user);
+    const tokens = await this.generateSession(user, undefined, undefined, true);
     return tokens;
   }
 
