@@ -279,22 +279,45 @@ export class AuthController {
     token: string,
     maxAge: number,
   ) {
-    const isProd = process.env.NODE_ENV === 'production';
+    const req = res.req as any;
+    const host = req?.headers?.host || '';
+    const origin = req?.headers?.origin || '';
+    
+    // Force production settings if running on the live domain
+    const isProd =
+      process.env.NODE_ENV === 'production' ||
+      host.includes('hairotic.com.ng') ||
+      origin.includes('hairotic.com.ng');
+
+    const useSharedDomain = isProd && !origin.includes('localhost') && !host.includes('localhost');
+
     res.cookie(name, token, {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? 'none' : 'lax',
+      domain: useSharedDomain ? '.hairotic.com.ng' : undefined,
       maxAge,
       path: '/',
     });
   }
 
   private clearCookie(res: Response, name: string) {
-    const isProd = process.env.NODE_ENV === 'production';
+    const req = res.req as any;
+    const host = req?.headers?.host || '';
+    const origin = req?.headers?.origin || '';
+    
+    const isProd =
+      process.env.NODE_ENV === 'production' ||
+      host.includes('hairotic.com.ng') ||
+      origin.includes('hairotic.com.ng');
+
+    const useSharedDomain = isProd && !origin.includes('localhost') && !host.includes('localhost');
+
     res.cookie(name, '', {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? 'none' : 'lax',
+      domain: useSharedDomain ? '.hairotic.com.ng' : undefined,
       expires: new Date(0),
       path: '/',
     });
