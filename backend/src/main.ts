@@ -56,7 +56,13 @@ async function bootstrap() {
         /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin) || 
         /^http:\/\/172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+(:\d+)?$/.test(origin);
 
-      if (isLocalOrNetwork) {
+      // Allow Vercel preview/production links and custom domains dynamically
+      const isAllowedDomain = 
+        /\.vercel\.(app|com)$/.test(origin) || 
+        /hairotic\.ng$/.test(origin) ||
+        /\.hairotic\.ng$/.test(origin);
+
+      if (isLocalOrNetwork || isAllowedDomain) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

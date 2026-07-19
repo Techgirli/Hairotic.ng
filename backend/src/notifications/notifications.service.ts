@@ -259,12 +259,14 @@ export class NotificationsService {
       return { success: true };
     }
 
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
     try {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
         body: JSON.stringify({
-          from: 'Hairotic.ng <no-reply@hairotic.ng>',
+          from: `Hairotic.ng <${fromEmail}>`,
           to: [email],
           subject: 'Verify your Hairotic.ng email address',
           html: htmlContent,
@@ -315,12 +317,14 @@ export class NotificationsService {
       return { success: true };
     }
 
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
     try {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
         body: JSON.stringify({
-          from: 'Hairotic.ng <no-reply@hairotic.ng>',
+          from: `Hairotic.ng <${fromEmail}>`,
           to: [email],
           subject: 'Reset your Hairotic.ng password',
           html: htmlContent,
@@ -368,12 +372,14 @@ export class NotificationsService {
       return { success: true };
     }
 
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
     try {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
         body: JSON.stringify({
-          from: 'Hairotic.ng <no-reply@hairotic.ng>',
+          from: `Hairotic.ng <${fromEmail}>`,
           to: [email],
           subject: 'Verify your login',
           html: htmlContent,

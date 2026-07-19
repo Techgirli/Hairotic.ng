@@ -435,7 +435,12 @@ export class AuthService {
 
     // Otherwise, generate 6-digit OTP and send verify email
     const otp = await this.otpService.createOtp(activeUser.id);
-    await this.notificationsService.sendOtpEmail(activeUser.email, activeUser.name || '', otp);
+    const emailResult = await this.notificationsService.sendOtpEmail(activeUser.email, activeUser.name || '', otp);
+    
+    if (!emailResult.success) {
+      this.logger.warn(`Resend failed to deliver OTP: ${emailResult.error || 'Unknown error'}. Fallback code printed to console.`);
+      console.log(`\n--- OTP FALLBACK FOR DEV: ${activeUser.email} ---\nOTP CODE: ${otp}\n-----------------------------------\n`);
+    }
 
     return {
       mfaRequired: true,
@@ -463,7 +468,11 @@ export class AuthService {
 
     const userAny = user as any;
     const otp = await this.otpService.createOtp(userAny.id);
-    await this.notificationsService.sendOtpEmail(userAny.email, userAny.name || '', otp);
+    const emailResult = await this.notificationsService.sendOtpEmail(userAny.email, userAny.name || '', otp);
+    if (!emailResult.success) {
+      this.logger.warn(`Resend failed to deliver OTP email on resend request: ${emailResult.error || 'Unknown error'}. Fallback code printed to console.`);
+      console.log(`\n--- OTP RESEND FALLBACK: ${userAny.email} ---\nOTP CODE: ${otp}\n---------------------------------------\n`);
+    }
 
     return { success: true, message: 'A new 6-digit code has been sent to your email.' };
   }
