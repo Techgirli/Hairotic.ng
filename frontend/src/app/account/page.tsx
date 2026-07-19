@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
-import { User, MapPin, ShoppingBag, Eye, Plus, Trash2, ShieldAlert, LogOut, KeyRound, Heart } from 'lucide-react';
+import { User, MapPin, ShoppingBag, Eye, Plus, Trash2, ShieldAlert, LogOut, KeyRound, Heart, Package, Sparkles, ArrowRight, Lock, Mail, Phone, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '../../components/header';
@@ -424,29 +424,197 @@ export default function AccountPage() {
 
   if (!user) {
     return (
-      <div className="flex-1 flex flex-col min-h-screen bg-[#FAF7F4]/30">
+      <div className="flex-1 flex flex-col min-h-screen" style={{ background: 'linear-gradient(135deg, #FAF7F4 0%, #F5EDE3 100%)' }}>
         <Header />
-        <main className="flex-1 w-full max-w-md mx-auto my-12 bg-white border border-[#222222]/5 p-6 md:p-8 rounded-[32px] shadow-sm select-none">
-        
-        {/* Auth Tab switcher */}
-        <div className="flex gap-1 bg-[#FAF7F4] border border-[#222222]/5 p-1 rounded-[16px] mb-8">
-          <button
-            onClick={() => setAuthTab('login')}
-            className={`flex-1 h-10 rounded-[12px] text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-              authTab === 'login' ? 'bg-white text-[#E56717] shadow-sm' : 'text-[#6B7280] hover:text-[#222222]'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => setAuthTab('register')}
-            className={`flex-1 h-10 rounded-[12px] text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-              authTab === 'register' ? 'bg-white text-[#E56717] shadow-sm' : 'text-[#6B7280] hover:text-[#222222]'
-            }`}
-          >
-            Create Account
-          </button>
-        </div>
+        <main className="flex-1 flex items-center justify-center px-4 py-10">
+          <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-[32px] overflow-hidden shadow-2xl">
+
+            {/* LEFT — Brand panel */}
+            <div
+              className="hidden lg:flex flex-col justify-between p-12 relative"
+              style={{
+                background: 'linear-gradient(160deg, #222222 0%, #1a1a1a 60%, #E56717 150%)',
+              }}
+            >
+              {/* Decorative circles */}
+              <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #E56717, transparent)', transform: 'translate(30%, -30%)' }} />
+              <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #E56717, transparent)', transform: 'translate(-30%, 30%)' }} />
+
+              <div>
+                <div className="flex items-center gap-3 mb-10">
+                  <div className="w-10 h-10 rounded-full bg-[#E56717] flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-white font-extrabold text-[18px] tracking-wide uppercase">Hairotic.ng</span>
+                </div>
+
+                <h2 className="text-[36px] font-extrabold text-white leading-tight mb-4">
+                  Your Hair,<br />
+                  <span className="text-[#E56717]">Your Story.</span>
+                </h2>
+                <p className="text-white/60 text-[15px] leading-relaxed max-w-xs">
+                  Premium human hair extensions, wigs, and bundles — handpicked for every texture and length.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  { icon: Package, text: 'Track all your orders in one place' },
+                  { icon: Heart, text: 'Save your favourite units to a wishlist' },
+                  { icon: MapPin, text: 'Store multiple delivery addresses' },
+                ].map(({ icon: Icon, text }) => (
+                  <div key={text} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-[#E56717]" />
+                    </div>
+                    <span className="text-white/70 text-[14px]">{text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT — Form panel */}
+            <div className="bg-white p-8 sm:p-10 flex flex-col justify-center">
+              {/* Mobile brand header */}
+              <div className="flex lg:hidden items-center gap-2 mb-8">
+                <div className="w-8 h-8 rounded-full bg-[#E56717] flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-extrabold text-[16px] tracking-wide uppercase text-[#222222]">Hairotic.ng</span>
+              </div>
+
+              {/* Tab switcher */}
+              <div className="flex gap-1 bg-[#FAF7F4] border border-[#222222]/5 p-1 rounded-[14px] mb-8">
+                <button
+                  onClick={() => setAuthTab('login')}
+                  className={`flex-1 h-10 rounded-[10px] text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    authTab === 'login' ? 'bg-white text-[#E56717] shadow-sm' : 'text-[#6B7280] hover:text-[#222222]'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => setAuthTab('register')}
+                  className={`flex-1 h-10 rounded-[10px] text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    authTab === 'register' ? 'bg-white text-[#E56717] shadow-sm' : 'text-[#6B7280] hover:text-[#222222]'
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <h1 className="text-[24px] font-extrabold text-[#222222] leading-tight">
+                  {authTab === 'login' ? 'Welcome back 👋' : 'Join Hairotic.ng ✨'}
+                </h1>
+                <p className="text-[13px] text-[#6B7280] mt-1">
+                  {authTab === 'login'
+                    ? 'Sign in to your account to manage orders, addresses, and favorites.'
+                    : 'Create your free account and start shopping premium human hair.'}
+                </p>
+              </div>
+
+              {authError && (
+                <div className="bg-[#EF4444]/8 border border-[#EF4444]/20 p-3.5 rounded-[12px] text-[#EF4444] text-[13px] font-semibold mb-5 flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 shrink-0" />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              <form onSubmit={authTab === 'login' ? handleLogin : handleRegister} className="space-y-4">
+                {/* Email field */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                    <input
+                      type="email"
+                      required
+                      placeholder="name@example.com"
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      className="w-full h-12 pl-10 pr-4 border border-[#222222]/10 rounded-[12px] bg-[#FAF7F4] text-[14px] focus:border-[#E56717] focus:bg-white outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone field (register only) */}
+                {authTab === 'register' && (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">Phone Number</label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                      <input
+                        type="tel"
+                        required
+                        placeholder="+2348012345678"
+                        value={authPhone}
+                        onChange={(e) => setAuthPhone(e.target.value)}
+                        className="w-full h-12 pl-10 pr-4 border border-[#222222]/10 rounded-[12px] bg-[#FAF7F4] text-[14px] focus:border-[#E56717] focus:bg-white outline-none transition-colors font-mono"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Password field */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      className="w-full h-12 pl-10 pr-4 border border-[#222222]/10 rounded-[12px] bg-[#FAF7F4] text-[14px] focus:border-[#E56717] focus:bg-white outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingAuth}
+                  className="w-full h-12 bg-[#E56717] hover:bg-[#C65A12] disabled:opacity-60 text-white text-[13px] font-bold uppercase tracking-widest rounded-[12px] shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-colors mt-2"
+                >
+                  {isSubmittingAuth ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  ) : (
+                    <>
+                      <span>{authTab === 'login' ? 'Sign In' : 'Create Account'}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="relative my-6 flex items-center">
+                <div className="flex-1 border-t border-[#222222]/8" />
+                <span className="px-3 text-[11px] font-bold text-[#6B7280] uppercase tracking-wider">or continue with</span>
+                <div className="flex-1 border-t border-[#222222]/8" />
+              </div>
+
+              <GoogleLoginButton
+                onSuccess={handleGoogleLoginSuccess}
+                onError={handleGoogleLoginError}
+                isLoading={isSubmittingAuth}
+              />
+
+              {authTab === 'login' && (
+                <p className="text-center text-[12px] text-[#6B7280] mt-5">
+                  Don&apos;t have an account?{' '}
+                  <button onClick={() => setAuthTab('register')} className="text-[#E56717] font-bold hover:underline cursor-pointer">
+                    Create one free
+                  </button>
+                </p>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
         <div className="text-center mb-6">
           <h2 className="text-[22px] font-extrabold uppercase tracking-tight text-[#222222]">
@@ -536,34 +704,61 @@ export default function AccountPage() {
 }
 
   // Logged-in Customer Dashboard View
+  const firstName = user.name?.split(' ')[0] || user.email.split('@')[0];
+
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#FAF7F4]/30">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#FAF7F4]/40">
       <Header />
-      <main className="flex-1 w-full max-w-6xl mx-auto py-8 px-4 md:px-0 space-y-8 select-none">
-      
-      {/* Welcome Banner */}
-      <div className="bg-white border border-[#222222]/5 p-6 rounded-[24px] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <main className="flex-1 w-full max-w-6xl mx-auto py-8 px-4 md:px-6 space-y-6 select-none">
+
+      {/* ── Welcome Banner ─────────────────────────────────── */}
+      <div
+        className="relative overflow-hidden rounded-[28px] p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+        style={{ background: 'linear-gradient(135deg, #222222 0%, #2d2d2d 60%, #E56717 200%)' }}
+      >
+        {/* Decorative glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 opacity-10 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, #E56717, transparent)', transform: 'translate(30%, -30%)' }} />
+
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-[#FAF7F4] border border-[#E56717]/20 rounded-full flex items-center justify-center text-[#E56717]">
-            <User className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white">
+            <User className="w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-[22px] font-extrabold uppercase tracking-tight text-[#222222]">
-              Customer Account
+            <p className="text-white/60 text-[12px] font-semibold uppercase tracking-wider">Welcome back</p>
+            <h1 className="text-[22px] font-extrabold text-white capitalize">
+              {firstName} 👋
             </h1>
-            <p className="text-[13px] text-[#6B7280] mt-0.5">
-              Logged in as <strong className="text-[#222222] font-semibold">{user.email}</strong>
-            </p>
+            <p className="text-white/50 text-[12px] mt-0.5">{user.email}</p>
           </div>
         </div>
 
         <button
           onClick={handleLogout}
-          className="h-10 px-4 border border-[#EF4444]/10 hover:border-[#EF4444]/20 hover:bg-[#EF4444]/5 text-[#EF4444] rounded-[12px] transition-all cursor-pointer flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider"
+          className="h-10 px-5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-[12px] transition-all cursor-pointer flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider shrink-0"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>
         </button>
+      </div>
+
+      {/* ── Stats Cards ────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: '#E56717' },
+          { label: 'Saved Addresses', value: addresses.length, icon: MapPin, color: '#22C55E' },
+          { label: 'Wishlist Items', value: wishlist.length, icon: Heart, color: '#EC4899' },
+          { label: 'Account Level', value: 'VIP', icon: Sparkles, color: '#8B5CF6' },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-white rounded-[20px] border border-[#222222]/5 p-4 shadow-sm flex flex-col gap-3">
+            <div className="w-9 h-9 rounded-[10px] flex items-center justify-center" style={{ background: `${color}18` }}>
+              <Icon className="w-4.5 h-4.5" style={{ color }} />
+            </div>
+            <div>
+              <p className="text-[22px] font-extrabold text-[#222222]">{value}</p>
+              <p className="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider mt-0.5">{label}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Main dashboard navigation layout */}

@@ -13,6 +13,7 @@ import {
   ScrollHint,
 } from '@/components/animations-shell';
 import MagneticProductCard from '@/components/magnetic-product-card';
+import AddToCartButton from '@/components/add-to-cart-button';
 import CategorySlider from '@/components/category-slider';
 import Testimonials from '@/components/testimonials';
 import CtaSection from '@/components/cta-section';
@@ -238,9 +239,9 @@ export default async function Homepage() {
       </section>
 
       {/* ── Shop Categories Grid ─────────────────────────────────────── */}
-      <section className="categories-section max-w-[1600px] mx-auto px-6 py-20">
-        <div className="text-center mb-14">
-          <h2 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
+      <section className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20">
+        <div className="w-full text-center mb-12 sm:mb-14">
+          <h2 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-[#222222] uppercase tracking-wide block w-full">
             Style By Texture
           </h2>
           <div className="section-divider w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />

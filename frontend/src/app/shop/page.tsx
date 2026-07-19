@@ -2,10 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import FilterSidebar from './filter-sidebar';
-import { Heart } from 'lucide-react';
 import Header from '../../components/header';
 import Footer from '@/components/footer';
 import WishlistButton from '../../components/wishlist-button';
+import AddToCartButton from '../../components/add-to-cart-button';
 
 export const metadata: Metadata = {
   title: 'Shop All Hair',
@@ -340,20 +340,24 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
                 const mainImage = defaultVariant?.images[0]?.url || '/Logo/photo_2023-09-25_16-13-56.jpg';
 
                 return (
-                  <Link
+                  <div
                     key={product.id}
-                    href={`/products/${product.slug}`}
-                    className="group bg-white rounded-[24px] border border-[#222222]/5 p-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+                    className="group bg-white rounded-[24px] border border-[#222222]/5 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
                   >
-                    <div className="space-y-4">
+                    <Link href={`/products/${product.slug}`} className="block space-y-4">
                       {/* Product image container */}
                       <div className="relative h-[260px] rounded-[20px] overflow-hidden bg-[#FAF7F4] border border-[#222222]/5">
                         <img
                           src={mainImage}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
+                        {/* Wishlist heart */}
                         <WishlistButton variantId={defaultVariant?.id} />
+                        {/* Quick add-to-cart pill (on hover) */}
+                        <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-3">
+                          <AddToCartButton variantId={defaultVariant?.id} />
+                        </div>
                       </div>
 
                       {/* Info details */}
@@ -372,14 +376,17 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
                           )}
                         </div>
                       </div>
-                    </div>
+                    </Link>
 
-                    <div className="pt-4 px-1">
-                      <span className="w-full h-11 bg-[#FAF7F4] group-hover:bg-[#E56717] text-[#222222] group-hover:text-white text-[13px] font-bold uppercase tracking-widest rounded-[12px] transition-all duration-300 flex items-center justify-center">
+                    <div className="pt-4 px-1 flex gap-2">
+                      <Link
+                        href={`/products/${product.slug}`}
+                        className="flex-1 h-11 bg-[#FAF7F4] group-hover:bg-[#222222] text-[#222222] group-hover:text-white text-[13px] font-bold uppercase tracking-widest rounded-[12px] transition-all duration-300 flex items-center justify-center"
+                      >
                         Select Length
-                      </span>
+                      </Link>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

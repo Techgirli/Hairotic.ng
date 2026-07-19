@@ -50,26 +50,20 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
     };
   }, [categories]);
 
-  // Scroll function using GSAP for smooth custom easing
+  // Scroll function — uses native scrollTo for iOS/mobile WebKit compatibility
+  // (GSAP cannot animate scrollLeft reliably on mobile Safari)
   const scroll = (direction: 'left' | 'right') => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Responsive scroll amount: scroll by one mobile card width (~204px) on small screens, or desktop card width (~460px)
     const isMobile = container.clientWidth < 640;
-    const scrollAmount = direction === 'left' 
-      ? -(isMobile ? 204 : 460) 
-      : (isMobile ? 204 : 460);
+    const scrollAmount = isMobile ? 200 : 460;
+    const delta = direction === 'left' ? -scrollAmount : scrollAmount;
+    const targetScroll = container.scrollLeft + delta;
 
-    const targetScroll = container.scrollLeft + scrollAmount;
-
-    // Animate the scrollLeft property smoothly
-    gsap.to(container, {
-      scrollLeft: targetScroll,
-      duration: 0.7,
-      ease: 'power3.out',
-      onComplete: checkScroll,
-    });
+    container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    // Give scroll time to complete before rechecking
+    setTimeout(checkScroll, 400);
   };
 
   return (
@@ -103,10 +97,13 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
       </div>
       <div
         ref={containerRef}
-        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 overflow-x-scroll overflow-y-hidden scrollbar-hide px-2 w-full touch-pan-x"
+        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 overflow-x-auto overflow-y-hidden scrollbar-hide px-2 w-full"
         style={{
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
+          overflowX: 'auto',
+          touchAction: 'pan-x',
+          cursor: 'grab',
         }}
       >
         {categories.map((cat) => (
@@ -144,26 +141,28 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
       </div>
 
       {/* Mobile Navigation Buttons (Centered below the slider, visible only on Mobile) */}
-      <div className="flex sm:hidden justify-center items-center gap-4 mt-4">
+      <div className="flex sm:hidden justify-center items-center gap-6 mt-5">
         <button
-          onClick={() => scroll('left')}
+          onPointerDown={() => scroll('left')}
           disabled={!canScrollLeft}
-          className={`w-11 h-11 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
+          style={{ touchAction: 'manipulation' }}
+          className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all duration-200 ${
             canScrollLeft
-              ? 'bg-white text-[#222222] active:bg-[#E56717] active:text-white active:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
-              : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+              ? 'bg-white border-[#222222]/20 text-[#222222] active:bg-[#E56717] active:text-white active:border-[#E56717] shadow-md active:scale-95'
+              : 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed opacity-40'
           }`}
           aria-label="Scroll left"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <button
-          onClick={() => scroll('right')}
+          onPointerDown={() => scroll('right')}
           disabled={!canScrollRight}
-          className={`w-11 h-11 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
+          style={{ touchAction: 'manipulation' }}
+          className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all duration-200 ${
             canScrollRight
-              ? 'bg-white text-[#222222] active:bg-[#E56717] active:text-white active:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
-              : 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+              ? 'bg-[#E56717] border-[#E56717] text-white shadow-md active:scale-95 active:opacity-80'
+              : 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed opacity-40'
           }`}
           aria-label="Scroll right"
         >
