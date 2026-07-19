@@ -23,6 +23,14 @@ export default function AdminLoginPage() {
   const [mfaCode, setMfaCode] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Password reset request states
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetStatus, setResetStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [resetError, setResetError] = useState('');
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
   // Clear errors on load
   useEffect(() => {
     clearError();
@@ -45,6 +53,29 @@ export default function AdminLoginPage() {
       }
     } catch {
       // Handled by store error state
+    }
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) return;
+    setResetStatus('loading');
+    setResetError('');
+    try {
+      const res = await fetch(`${API_URL}/auth/password-reset/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      if (res.ok) {
+        setResetStatus('success');
+      } else {
+        const d = await res.json();
+        throw new Error(d.message || 'Failed to request password reset');
+      }
+    } catch (err: any) {
+      setResetStatus('error');
+      setResetError(err.message || 'An error occurred');
     }
   };
 
@@ -95,8 +126,83 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          {/* Render standard login form or MFA screen */}
-          {!mfaRequired ? (
+          {/* Render standard login form, MFA screen, or Password Reset screen */}
+          {showReset ? (
+            <form onSubmit={handleResetSubmit} className="space-y-6">
+              <div className="text-center mb-6">
+                <KeyRound className="w-12 h-12 text-[#E56717] mx-auto mb-2" />
+                <h3 className="text-[18px] font-bold text-[#222222]">
+                  Reset Security Password
+                </h3>
+                <p className="text-[14px] text-[#6B7280] mt-1">
+                  Enter your email address and we will send you a password reset link.
+                </p>
+              </div>
+
+              {resetStatus === 'success' ? (
+                <div className="bg-[#22C55E]/5 border border-[#22C55E]/20 rounded-[12px] p-4 text-[14px] text-[#22C55E] text-center space-y-3">
+                  <p>A password reset link has been dispatched to your email address.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowReset(false);
+                      setResetStatus('idle');
+                      setResetEmail('');
+                    }}
+                    className="text-[14px] font-bold text-[#E56717] hover:underline"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {resetStatus === 'error' && (
+                    <div className="flex items-start gap-3 bg-[#EF4444]/5 border border-[#EF4444]/20 rounded-[12px] p-4 text-[14px] text-[#EF4444]">
+                      <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
+                      <span>{resetError}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
+                      Admin Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+                      <input
+                        type="email"
+                        required
+                        placeholder="Enter your registered email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        className="w-full h-[52px] pl-12 pr-4 bg-[#F8F8F8] border border-[#222222]/10 rounded-[12px] text-[16px] text-[#222222] placeholder-[#6B7280] focus:outline-none focus:border-[#E56717] focus:ring-1 focus:ring-[#E56717] transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={resetStatus === 'loading'}
+                    className="w-full h-[52px] bg-[#E56717] hover:bg-[#C65A12] text-[#FFFFFF] text-[16px] font-semibold rounded-[12px] shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {resetStatus === 'loading' ? (
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <span>Send Reset Link</span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowReset(false)}
+                    className="w-full text-center text-[14px] text-[#6B7280] hover:text-[#222222] font-semibold transition-colors mt-2 block"
+                  >
+                    Back to Login
+                  </button>
+                </>
+              )}
+            </form>
+          ) : !mfaRequired ? (
             <form onSubmit={handleLoginSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
@@ -116,9 +222,18 @@ export default function AdminLoginPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
-                  Password
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowReset(true)}
+                    className="text-[12px] font-semibold text-[#E56717] hover:underline cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
                   <input

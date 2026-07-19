@@ -67,6 +67,7 @@ export default function AccountPage() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authPhone, setAuthPhone] = useState('');
+  const [authName, setAuthName] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
 
@@ -191,7 +192,7 @@ export default function AccountPage() {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: authEmail, password: authPassword, phone: authPhone }),
+        body: JSON.stringify({ email: authEmail, password: authPassword, phone: authPhone, name: authName }),
         credentials: 'include',
       });
 
@@ -213,6 +214,7 @@ export default function AccountPage() {
       }
 
       setAuthPassword('');
+      setAuthName('');
       checkAuth();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -522,6 +524,24 @@ export default function AccountPage() {
               )}
 
               <form onSubmit={authTab === 'login' ? handleLogin : handleRegister} className="space-y-4">
+                {/* Full Name field (register only) */}
+                {authTab === 'register' && (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">Full Name</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="John Doe"
+                        value={authName}
+                        onChange={(e) => setAuthName(e.target.value)}
+                        className="w-full h-12 pl-10 pr-4 border border-[#222222]/10 rounded-[12px] bg-[#FAF7F4] text-[14px] focus:border-[#E56717] focus:bg-white outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Email field */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B7280]">Email Address</label>

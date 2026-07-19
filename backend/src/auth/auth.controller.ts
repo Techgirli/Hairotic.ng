@@ -26,6 +26,7 @@ export class AuthController {
       body.email,
       body.phone,
       body.password,
+      body.name,
     );
     return { success: true, user };
   }

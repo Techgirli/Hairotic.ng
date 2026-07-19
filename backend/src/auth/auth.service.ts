@@ -30,7 +30,7 @@ export class AuthService {
     private refreshTokenService: RefreshTokenService,
   ) {}
 
-  async register(email: string, phone: string, password: string) {
+  async register(email: string, phone: string, password: string, name?: string) {
     if (!email || !phone || !password) {
       throw new BadRequestException('Email, phone number, and password are required');
     }
@@ -69,6 +69,7 @@ export class AuthService {
       data: {
         email,
         phone,
+        name,
         passwordHash,
         role: Role.CUSTOMER,
         emailVerified: isDev,
