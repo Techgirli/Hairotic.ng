@@ -25,9 +25,9 @@ export const metadata: Metadata = {
     template: '%s | Hairotic.ng',
   },
   icons: {
-    icon: '/Logo/photo_2023-09-25_16-13-56.jpg',
-    shortcut: '/Logo/photo_2023-09-25_16-13-56.jpg',
-    apple: '/Logo/photo_2023-09-25_16-13-56.jpg',
+    icon: '/Logo/logo_transparent.png',
+    shortcut: '/Logo/logo_transparent.png',
+    apple: '/Logo/logo_transparent.png',
   },
   description: 'Hey! Hairotic Baddies!! Empower your boldest self with premium, high-quality wigs and hair bundles. Shopped like a fashion drop.',
   keywords: ['premium hair', 'human hair wigs', 'Nigerian hair store', 'Lagos hair', 'bundles', 'closures', 'frontals'],
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     description: 'Nigeria\'s premium hair drop destination. Authentic donor hair units that represent your energy.',
     images: [
       {
-        url: '/Logo/photo_2023-09-25_16-13-56.jpg',
+        url: '/Logo/logo_transparent.png',
         width: 1200,
         height: 630,
         alt: 'Hairotic.ng — Premium Nigerian Hair Store',
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     creator: '@hairoticng',
     title: 'Hairotic.ng | Premium Nigerian Hair Store',
     description: 'Nigeria\'s premium hair drop destination. Authentic donor hair units that represent your energy.',
-    images: ['/Logo/photo_2023-09-25_16-13-56.jpg'],
+    images: ['/Logo/logo_transparent.png'],
   },
 };
 
