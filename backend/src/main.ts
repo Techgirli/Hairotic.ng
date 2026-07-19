@@ -32,6 +32,9 @@ async function bootstrap() {
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://hairotic-ng.vercel.app',
+    'https://www.hairotic.com.ng',
+    'https://hairotic.com.ng',
+    'https://hairotic-ng.onrender.com',
   ];
   if (process.env.APP_URL) {
     allowedOrigins.push(process.env.APP_URL);
