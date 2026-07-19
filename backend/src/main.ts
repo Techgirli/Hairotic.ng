@@ -43,6 +43,9 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Log origin to console for easy debugging
+      console.log(`[CORS Check] Incoming request from origin: "${origin}"`);
+
       // Allow if no origin (e.g. server-to-server) or matches allowedOrigins list
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
@@ -59,13 +62,13 @@ async function bootstrap() {
       // Allow Vercel preview/production links and custom domains dynamically
       const isAllowedDomain = 
         /\.vercel\.(app|com)$/.test(origin) || 
-        /hairotic\.ng$/.test(origin) ||
-        /\.hairotic\.ng$/.test(origin);
+        /hairotic\.(ng|com\.ng)$/.test(origin) ||
+        /\.hairotic\.(ng|com\.ng)$/.test(origin);
 
       if (isLocalOrNetwork || isAllowedDomain) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },
     credentials: true,
