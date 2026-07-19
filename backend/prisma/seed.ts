@@ -174,13 +174,13 @@ async function main() {
     catWigs.id,
     colBestsellers.id,
     [
-      '/bob-hairs/02ab823d3a0c332042b5a6c3b3f99282.jpg',
-      '/bob-hairs/2d0454f23e05f4a8e3b6c76ff466b580.jpg',
-      '/bob-hairs/2d90fbd186d907f4c9ae5dcb21eac261.jpg',
-      '/bob-hairs/3bf3e64b450bd319f4877f68089f9406.jpg',
-      '/bob-hairs/4b2249f72bab268a1b71b7092f0376ff.jpg',
-      '/bob-hairs/7dfec8bb246f41c69cb983e331cfcaac.jpg',
-      '/bob-hairs/9c0938fcd9094c0d28af07b00298bcc5.jpg'
+      '/wigs/02ab823d3a0c332042b5a6c3b3f99282.jpg',
+      '/wigs/2d0454f23e05f4a8e3b6c76ff466b580.jpg',
+      '/wigs/2d90fbd186d907f4c9ae5dcb21eac261.jpg',
+      '/wigs/3bf3e64b450bd319f4877f68089f9406.jpg',
+      '/wigs/4b2249f72bab268a1b71b7092f0376ff.jpg',
+      '/wigs/7dfec8bb246f41c69cb983e331cfcaac.jpg',
+      '/wigs/9c0938fcd9094c0d28af07b00298bcc5.jpg'
     ],
     ['10', '12', '14'],
     'straight',
@@ -194,14 +194,13 @@ async function main() {
     catWigs.id,
     colNewDrops.id,
     [
-      '/bob-hairs/9e4dc4b86e63fe6fccc3d4cab8b96215.jpg',
-      '/bob-hairs/cb97d3608ba181d8947271aef6cd2d9a.jpg',
-      '/bob-hairs/d889fc460dec62af86f73aed92407c15.jpg',
-      '/bob-hairs/deb96943abdd8693bc7cd6910ff8a879.jpg',
-      '/bob-hairs/e5ada6a44b4cee068499cac637d48d2a.jpg',
-      '/bob-hairs/f7603c772d72ae50f2c4fbb94a7ce4f5.jpg',
-      '/bob-hairs/f9cf7ebc537293f547e939faf8f4ac17.jpg',
-      '/bob-hairs/videoframe_19691.png'
+      '/wigs/9e4dc4b86e63fe6fccc3d4cab8b96215.jpg',
+      '/wigs/cb97d3608ba181d8947271aef6cd2d9a.jpg',
+      '/wigs/d889fc460dec62af86f73aed92407c15.jpg',
+      '/wigs/deb96943abdd8693bc7cd6910ff8a879.jpg',
+      '/wigs/e5ada6a44b4cee068499cac637d48d2a.jpg',
+      '/wigs/f7603c772d72ae50f2c4fbb94a7ce4f5.jpg',
+      '/wigs/f9cf7ebc537293f547e939faf8f4ac17.jpg'
     ],
     ['12', '14'],
     'straight',
@@ -558,7 +557,7 @@ async function main() {
     'Professional, seamless lace melt using waterproof or glueless techniques. Includes flat braid-down, bald cap prep, lace tinting, hairline customization, and hot-tool styling.',
     catStyling.id,
     colBestsellers.id,
-    ['/styling/wig_install.jpg'],
+    ['/wigs/185fe686f5da0947e75f3bff9adfe1dc.jpg', '/wigs/31e8670dd3cc32374263cef8f046e791.jpg'],
     ['standard'],
     'straight',
     25000
@@ -570,7 +569,7 @@ async function main() {
     'Full wig spa service. Includes deep detangling, sulfate-free wash, moisture-rich deep conditioning, lace clean-up, and hot tool styling (sleek straight, soft curls, or wand waves).',
     catStyling.id,
     null,
-    ['/styling/wig_revamp.jpg'],
+    ['/wigs/8fbfe0474edd5027a101397c528a6830.jpg', '/wigs/a14d8543e60511923b22767b7f51bec4.jpg'],
     ['standard'],
     'straight',
     15000
@@ -582,7 +581,7 @@ async function main() {
     'Custom hand-painted highlights, balayage, or single process hair coloring. Performed with premium products to maintain hair shine, bounce, and lace integrity.',
     catStyling.id,
     colNewDrops.id,
-    ['/styling/wig_coloring.jpg'],
+    ['/wigs/bcb3bad5911f442426b8d37b3a86fa2b.jpg', '/wigs/c5c7aa3217ab8abc3be8218c15e4871a.jpg'],
     ['standard'],
     'straight',
     30000
