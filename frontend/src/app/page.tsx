@@ -239,12 +239,19 @@ export default async function Homepage() {
       </section>
 
       {/* ── Shop Categories Grid ─────────────────────────────────────── */}
-      <section className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20">
-        <div className="w-full text-center mb-12 sm:mb-14">
-          <h2 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-[#222222] uppercase tracking-wide block w-full">
+      <section className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20" style={{ overflow: 'visible' }}>
+        <div className="w-full text-center mb-10 sm:mb-14">
+          <h2
+            className="text-[22px] sm:text-[28px] md:text-[32px] font-bold uppercase tracking-wide"
+            style={{ color: '#222222', display: 'block', width: '100%' }}
+          >
             Style By Texture
           </h2>
-          <div className="section-divider w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
+          <div className="w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
+          {/* Mobile swipe hint */}
+          <p className="sm:hidden text-[12px] text-[#6B7280] mt-3 tracking-wide flex items-center justify-center gap-1">
+            <span>←</span> Swipe to explore <span>→</span>
+          </p>
         </div>
         <CategorySlider categories={categories} />
       </section>

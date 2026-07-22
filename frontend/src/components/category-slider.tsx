@@ -67,7 +67,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
   };
 
   return (
-    <div className="relative group/slider w-full" ref={sliderRef}>
+    <div className="relative w-full" ref={sliderRef} style={{ overflow: 'hidden' }}>
       {/* Desktop Navigation Buttons (Top Right, Hidden on Mobile) */}
       <div className="absolute -top-20 right-6 hidden sm:flex items-center gap-3 z-20">
         <button
@@ -97,12 +97,14 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
       </div>
       <div
         ref={containerRef}
-        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 overflow-x-auto overflow-y-hidden scrollbar-hide px-2 w-full"
+        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 px-2 w-full scrollbar-hide"
         style={{
+          overflowX: 'scroll',
+          overflowY: 'hidden',
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          overflowX: 'auto',
           touchAction: 'pan-x',
+          willChange: 'scroll-position',
           cursor: 'grab',
         }}
       >
