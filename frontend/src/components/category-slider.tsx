@@ -21,7 +21,6 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
   const [canScrollRight, setCanScrollRight] = useState(true);
 
   // ── 1. GSAP ScrollTrigger Entrance Animation ────────────────────────────
-  // Entrance animation: fade-in and slide-up stagger when section scrolls into view
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -147,20 +146,24 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
       </div>
 
       {/* 
-        Peeking-carousel on mobile (<640px): w-[78vw] shows ~1.3–1.5 cards with 15-20% peeking edge.
+        Peeking-carousel on mobile (<640px): w-[75vw] shows ~1.3–1.5 cards with 15-20% peeking edge.
         Reflows to 2-col grid on tablet (sm: 640px) and 4-col grid on desktop (lg: 1024px).
       */}
       <div
         ref={containerRef}
         onScroll={updateArrows}
         className="flex gap-3 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible pb-4 sm:pb-0"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-x',
+        }}
       >
         {categories.map((cat) => (
           <Link
             key={cat.slug}
             href={cat.customUrl || `/shop?categorySlug=${cat.slug}`}
             data-cat-card="true"
-            className="shrink-0 w-[78vw] max-w-[320px] sm:max-w-none sm:w-auto snap-start sm:snap-align-none group relative h-[270px] sm:h-[320px] md:h-[380px] rounded-[24px] sm:rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
+            className="shrink-0 w-[75vw] max-w-[300px] sm:max-w-none sm:w-auto snap-start sm:snap-align-none group relative h-[250px] sm:h-[320px] md:h-[380px] rounded-[24px] sm:rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
           >
             {/* Background image container for smooth parallax slide */}
             <div
