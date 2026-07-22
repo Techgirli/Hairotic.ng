@@ -239,18 +239,17 @@ export default async function Homepage() {
       </section>
 
       {/* ── Shop Categories Grid ─────────────────────────────────────── */}
-      <section className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20" style={{ overflow: 'visible' }}>
+      {/* overflow-hidden on the section clips any stray bleed; the slider     */}
+      {/* inner track uses clip-path so touch events still reach it on iOS.   */}
+      <section className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
         <div className="w-full text-center mb-10 sm:mb-14">
-          <h2
-            className="text-[22px] sm:text-[28px] md:text-[32px] font-bold uppercase tracking-wide"
-            style={{ color: '#222222', display: 'block', width: '100%' }}
-          >
+          <h2 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-[#222222] uppercase tracking-wide">
             Style By Texture
           </h2>
           <div className="w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
-          {/* Mobile swipe hint */}
-          <p className="sm:hidden text-[12px] text-[#6B7280] mt-3 tracking-wide flex items-center justify-center gap-1">
-            <span>←</span> Swipe to explore <span>→</span>
+          {/* Swipe hint — mobile only, centered below the divider */}
+          <p className="sm:hidden text-[12px] text-[#6B7280] mt-3 tracking-wide">
+            ← Swipe to explore →
           </p>
         </div>
         <CategorySlider categories={categories} />

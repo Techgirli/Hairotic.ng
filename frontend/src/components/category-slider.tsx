@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import gsap from 'gsap';
 
 interface Category {
   name: string;
@@ -17,123 +16,126 @@ interface CategorySliderProps {
 }
 
 export default function CategorySlider({ categories }: CategorySliderProps) {
-  const sliderRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Check scroll position to show/hide navigation buttons
-  const checkScroll = () => {
-    const container = containerRef.current;
-    if (container) {
-      const { scrollLeft, scrollWidth, clientWidth } = container;
-      setCanScrollLeft(scrollLeft > 10);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-    }
-  };
+  // ── Scroll state checker ─────────────────────────────────────────────────
+  const checkScroll = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+  }, []);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', checkScroll);
-      // Run once initially
+    const el = containerRef.current;
+    if (!el) return;
+
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+
+    // Re-check on resize AND re-calibrate any GSAP ScrollTriggers that
+    // depend on element positions (they need to re-read layout after reflow).
+    const onResize = () => {
       checkScroll();
-      
-      // Also check on window resize
-      window.addEventListener('resize', checkScroll);
-    }
-    return () => {
-      if (container) {
-        container.removeEventListener('scroll', checkScroll);
+      // Safely refresh ScrollTrigger if it has been registered by GSAPAnimations.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { ScrollTrigger } = require('gsap/ScrollTrigger');
+        ScrollTrigger.refresh();
+      } catch {
+        // GSAP not loaded yet — no-op
       }
-      window.removeEventListener('resize', checkScroll);
     };
-  }, [categories]);
 
-  // Scroll function — uses native scrollTo for iOS/mobile WebKit compatibility
-  // (GSAP cannot animate scrollLeft reliably on mobile Safari)
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('orientationchange', onResize, { passive: true });
+
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [categories, checkScroll]);
+
+  // ── Button scroll: advance by one card width so snap points align ────────
   const scroll = (direction: 'left' | 'right') => {
-    const container = containerRef.current;
-    if (!container) return;
+    const el = containerRef.current;
+    if (!el) return;
 
-    const isMobile = container.clientWidth < 640;
-    const scrollAmount = isMobile ? 200 : 460;
-    const delta = direction === 'left' ? -scrollAmount : scrollAmount;
-    const targetScroll = container.scrollLeft + delta;
+    // Measure the first card's actual rendered width (includes gap via scrollLeft delta)
+    const firstCard = el.querySelector<HTMLElement>('.cat-card');
+    const cardWidth = firstCard ? firstCard.offsetWidth + 16 : 220; // 16 = gap fallback
 
-    container.scrollTo({ left: targetScroll, behavior: 'smooth' });
-    // Give scroll time to complete before rechecking
-    setTimeout(checkScroll, 400);
+    const delta = direction === 'left' ? -cardWidth : cardWidth;
+    el.scrollBy({ left: delta, behavior: 'smooth' });
+
+    // Re-check state after animation settles
+    setTimeout(checkScroll, 450);
   };
 
   return (
-    <div className="relative w-full" ref={sliderRef} style={{ overflow: 'hidden' }}>
-      {/* Desktop Navigation Buttons (Top Right, Hidden on Mobile) */}
+    /* cat-slider-outer uses clip-path instead of overflow:hidden so the
+       inner scroll track can still receive touch events on iOS/Android.    */
+    <div className="cat-slider-outer">
+
+      {/* ── Desktop arrow buttons (hidden on mobile) ────────────────── */}
       <div className="absolute -top-20 right-6 hidden sm:flex items-center gap-3 z-20">
         <button
           onClick={() => scroll('left')}
           disabled={!canScrollLeft}
+          aria-label="Scroll left"
           className={`w-12 h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
             canScrollLeft
               ? 'bg-white text-[#222222] hover:bg-[#E56717] hover:text-white hover:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
           }`}
-          aria-label="Scroll left"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <button
           onClick={() => scroll('right')}
           disabled={!canScrollRight}
+          aria-label="Scroll right"
           className={`w-12 h-12 rounded-full border border-[#222222]/10 flex items-center justify-center transition-all duration-300 ${
             canScrollRight
               ? 'bg-white text-[#222222] hover:bg-[#E56717] hover:text-white hover:border-[#E56717] shadow-md hover:scale-105 active:scale-95'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
           }`}
-          aria-label="Scroll right"
         >
           <ArrowRight className="w-5 h-5" />
         </button>
       </div>
-      <div
-        ref={containerRef}
-        className="flex flex-row flex-nowrap gap-6 md:gap-8 pb-8 pt-2 px-2 w-full scrollbar-hide"
-        style={{
-          overflowX: 'scroll',
-          overflowY: 'hidden',
-          scrollbarWidth: 'none',
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-x',
-          willChange: 'scroll-position',
-          cursor: 'grab',
-        }}
-      >
+
+      {/* ── Scroll track — all sizing/snap/overflow in globals.css ───── */}
+      <div ref={containerRef} className="cat-slider-track">
         {categories.map((cat) => (
           <Link
             key={cat.slug}
             href={cat.customUrl || `/shop?categorySlug=${cat.slug}`}
-            className="category-card group relative h-[260px] sm:h-[320px] md:h-[380px] w-[180px] sm:w-[300px] md:w-[380px] lg:w-[440px] shrink-0 rounded-[20px] sm:rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
-            style={{ flexShrink: 0 }}
+            /* cat-card: width/height/border-radius set per-breakpoint in CSS */
+            className="cat-card group border border-[#222222]/5 shadow-md hover:shadow-2xl transition-shadow duration-500"
           >
-            {/* Background image container for smooth parallax slide */}
+            {/* BG image */}
             <div
               className="absolute inset-0 bg-cover bg-center scale-105 group-hover:scale-110 transition-transform duration-700 ease-out"
               style={{ backgroundImage: `url('${cat.image}')` }}
             />
-            {/* Gradient overlay - deepens on hover */}
+            {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#222222]/95 via-[#222222]/40 to-transparent group-hover:via-[#222222]/20 transition-all duration-500" />
-            
-            {/* Elegant lighting shine effect on hover */}
+            {/* Shine on hover */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-tr from-transparent via-white/5 to-white/10 transition-opacity duration-700 pointer-events-none" />
 
-            {/* Bottom info section with subtle slide up */}
+            {/* Label */}
             <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500 ease-out">
               <div className="space-y-1 sm:space-y-2">
                 <h3 className="text-[18px] sm:text-[22px] md:text-[26px] font-extrabold text-white uppercase tracking-wider group-hover:text-[#E56717] transition-colors duration-300 drop-shadow-md">
                   {cat.name}
                 </h3>
                 <span className="text-[11px] sm:text-[13px] text-[#E56717] uppercase tracking-widest font-bold flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
-                  View Collection 
+                  View Collection{' '}
                   <span className="transform translate-x-0 group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
               </div>
@@ -142,18 +144,18 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
         ))}
       </div>
 
-      {/* Mobile Navigation Buttons (Centered below the slider, visible only on Mobile) */}
+      {/* ── Mobile arrow buttons (below the track, hidden on ≥640px) ── */}
       <div className="flex sm:hidden justify-center items-center gap-6 mt-5">
         <button
           onPointerDown={() => scroll('left')}
           disabled={!canScrollLeft}
           style={{ touchAction: 'manipulation' }}
+          aria-label="Scroll left"
           className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all duration-200 ${
             canScrollLeft
               ? 'bg-white border-[#222222]/20 text-[#222222] active:bg-[#E56717] active:text-white active:border-[#E56717] shadow-md active:scale-95'
               : 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed opacity-40'
           }`}
-          aria-label="Scroll left"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -161,12 +163,12 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
           onPointerDown={() => scroll('right')}
           disabled={!canScrollRight}
           style={{ touchAction: 'manipulation' }}
+          aria-label="Scroll right"
           className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all duration-200 ${
             canScrollRight
               ? 'bg-[#E56717] border-[#E56717] text-white shadow-md active:scale-95 active:opacity-80'
               : 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed opacity-40'
           }`}
-          aria-label="Scroll right"
         >
           <ArrowRight className="w-5 h-5" />
         </button>
