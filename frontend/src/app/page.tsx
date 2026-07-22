@@ -239,16 +239,24 @@ export default async function Homepage() {
       </section>
 
       {/* ── Shop Categories Grid ─────────────────────────────────────── */}
-      {/* overflow-hidden on the section clips any stray bleed; the slider     */}
-      {/* inner track uses clip-path so touch events still reach it on iOS.   */}
-      <section className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
+      {/*
+        overflow:hidden as inline style — guaranteed not to be overridden
+        by Tailwind v4 cascade. Clips any stray card bleed on mobile.
+        The inner scroll track still scrolls because overflow:hidden on a
+        non-scroll-container just clips visual overflow, not scroll events
+        on child elements.
+      */}
+      <section
+        className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20"
+        style={{ overflowX: 'hidden' }}
+      >
         <div className="w-full text-center mb-10 sm:mb-14">
           <h2 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-[#222222] uppercase tracking-wide">
             Style By Texture
           </h2>
           <div className="w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
-          {/* Swipe hint — mobile only, centered below the divider */}
-          <p className="sm:hidden text-[12px] text-[#6B7280] mt-3 tracking-wide">
+          {/* Mobile swipe hint */}
+          <p className="sm:hidden text-[12px] text-[#6B7280] mt-3 tracking-wide text-center">
             ← Swipe to explore →
           </p>
         </div>
