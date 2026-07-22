@@ -250,15 +250,11 @@ export default async function Homepage() {
         className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20"
         style={{ overflowX: 'hidden' }}
       >
-        <div className="w-full text-center mb-10 sm:mb-14">
+        <div className="w-full text-center mb-6 sm:mb-8">
           <h2 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-[#222222] uppercase tracking-wide">
             Style By Texture
           </h2>
           <div className="w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
-          {/* Mobile swipe hint */}
-          <p className="sm:hidden text-[12px] text-[#6B7280] mt-3 tracking-wide text-center">
-            ← Swipe to explore →
-          </p>
         </div>
         <CategorySlider categories={categories} />
       </section>
