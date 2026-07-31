@@ -10,7 +10,7 @@ name: Reconcile — Stuck Payment Orders
 
 on:
   schedule:
-    - cron: '*/10 * * * *'   # Every 10 minutes, all day
+    - cron: '*/40 * * * *'   # Every 40 minutes, all day
 
   # Allow manual trigger from the Actions UI for emergency use
   workflow_dispatch:
