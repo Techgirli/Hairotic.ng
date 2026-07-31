@@ -33,6 +33,10 @@ export default function MagneticProductCard({
     const img = imgRef.current;
     if (!card || !glow) return;
 
+    // Only enable 3D tilt on devices with a fine pointer (desktop mouse)
+    const isFinePointer = window.matchMedia('(pointer: fine)').matches;
+    if (!isFinePointer) return;
+
     const handleMove = (e: MouseEvent) => {
       const rect = card.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
@@ -141,5 +145,3 @@ export default function MagneticProductCard({
     </div>
   );
 }
-
-

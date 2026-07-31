@@ -22,19 +22,19 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#222222]/5 z-50 h-16 transition-all duration-300">
-      <div className="w-full px-8 h-full flex items-center justify-between">
+      <div className="w-full px-4 sm:px-8 h-full flex items-center justify-between">
         
         {/* Brand identity logo */}
-        <Link href="/" className="flex items-center gap-2 select-none relative">
+        <Link href="/" className="flex items-center gap-2 select-none relative shrink-0">
           <Image
             src="/Logo/logo.svg"
             alt="Hairotic Logo"
             width={96}
             height={96}
-            className="h-20 md:h-24 w-auto object-contain relative -bottom-2 z-20 hover:scale-105 transition-transform duration-200"
+            className="h-14 sm:h-20 md:h-24 w-auto object-contain relative -bottom-1 sm:-bottom-2 z-20 hover:scale-105 transition-transform duration-200"
             priority
           />
-          <span className="font-display text-[22px] tracking-wider text-[#222222] font-black uppercase">
+          <span className="font-display text-[18px] sm:text-[22px] tracking-wider text-[#222222] font-black uppercase">
             Hairotic
           </span>
         </Link>
@@ -66,7 +66,7 @@ export default function Header() {
         </nav>
 
         {/* Action Controls & Icons */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3 sm:gap-5">
           
           {/* Wishlist Link */}
           <Link 
@@ -74,7 +74,7 @@ export default function Header() {
             className="text-[#222222] hover:text-[#E56717] transition-colors p-1"
             title="Wishlist"
           >
-            <Heart className="w-5.5 h-5.5" />
+            <Heart className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
           </Link>
 
           {/* Account/User Auth Link */}
@@ -83,7 +83,7 @@ export default function Header() {
             className="text-[#222222] hover:text-[#E56717] transition-colors p-1 relative"
             title={user ? `Signed in as ${user.email}` : "Sign In / Register"}
           >
-            <User className="w-5.5 h-5.5" />
+            <User className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
             {user && (
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-white" />
             )}
@@ -95,7 +95,7 @@ export default function Header() {
             className="text-[#222222] hover:text-[#E56717] transition-colors p-1 relative cursor-pointer"
             title="Shopping Bag"
           >
-            <ShoppingBag className="w-5.5 h-5.5" />
+            <ShoppingBag className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
             {cartItemCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-[#E56717] text-white text-[9.5px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border border-white">
                 {cartItemCount}

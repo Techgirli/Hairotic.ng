@@ -119,10 +119,10 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
   return (
     <div className="relative w-full">
       {/* 
-        Top Header Row: Swipe hint on left, small circular navigation arrows top-right 
+        Top Header Row: Swipe hint on mobile (<640px), hidden on tablet/desktop where grid layout is used
       */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
-        <p className="text-[12px] sm:text-[13px] text-[#6B7280] font-medium tracking-wide flex items-center gap-1.5">
+      <div className="flex items-center justify-between mb-3 sm:mb-4 px-1 sm:hidden">
+        <p className="text-[12px] text-[#6B7280] font-medium tracking-wide flex items-center gap-1.5">
           <span className="text-[#E56717] font-bold">←</span> Swipe to explore <span className="text-[#E56717] font-bold">→</span>
         </p>
         <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
             aria-label="Scroll left"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#222222]/10 bg-white shadow-sm flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E56717]/10 transition-colors"
+            className="w-8 h-8 rounded-full border border-[#222222]/10 bg-white shadow-sm flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E56717]/10 transition-colors"
           >
             <ChevronLeft className="w-4 h-4 text-[#222222]" />
           </button>
@@ -138,7 +138,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
             aria-label="Scroll right"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#222222]/10 bg-white shadow-sm flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E56717]/10 transition-colors"
+            className="w-8 h-8 rounded-full border border-[#222222]/10 bg-white shadow-sm flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E56717]/10 transition-colors"
           >
             <ChevronRight className="w-4 h-4 text-[#222222]" />
           </button>
@@ -146,7 +146,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
       </div>
 
       {/* 
-        Peeking-carousel on mobile (<640px): w-[75vw] shows ~1.3–1.5 cards with 15-20% peeking edge.
+        Peeking-carousel on mobile (<640px): w-[75vw] shows cards with peeking edge.
         Reflows to 2-col grid on tablet (sm: 640px) and 4-col grid on desktop (lg: 1024px).
       */}
       <div
@@ -155,7 +155,6 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
         className="flex gap-3 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible pb-4 sm:pb-0"
         style={{
           WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-x',
         }}
       >
         {categories.map((cat) => (
