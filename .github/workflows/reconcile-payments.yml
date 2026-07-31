@@ -1,12 +1,12 @@
 name: Reconcile — Stuck Payment Orders
 
-# Runs every 10 minutes to catch any orders that received a Paystack payment
+# Runs every 40 minutes to catch any orders that received a Paystack payment
 # confirmation but whose webhook was missed (network blip, server restart, etc.)
 # Calls the internal reconcile endpoint which re-verifies all orders that have
-# been in PENDING_PAYMENT status for more than 10 minutes.
+# been in PENDING_PAYMENT status for more than 40 minutes.
 #
 # PRD requirement: "Scheduled reconciliation job re-verifies any order stuck
-# in pending_payment for more than 10 minutes."
+# in pending_payment for more than 40 minutes."
 
 on:
   schedule:
