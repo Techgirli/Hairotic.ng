@@ -48,7 +48,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
                 ease: 'power3.out',
                 scrollTrigger: {
                   trigger: el,
-                  start: 'top 85%',
+                  start: 'top 95%',
                   once: true,
                 },
               }
@@ -108,7 +108,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
     const el = containerRef.current;
     if (!el) return;
     const firstCard = el.querySelector<HTMLElement>('[data-cat-card]');
-    const cardWidth = firstCard ? firstCard.offsetWidth + 12 : el.clientWidth * 0.75;
+    const cardWidth = firstCard ? firstCard.offsetWidth + 24 : el.clientWidth * 0.75;
     el.scrollBy({
       left: direction === 'left' ? -cardWidth : cardWidth,
       behavior: 'smooth',
@@ -119,40 +119,39 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
   return (
     <div className="relative w-full">
       {/* 
-        Top Header Row: Swipe hint on mobile (<640px), hidden on tablet/desktop where grid layout is used
+        Top Header Controls Row: Active navigation arrows on all screen sizes
       */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4 px-1 sm:hidden">
-        <p className="text-[12px] text-[#6B7280] font-medium tracking-wide flex items-center gap-1.5">
-          <span className="text-[#E56717] font-bold">←</span> Swipe to explore <span className="text-[#E56717] font-bold">→</span>
+      <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
+        <p className="text-[13px] sm:text-[14px] text-[#6B7280] font-medium tracking-wide flex items-center gap-1.5">
+          <span className="text-[#E56717] font-bold">←</span> Scroll or swipe to explore <span className="text-[#E56717] font-bold">→</span>
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
             aria-label="Scroll left"
-            className="w-8 h-8 rounded-full border border-[#222222]/10 bg-white shadow-sm flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E56717]/10 transition-colors"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#222222]/15 bg-white shadow-sm flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E56717] hover:text-white hover:border-[#E56717] transition-all cursor-pointer group"
           >
-            <ChevronLeft className="w-4 h-4 text-[#222222]" />
+            <ChevronLeft className="w-5 h-5 text-[#222222] group-hover:text-white transition-colors" />
           </button>
           <button
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
             aria-label="Scroll right"
-            className="w-8 h-8 rounded-full border border-[#222222]/10 bg-white shadow-sm flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E56717]/10 transition-colors"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#222222]/15 bg-white shadow-sm flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E56717] hover:text-white hover:border-[#E56717] transition-all cursor-pointer group"
           >
-            <ChevronRight className="w-4 h-4 text-[#222222]" />
+            <ChevronRight className="w-5 h-5 text-[#222222] group-hover:text-white transition-colors" />
           </button>
         </div>
       </div>
 
       {/* 
-        Peeking-carousel on mobile (<640px): w-[75vw] shows cards with peeking edge.
-        Reflows to 2-col grid on tablet (sm: 640px) and 4-col grid on desktop (lg: 1024px).
+        Full Horizontal Carousel with wider card width on mobile, tablet & desktop
       */}
       <div
         ref={containerRef}
         onScroll={updateArrows}
-        className="flex gap-3 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible pb-4 sm:pb-0"
+        className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 pb-4"
         style={{
           WebkitOverflowScrolling: 'touch',
         }}
@@ -162,7 +161,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
             key={cat.slug}
             href={cat.customUrl || `/shop?categorySlug=${cat.slug}`}
             data-cat-card="true"
-            className="shrink-0 w-[75vw] max-w-[300px] sm:max-w-none sm:w-auto snap-start sm:snap-align-none group relative h-[250px] sm:h-[320px] md:h-[380px] rounded-[24px] sm:rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
+            className="shrink-0 w-[82vw] sm:w-[350px] md:w-[400px] lg:w-[440px] snap-start group relative h-[300px] sm:h-[360px] md:h-[420px] rounded-[24px] sm:rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
           >
             {/* Background image container for smooth parallax slide */}
             <div
@@ -176,14 +175,14 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-tr from-transparent via-white/5 to-white/10 transition-opacity duration-700 pointer-events-none" />
 
             {/* Bottom info section */}
-            <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 md:bottom-8 md:left-8 md:right-8 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500 ease-out">
-              <div className="space-y-1 sm:space-y-2">
-                <h3 className="text-[16px] sm:text-[20px] md:text-[26px] font-extrabold text-white uppercase tracking-wider group-hover:text-[#E56717] transition-colors duration-300 drop-shadow-md">
+            <div className="absolute bottom-5 left-5 right-5 sm:bottom-7 sm:left-7 sm:right-7 md:bottom-9 md:left-9 md:right-9 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500 ease-out">
+              <div className="space-y-1.5 sm:space-y-2.5">
+                <h3 className="text-[18px] sm:text-[22px] md:text-[28px] font-extrabold text-white uppercase tracking-wider group-hover:text-[#E56717] transition-colors duration-300 drop-shadow-md">
                   {cat.name}
                 </h3>
-                <span className="text-[11px] sm:text-[12px] md:text-[13px] text-[#E56717] uppercase tracking-widest font-bold flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
+                <span className="text-[12px] sm:text-[13px] md:text-[14px] text-[#E56717] uppercase tracking-widest font-bold flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
                   View Collection 
-                  <span className="transform translate-x-0 group-hover:translate-x-1 transition-transform duration-300">→</span>
+                  <span className="transform translate-x-0 group-hover:translate-x-1.5 transition-transform duration-300">→</span>
                 </span>
               </div>
             </div>

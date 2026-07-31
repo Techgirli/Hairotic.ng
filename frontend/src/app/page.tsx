@@ -115,7 +115,10 @@ async function getFeaturedProducts(): Promise<Product[]> {
     clearTimeout(timeout);
     if (!res.ok) throw new Error('API response not ok');
     const data = await res.json();
-    return data.products || [];
+    if (Array.isArray(data.products) && data.products.length > 0) {
+      return data.products;
+    }
+    return MOCK_HOMEPAGE_PRODUCTS;
   } catch {
     // Backend offline or timed out — return mock homepage products
     return MOCK_HOMEPAGE_PRODUCTS;

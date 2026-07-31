@@ -55,7 +55,7 @@ export default function Testimonials() {
           ease: 'power3.out',
           scrollTrigger: {
             trigger: el,
-            start: 'top 85%',
+            start: 'top 95%',
             once: true,
           },
         }
