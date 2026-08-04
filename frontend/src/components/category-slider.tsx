@@ -117,15 +117,14 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
   };
 
   return (
-    <div className="relative w-full">
-      {/* 
-        Top Header Controls Row: Active navigation arrows on all screen sizes
-      */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
-        <p className="text-[13px] sm:text-[14px] text-[#6B7280] font-medium tracking-wide flex items-center gap-1.5">
-          <span className="text-[#E56717] font-bold">←</span> Scroll or swipe to explore <span className="text-[#E56717] font-bold">→</span>
+    <div className="relative w-full min-w-0 max-w-full">
+      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6 px-1">
+        <p className="text-[12px] sm:text-[14px] text-[#6B7280] font-medium tracking-wide flex items-center gap-1.5 min-w-0">
+          <span className="text-[#E56717] font-bold shrink-0">←</span>
+          <span className="truncate">Scroll or swipe to explore</span>
+          <span className="text-[#E56717] font-bold shrink-0">→</span>
         </p>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
@@ -145,13 +144,10 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
         </div>
       </div>
 
-      {/* 
-        Full Horizontal Carousel with wider card width on mobile, tablet & desktop
-      */}
       <div
         ref={containerRef}
         onScroll={updateArrows}
-        className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 pb-4"
+        className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto overscroll-x-contain snap-x snap-mandatory scrollbar-hide w-full min-w-0 max-w-full -mx-4 px-4 sm:-mx-6 sm:px-6 pb-4"
         style={{
           WebkitOverflowScrolling: 'touch',
         }}
@@ -161,7 +157,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
             key={cat.slug}
             href={cat.customUrl || `/shop?categorySlug=${cat.slug}`}
             data-cat-card="true"
-            className="shrink-0 w-[82vw] sm:w-[350px] md:w-[400px] lg:w-[440px] snap-start group relative h-[300px] sm:h-[360px] md:h-[420px] rounded-[24px] sm:rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
+            className="shrink-0 w-[min(82vw,320px)] sm:w-[350px] md:w-[400px] lg:w-[440px] snap-start group relative h-[300px] sm:h-[360px] md:h-[420px] rounded-[24px] sm:rounded-[32px] overflow-hidden border border-[#222222]/5 shadow-md hover:shadow-2xl transition-all duration-500 block"
           >
             {/* Background image container for smooth parallax slide */}
             <div

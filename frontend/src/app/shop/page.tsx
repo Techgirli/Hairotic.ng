@@ -304,12 +304,12 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const activeSort = (Array.isArray(resolvedParams.sort) ? resolvedParams.sort[0] : resolvedParams.sort) || 'newest';
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="flex-1 flex flex-col min-h-screen min-w-0 w-full overflow-x-clip">
       {/* Premium Header */}
       <Header />
 
       {/* Main Browse Container */}
-      <main className="max-w-7xl mx-auto px-6 py-12 flex-1 flex flex-col lg:flex-row gap-8">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-1 flex flex-col lg:flex-row gap-8 min-w-0">
         {/* Filters Sidebar */}
         <FilterSidebar categories={categories} />
 
@@ -322,7 +322,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               <p className="text-[13px] text-[#6B7280]">Found {products.length} units</p>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-[13px] text-[#6B7280] font-semibold mr-1">Sort:</span>
               <SortOptionLink label="Newest" value="newest" activeSort={activeSort} currentParams={resolvedParams} />
               <SortOptionLink label="₦ Low-High" value="price_asc" activeSort={activeSort} currentParams={resolvedParams} />

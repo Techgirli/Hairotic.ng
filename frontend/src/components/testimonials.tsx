@@ -78,7 +78,7 @@ export default function Testimonials() {
           <span className="text-[#E56717] text-[13px] font-extrabold uppercase tracking-widest block mb-2">
             Baddie Approved
           </span>
-          <h2 className="text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
+          <h2 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-[#222222] uppercase tracking-wide inline-block">
             Baddies Love Hairotic
           </h2>
           <div className="w-14 h-1 bg-[#E56717] mx-auto mt-3 rounded-full" />
@@ -111,12 +111,12 @@ export default function Testimonials() {
               </div>
 
               {/* Reviewer Details */}
-              <div className="mt-8 pt-6 border-t border-[#222222]/5 flex items-center justify-between relative z-10">
-                <div>
+              <div className="mt-8 pt-6 border-t border-[#222222]/5 flex items-start sm:items-center justify-between gap-3 relative z-10">
+                <div className="min-w-0">
                   <h4 className="text-[15px] font-bold text-[#222222]">{review.name}</h4>
                   <p className="text-[12px] text-gray-500">{review.location}</p>
                 </div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#E56717] bg-[#E56717]/10 rounded-full px-3 py-1">
+                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E56717] bg-[#E56717]/10 rounded-full px-2.5 sm:px-3 py-1 shrink-0 text-right">
                   {review.tag}
                 </span>
               </div>

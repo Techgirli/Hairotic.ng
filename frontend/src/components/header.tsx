@@ -22,19 +22,19 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#222222]/5 z-50 h-16 transition-all duration-300">
-      <div className="w-full px-4 sm:px-8 h-full flex items-center justify-between">
+      <div className="w-full max-w-full min-w-0 px-3 sm:px-8 h-full flex items-center justify-between gap-2">
         
         {/* Brand identity logo */}
-        <Link href="/" className="flex items-center gap-2 select-none relative shrink-0">
+        <Link href="/" className="flex items-center gap-1.5 sm:gap-2 select-none relative min-w-0 shrink">
           <Image
             src="/Logo/logo.svg"
             alt="Hairotic Logo"
             width={96}
             height={96}
-            className="h-14 sm:h-20 md:h-24 w-auto object-contain relative -bottom-1 sm:-bottom-2 z-20 hover:scale-105 transition-transform duration-200"
+            className="h-11 sm:h-14 w-auto object-contain relative z-20 hover:scale-105 transition-transform duration-200"
             priority
           />
-          <span className="font-display text-[18px] sm:text-[22px] tracking-wider text-[#222222] font-black uppercase">
+          <span className="font-display text-[16px] sm:text-[22px] tracking-wider text-[#222222] font-black uppercase truncate">
             Hairotic
           </span>
         </Link>
@@ -66,7 +66,7 @@ export default function Header() {
         </nav>
 
         {/* Action Controls & Icons */}
-        <div className="flex items-center gap-3 sm:gap-5">
+        <div className="flex items-center gap-2 sm:gap-5 shrink-0">
           
           {/* Wishlist Link */}
           <Link 

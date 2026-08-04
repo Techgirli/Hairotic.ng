@@ -16,7 +16,7 @@ export default function ToastContainer() {
   if (!mounted) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+    <div className="fixed bottom-24 left-4 right-4 sm:left-auto sm:right-6 z-50 flex flex-col gap-3 sm:max-w-sm sm:w-full pointer-events-none">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onClose={() => dismissToast(toast.id)} />
       ))}
