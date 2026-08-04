@@ -136,7 +136,7 @@ export default async function Homepage() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="flex-1 flex flex-col min-h-screen min-w-0 w-full overflow-x-clip">
       {/* GSAP orchestrator (client, no UI output) */}
       <GSAPAnimations />
 
@@ -148,7 +148,7 @@ export default async function Homepage() {
 
       {/* ── Hero Banner ─────────────────────────────────────────────── */}
       <section
-        className="hero-section relative h-[90vh] flex items-center justify-center bg-[#222222] text-white overflow-hidden select-none"
+        className="hero-section relative min-h-[85vh] sm:h-[90vh] flex items-center justify-center bg-[#222222] text-white overflow-hidden select-none py-16 sm:py-0"
       >
         {/* Parallax BG */}
         <div
@@ -165,14 +165,14 @@ export default async function Homepage() {
         <div className="relative max-w-4xl mx-auto px-6 text-center z-10 space-y-6"
           style={{ perspective: '1200px' }}
         >
-          <span className="hero-badge text-white text-[13px] uppercase tracking-[0.32em] font-bold block
-            bg-[#E56717]/20 border border-[#E56717]/40 rounded-full px-6 py-2 inline-block
+          <span className="hero-badge text-white text-[10px] sm:text-[13px] uppercase tracking-[0.18em] sm:tracking-[0.32em] font-bold
+            bg-[#E56717]/20 border border-[#E56717]/40 rounded-full px-3 sm:px-6 py-1.5 sm:py-2 inline-block max-w-[calc(100vw-3rem)]
             backdrop-blur-sm shadow-lg shadow-[#E56717]/10">
             Hey Hairotic Baddie!! · Shop Premium Vietnamese Human Hair
           </span>
 
-          <h1 className="font-display leading-[1.0] uppercase tracking-tight drop-shadow-lg"
-            style={{ fontSize: 'clamp(52px, 8vw, 86px)' }}
+          <h1 className="font-display leading-[1.05] sm:leading-[1.0] uppercase tracking-tight drop-shadow-lg"
+            style={{ fontSize: 'clamp(36px, 9vw, 86px)' }}
           >
             <span className="hero-title-word inline-block">Empower</span>{' '}
             <span className="hero-title-word inline-block text-[#E56717]">Your</span>
@@ -181,15 +181,15 @@ export default async function Homepage() {
             <span className="hero-title-word inline-block">Self</span>
           </h1>
 
-          <p className="hero-subtitle text-[18px] text-[#FAF7F4] max-w-xl mx-auto font-light leading-relaxed">
+          <p className="hero-subtitle text-[15px] sm:text-[18px] text-[#FAF7F4] max-w-xl mx-auto font-light leading-relaxed px-1">
             Hair that turns heads and never holds you back. Crafted for the young, confident, and trend-driven woman.
           </p>
 
-          <div className="hero-cta pt-4 flex items-center justify-center gap-4 flex-wrap">
+          <div className="hero-cta pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 w-full max-w-md sm:max-w-none mx-auto">
             <Link
               href="/shop"
               id="hero-cta-primary"
-              className="inline-flex h-[54px] px-10 bg-[#E56717] hover:bg-[#C65A12] text-white text-[15px] font-bold uppercase tracking-widest rounded-[14px] shadow-xl shadow-[#E56717]/30 active:scale-95 transition-all duration-200 items-center justify-center gap-2 cursor-pointer"
+              className="inline-flex h-12 sm:h-[54px] px-6 sm:px-10 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] sm:text-[15px] font-bold uppercase tracking-widest rounded-[14px] shadow-xl shadow-[#E56717]/30 active:scale-95 transition-all duration-200 items-center justify-center gap-2 cursor-pointer"
             >
               <span>Explore The Drop</span>
               <Sparkles className="w-5 h-5" />
@@ -197,7 +197,7 @@ export default async function Homepage() {
             <Link
               href="/collections/new-drops"
               id="hero-cta-secondary"
-              className="inline-flex h-[54px] px-8 bg-white/10 hover:bg-white/20 text-white text-[15px] font-semibold uppercase tracking-widest rounded-[14px] border border-white/20 backdrop-blur-sm active:scale-95 transition-all duration-200 items-center justify-center gap-2 cursor-pointer"
+              className="inline-flex h-12 sm:h-[54px] px-6 sm:px-8 bg-white/10 hover:bg-white/20 text-white text-[13px] sm:text-[15px] font-semibold uppercase tracking-widest rounded-[14px] border border-white/20 backdrop-blur-sm active:scale-95 transition-all duration-200 items-center justify-center gap-2 cursor-pointer"
             >
               New Drops
             </Link>
@@ -250,8 +250,7 @@ export default async function Homepage() {
         on child elements.
       */}
       <section
-        className="categories-section max-w-[1600px] mx-auto px-4 sm:px-6 py-16 sm:py-20"
-        style={{ overflowX: 'hidden' }}
+        className="categories-section w-full max-w-[1600px] min-w-0 mx-auto px-4 sm:px-6 py-16 sm:py-20 overflow-x-hidden"
       >
         <div className="w-full text-center mb-6 sm:mb-8">
           <h2 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-[#222222] uppercase tracking-wide">
