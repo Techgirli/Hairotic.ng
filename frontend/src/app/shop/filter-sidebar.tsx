@@ -105,17 +105,53 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
         <h5 className="text-[14px] font-bold text-[#222222] uppercase tracking-wider">Category</h5>
         <div className="space-y-2">
           {categories.map((cat) => (
-            <button
-              key={cat.slug}
-              onClick={() => handleCategoryChange(cat.slug)}
-              className={`w-full text-left h-10 px-4 rounded-[12px] text-[14px] font-semibold transition-all duration-200 ${
-                activeCategory === cat.slug
-                  ? 'bg-[#E56717] text-[#FFFFFF]'
-                  : 'bg-[#FAF7F4] text-[#222222] hover:bg-[#222222]/5'
-              }`}
-            >
-              {cat.name}
-            </button>
+            <div key={cat.slug} className="space-y-1">
+              <button
+                onClick={() => handleCategoryChange(cat.slug)}
+                className={`w-full text-left h-10 px-4 rounded-[12px] text-[14px] font-semibold transition-all duration-200 ${
+                  activeCategory === cat.slug
+                    ? 'bg-[#E56717] text-[#FFFFFF]'
+                    : 'bg-[#FAF7F4] text-[#222222] hover:bg-[#222222]/5'
+                }`}
+              >
+                {cat.name}
+              </button>
+
+              {/* Sub-styles under Wigs */}
+              {cat.slug === 'wigs' && (
+                <div className="pl-3 space-y-1 pt-1">
+                  {[
+                    { label: 'Straight Hairs', styleVal: 'straight' },
+                    { label: 'Bob Hairs', styleVal: 'bob' },
+                    { label: 'Curly Wigs', styleVal: 'curly' },
+                  ].map((subStyle) => {
+                    const isStyleActive = activeCategory === 'wigs' && searchParams.get('style') === subStyle.styleVal;
+                    return (
+                      <button
+                        key={subStyle.styleVal}
+                        onClick={() => {
+                          const params = new URLSearchParams(searchParams.toString());
+                          params.set('categorySlug', 'wigs');
+                          if (isStyleActive) {
+                            params.delete('style');
+                          } else {
+                            params.set('style', subStyle.styleVal);
+                          }
+                          router.push(`/shop?${params.toString()}`);
+                        }}
+                        className={`w-full text-left h-8 px-3 rounded-[8px] text-[12.5px] font-semibold transition-all ${
+                          isStyleActive
+                            ? 'bg-[#E56717]/15 text-[#E56717]'
+                            : 'text-[#6B7280] hover:text-[#222222] hover:bg-[#FAF7F4]'
+                        }`}
+                      >
+                        • {subStyle.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>

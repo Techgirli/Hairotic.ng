@@ -246,6 +246,8 @@ async function getFilteredProducts(searchParams: Record<string, string | string[
       }
     }
 
+    if (searchParams.style) query.set('style', Array.isArray(searchParams.style) ? searchParams.style[0] : searchParams.style);
+
     const res = await fetch(`${API_URL}/products?${query.toString()}`, {
       cache: 'no-store',
     });
@@ -254,12 +256,25 @@ async function getFilteredProducts(searchParams: Record<string, string | string[
     return data.products || [];
   } catch (err) {
     console.error('Failed to query shop products, using mock fallback', err);
+    let filtered = MOCK_PRODUCTS;
+
     const catSlug = searchParams.categorySlug;
     if (catSlug) {
       const targetSlug = Array.isArray(catSlug) ? catSlug[0] : catSlug;
-      return MOCK_PRODUCTS.filter(p => p.categorySlug === targetSlug);
+      filtered = filtered.filter(p => p.categorySlug === targetSlug);
     }
-    return MOCK_PRODUCTS;
+
+    const style = Array.isArray(searchParams.style) ? searchParams.style[0] : searchParams.style;
+    if (style) {
+      const s = style.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(s) || 
+        p.description.toLowerCase().includes(s) ||
+        p.variants[0]?.attributes?.texture?.toLowerCase() === s
+      );
+    }
+
+    return filtered;
   }
 }
 

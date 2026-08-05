@@ -42,7 +42,21 @@ export default function Header() {
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 text-[15px] font-semibold text-[#222222] uppercase tracking-wider">
           <Link href="/" className="hover:text-[#E56717] transition-colors duration-200">Home</Link>
-          <Link href="/shop?categorySlug=wigs" className="hover:text-[#E56717] transition-colors duration-200">Wigs</Link>
+          {/* Interactive Wigs Dropdown */}
+          <div className="relative group py-2">
+            <Link href="/shop?categorySlug=wigs" className="hover:text-[#E56717] transition-colors duration-200 flex items-center gap-1 uppercase tracking-wider font-semibold text-[15px]">
+              <span>Wigs</span>
+              <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
+            </Link>
+            <div className="absolute top-[80%] left-0 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="bg-white border border-[#222222]/5 shadow-2xl rounded-[16px] py-3 px-5 min-w-[210px] flex flex-col gap-2">
+                <Link href="/shop?categorySlug=wigs" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block border-b border-[#222222]/5 pb-2">All Wigs</Link>
+                <Link href="/shop?categorySlug=wigs&style=straight" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block">Straight Hairs</Link>
+                <Link href="/shop?categorySlug=wigs&style=bob" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block">Bob Hairs</Link>
+                <Link href="/shop?categorySlug=wigs&style=curly" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block">Curly Wigs</Link>
+              </div>
+            </div>
+          </div>
           
           {/* Interactive Collections Dropdown */}
           <div className="relative group py-2">
@@ -50,7 +64,7 @@ export default function Header() {
               <span>Collections</span>
               <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
             </button>
-            {/* Hover bridge container — eliminates the gap so the dropdown doesn't disappear */}
+            {/* Hover bridge container */}
             <div className="absolute top-[80%] left-0 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
               <div className="bg-white border border-[#222222]/5 shadow-2xl rounded-[16px] py-3 px-5 min-w-[200px] flex flex-col gap-2">
                 <Link href="/shop?categorySlug=wigs" className="hover:text-[#E56717] text-[14px] text-gray-700 font-semibold py-1 transition-colors block">Wigs</Link>
@@ -124,13 +138,39 @@ export default function Header() {
           >
             Home
           </Link>
-          <Link 
-            href="/shop?categorySlug=wigs" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-[15px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
-          >
-            Wigs
-          </Link>
+          {/* Expandable Mobile Wigs Submenu */}
+          <div className="space-y-2">
+            <Link 
+              href="/shop?categorySlug=wigs" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-[15px] font-bold uppercase tracking-wider text-[#222222] hover:text-[#E56717]"
+            >
+              Wigs
+            </Link>
+            <div className="pl-4 flex flex-col gap-2">
+              <Link 
+                href="/shop?categorySlug=wigs&style=straight" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-[13.5px] font-semibold text-gray-700 hover:text-[#E56717]"
+              >
+                Straight Hairs
+              </Link>
+              <Link 
+                href="/shop?categorySlug=wigs&style=bob" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-[13.5px] font-semibold text-gray-700 hover:text-[#E56717]"
+              >
+                Bob Hairs
+              </Link>
+              <Link 
+                href="/shop?categorySlug=wigs&style=curly" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-[13.5px] font-semibold text-gray-700 hover:text-[#E56717]"
+              >
+                Curly Wigs
+              </Link>
+            </div>
+          </div>
           {/* Expandable Mobile Collections Submenu */}
           <div className="space-y-2">
             <span className="block text-[13px] font-bold uppercase tracking-wider text-[#6B7280]">
