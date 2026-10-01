@@ -33,7 +33,7 @@ export class PaymentsService {
       throw new BadRequestException('Order is already paid or cancelled');
     }
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY?.replace(/^["']|["']$/g, '').trim();
 
     const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000';
 
@@ -111,7 +111,7 @@ export class PaymentsService {
       throw new NotFoundException('Order not found');
     }
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY?.replace(/^["']|["']$/g, '').trim();
 
     // Handle mock verification for local development
     if (!paystackSecret) {
@@ -157,7 +157,7 @@ export class PaymentsService {
   }
 
   async handleWebhook(signature: string, rawBody: string) {
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY?.replace(/^["']|["']$/g, '').trim();
 
     if (!paystackSecret) {
       this.logger.warn(
@@ -296,7 +296,7 @@ export class PaymentsService {
       );
     }
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY?.replace(/^["']|["']$/g, '').trim();
 
     if (!paystackSecret) {
       this.logger.warn(
