@@ -35,6 +35,8 @@ export class PaymentsService {
 
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
 
+    const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000';
+
     if (!paystackSecret) {
       this.logger.warn(
         'PAYSTACK_SECRET_KEY is not defined. Falling back to local development mock checkout redirect.',
@@ -42,7 +44,7 @@ export class PaymentsService {
 
       // Local development mock mode: return success callback instantly
       return {
-        authorization_url: `http://localhost:3000/checkout/success?orderNumber=${order.orderNumber}`,
+        authorization_url: `${baseUrl}/checkout/success?orderNumber=${order.orderNumber}`,
         reference: order.orderNumber,
         isMock: true,
       };
@@ -64,7 +66,7 @@ export class PaymentsService {
             email,
             amount: order.total, // already in kobo
             reference: order.orderNumber,
-            callback_url: `http://localhost:3000/checkout/success?orderNumber=${order.orderNumber}`,
+            callback_url: `${baseUrl}/checkout/success?orderNumber=${order.orderNumber}`,
           }),
         },
       );
