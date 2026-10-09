@@ -27,13 +27,13 @@ possible. Never force account creation at any step.
 | ORM | Prisma |
 | Database | PostgreSQL via Neon (serverless) |
 | Cache/sessions | Redis via Upstash |
-| Media | Cloudinary |
+| Media | Cloudflare R2 (S3-compatible object storage) |
 | Auth | JWT (access + refresh) + bcrypt |
 | Payments | Paystack |
 | Email | Resend |
 | Customer messaging | Meta WhatsApp Cloud API |
-| Frontend hosting | Vercel |
-| Backend hosting | Render |
+| Frontend hosting | Cloudflare Pages |
+| Backend hosting | Cloudflare Workers / Render |
 | DNS/CDN/WAF | Cloudflare |
 | CI/CD | GitHub Actions |
 | Error tracking | Sentry |

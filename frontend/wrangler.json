@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hairotic-frontend",
+  "pages_build_output_dir": ".vercel/output/static",
+  "compatibility_date": "2026-10-09",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "env": {
+    "production": {
+      "vars": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
