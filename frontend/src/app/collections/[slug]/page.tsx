@@ -7,6 +7,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 interface ProductImage {
   id: string;
