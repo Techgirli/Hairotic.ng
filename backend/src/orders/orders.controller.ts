@@ -35,12 +35,12 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async getOrders(@Req() req: any) {
-    return this.ordersService.getOrdersForCustomer(req.user.id);
+    return this.ordersService.getOrdersForCustomer(req.user?.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getOrderDetails(@Param('id') id: string, @Req() req: any) {
-    return this.ordersService.getOrderDetails(id, req.user.id);
+    return this.ordersService.getOrderDetails(id, req.user?.id);
   }
 }

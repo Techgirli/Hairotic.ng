@@ -70,7 +70,7 @@ export class CartController {
   }
 
   private getUserIdFromCookie(req: Request): string | undefined {
-    const token = req.cookies['access_token'];
+    const token = req.cookies?.['access_token'];
     if (!token) return undefined;
     try {
       const payload = this.jwtService.verify(token, {

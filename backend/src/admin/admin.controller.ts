@@ -49,7 +49,7 @@ export class AdminController {
     return this.adminService.updateOrderStatus(
       id,
       status,
-      req.user.id || 'ADMIN',
+      req?.user?.id || 'ADMIN',
       note,
     );
   }
@@ -84,7 +84,7 @@ export class AdminController {
       id,
       quantity,
       reason,
-      req.user.id || 'ADMIN',
+      req?.user?.id || 'ADMIN',
     );
   }
 
@@ -107,7 +107,7 @@ export class AdminController {
     if (!note) {
       throw new BadRequestException('Note content is required');
     }
-    return this.adminService.addCustomerNote(id, note, req.user.id || 'ADMIN');
+    return this.adminService.addCustomerNote(id, note, req?.user?.id || 'ADMIN');
   }
 
   @Get('products')

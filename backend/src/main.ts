@@ -62,9 +62,10 @@ async function bootstrap() {
         /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin) || 
         /^http:\/\/172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+(:\d+)?$/.test(origin);
 
-      // Allow Vercel preview/production links and custom domains dynamically
+      // Allow Vercel preview/production links and Cloudflare Pages custom domains dynamically
       const isAllowedDomain = 
         /\.vercel\.(app|com)$/.test(origin) || 
+        /\.pages\.dev$/.test(origin) ||
         /hairotic\.(ng|com\.ng)$/.test(origin) ||
         /\.hairotic\.(ng|com\.ng)$/.test(origin);
 

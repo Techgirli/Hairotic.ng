@@ -187,14 +187,14 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies['refresh_token'];
+    const refreshToken = req.cookies?.['refresh_token'];
     if (!refreshToken) {
       return { success: false, message: 'Refresh token missing' };
     }
 
     const ip = req.ip || (req.headers['x-forwarded-for'] as string) || '';
     const userAgent = req.headers['user-agent'] || '';
-    const deviceId = req.cookies['device_id'];
+    const deviceId = req.cookies?.['device_id'];
 
     const result = await this.authService.refreshSession(
       refreshToken,
@@ -222,7 +222,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies['refresh_token'];
+    const refreshToken = req.cookies?.['refresh_token'];
     if (refreshToken) {
       try {
         const resolved = await this.authService.verifyRefresh(refreshToken);

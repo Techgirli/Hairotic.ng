@@ -18,12 +18,12 @@ export class WishlistController {
 
   @Get()
   async getWishlist(@Req() req: any) {
-    return this.wishlistService.getWishlist(req.user.id);
+    return this.wishlistService.getWishlist(req.user?.id);
   }
 
   @Post()
   async addToWishlist(@Req() req: any, @Body() body: { variantId: string }) {
-    return this.wishlistService.addToWishlist(req.user.id, body.variantId);
+    return this.wishlistService.addToWishlist(req.user?.id, body.variantId);
   }
 
   @Delete(':variantId')
@@ -31,6 +31,6 @@ export class WishlistController {
     @Req() req: any,
     @Param('variantId') variantId: string,
   ) {
-    return this.wishlistService.removeFromWishlist(req.user.id, variantId);
+    return this.wishlistService.removeFromWishlist(req.user?.id, variantId);
   }
 }

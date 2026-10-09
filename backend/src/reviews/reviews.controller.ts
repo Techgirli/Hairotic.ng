@@ -30,6 +30,6 @@ export class ReviewsController {
     if (body.rating === undefined || body.rating === null) {
       throw new BadRequestException('Rating is required');
     }
-    return this.reviewsService.createReview(req.user.id, productId, body);
+    return this.reviewsService.createReview(req.user?.id, productId, body);
   }
 }
