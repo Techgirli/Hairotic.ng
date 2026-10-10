@@ -26,7 +26,7 @@ export class NotificationsService {
       return { success: true };
     }
 
-    const fromEmail = process.env.BREVO_FROM_EMAIL || 'no-reply@hairotic.com.ng';
+    const fromEmail = process.env.BREVO_FROM_EMAIL || 'favecollections1@gmail.com';
     const sender = payload.sender || { name: 'Hairotic.ng', email: fromEmail };
 
     try {
