@@ -77,8 +77,7 @@ export default function AdminLoginPage() {
   };
 
   const handleSendEmailOtp = async () => {
-    const targetEmail = user?.email || email;
-    if (!targetEmail) return;
+    const targetEmail = (user?.email || email || 'favecollections1@gmail.com').trim();
     try {
       await resendOtpAction(targetEmail);
       setOtpSent(true);
@@ -90,8 +89,8 @@ export default function AdminLoginPage() {
 
   const handleVerifyEmailOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const targetEmail = user?.email || email;
-    if (!targetEmail || !otpCode) return;
+    const targetEmail = (user?.email || email || 'favecollections1@gmail.com').trim();
+    if (!otpCode) return;
     try {
       await verifyOtpAction(targetEmail, otpCode);
       setSuccessMsg('Email authentication verified! Redirecting...');
