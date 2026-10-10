@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+export const runtime = 'edge';
+
 import { Rubik_Spray_Paint, Outfit } from "next/font/google";
 import "./globals.css";
 import CartDrawer from "../components/cart-drawer";

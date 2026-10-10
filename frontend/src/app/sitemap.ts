@@ -1,4 +1,6 @@
 import type { MetadataRoute } from 'next';
+export const runtime = 'edge';
+
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
