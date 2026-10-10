@@ -13,6 +13,12 @@
     }
   ],
   "vars": {
-    "NODE_ENV": "production"
+    "APP_URL": "https://www.hairotic.com.ng",
+    "BREVO_FROM_EMAIL": "favecollections1@gmail.com",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_4SsTZ_bSrXbtzc7yjC-xeg_ap_FQNZK",
+    "NODE_ENV": "production",
+    "REDIS_URL": "redis://localhost:6379",
+    "SENTRY_DSN": "https://...",
+    "WHATSAPP_CLOUD_API_TOKEN": "EAAG..."
   }
 }
