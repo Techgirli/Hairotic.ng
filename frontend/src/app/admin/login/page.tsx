@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
   const [authMode, setAuthMode] = useState<'password' | 'email_otp'>('password');
   const [mfaMethod, setMfaMethod] = useState<'totp' | 'email_otp'>('totp');
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('favecollections1@gmail.com');
   const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
   const [otpCode, setOtpCode] = useState('');
