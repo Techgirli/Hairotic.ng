@@ -455,7 +455,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const tokens = await this.generateSession(user, device, ip);
+    const tokens = await this.generateSession(user, device, ip, true);
     return {
       ...tokens,
       user: this.sanitizeUser(user),
