@@ -440,7 +440,7 @@ export class AuthService {
     const emailResult = await this.notificationsService.sendOtpEmail(activeUser.email, activeUser.name || '', otp);
     
     if (!emailResult.success) {
-      this.logger.warn(`Resend failed to deliver OTP: ${emailResult.error || 'Unknown error'}. Fallback code printed to console.`);
+      this.logger.warn(`Brevo failed to deliver OTP: ${emailResult.error || 'Unknown error'}. Fallback code printed to console.`);
       console.log(`\n--- OTP FALLBACK FOR DEV: ${activeUser.email} ---\nOTP CODE: ${otp}\n-----------------------------------\n`);
     }
 
@@ -472,7 +472,7 @@ export class AuthService {
     const otp = await this.otpService.createOtp(userAny.id);
     const emailResult = await this.notificationsService.sendOtpEmail(userAny.email, userAny.name || '', otp);
     if (!emailResult.success) {
-      this.logger.warn(`Resend failed to deliver OTP email on resend request: ${emailResult.error || 'Unknown error'}. Fallback code printed to console.`);
+      this.logger.warn(`Brevo failed to deliver OTP email on resend request: ${emailResult.error || 'Unknown error'}. Fallback code printed to console.`);
       console.log(`\n--- OTP RESEND FALLBACK: ${userAny.email} ---\nOTP CODE: ${otp}\n---------------------------------------\n`);
     }
 
