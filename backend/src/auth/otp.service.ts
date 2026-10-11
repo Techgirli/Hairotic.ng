@@ -46,7 +46,7 @@ export class OtpService {
     const rawOtp = this.generateOtpCode();
     const salt = await bcrypt.genSalt(12);
     const codeHash = await bcrypt.hash(rawOtp, salt);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
     await (this.prisma as any).otp.create({
       data: {
@@ -62,16 +62,10 @@ export class OtpService {
   }
 
   async verifyOtp(email: string, code: string): Promise<string> {
-    const cleanEmail = (email || 'favecollections1@gmail.com').trim().toLowerCase();
-    let user = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: cleanEmail },
-          { email: 'favecollections1@gmail.com' },
-          { role: 'ADMIN' as any },
-        ],
-      },
-    });
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = cleanEmail
+      ? await this.prisma.user.findUnique({ where: { email: cleanEmail } })
+      : null;
 
     if (!user) {
       this.logger.warn(`OTP verification failed: User not found for email ${email}`);

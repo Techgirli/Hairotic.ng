@@ -4,55 +4,48 @@ import { Injectable, Logger } from '@nestjs/common';
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
-  /**
-   * Sends an email via the Brevo transactional email API (v3).
-   * Centralises the HTTP call so individual methods only build the payload.
-   */
-  private async sendBrevoEmail(payload: {
+  private async sendEmail(payload: {
     to: { email: string; name?: string }[];
     subject: string;
     htmlContent: string;
     sender?: { name: string; email: string };
   }): Promise<{ success: boolean; error?: string }> {
-    const brevoApiKey = process.env.BREVO_API_KEY;
+    const resendApiKey = process.env.RESEND_API_KEY;
 
-    if (!brevoApiKey) {
-      this.logger.warn(
-        'BREVO_API_KEY is not defined. Printing email to console fallback.',
-      );
-      this.logger.log(
-        `\n--- EMAIL TO: ${payload.to.map((t) => t.email).join(', ')} ---\nSubject: ${payload.subject}\n${payload.htmlContent}\n------------------------`,
-      );
-      return { success: true };
+    if (!resendApiKey) {
+      const error = 'RESEND_API_KEY is not configured';
+      this.logger.error(error);
+      return { success: false, error };
     }
 
-    const fromEmail = process.env.BREVO_FROM_EMAIL || 'favecollections1@gmail.com';
-    const sender = payload.sender || { name: 'Hairotic.ng', email: fromEmail };
+    const from = payload.sender
+      ? `${payload.sender.name} <${payload.sender.email}>`
+      : process.env.RESEND_FROM_EMAIL || 'Hairotic.ng <notifications@hairotic.com.ng>';
 
     try {
-      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api-key': brevoApiKey,
+          Authorization: `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          sender,
-          to: payload.to,
+          from,
+          to: payload.to.map((recipient) => recipient.email),
           subject: payload.subject,
-          htmlContent: payload.htmlContent,
+          html: payload.htmlContent,
         }),
       });
 
       if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText);
+        throw new Error(await res.text());
       }
 
       return { success: true };
-    } catch (err: any) {
-      this.logger.error(`Failed to send Brevo email: ${err.message}`);
-      return { success: false, error: err.message };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown email provider error';
+      this.logger.error(`Failed to send Resend email: ${message}`);
+      return { success: false, error: message };
     }
   }
 
@@ -108,11 +101,11 @@ export class NotificationsService {
       </div>
     `;
 
-    const result = await this.sendBrevoEmail({
+    const result = await this.sendEmail({
       to: [{ email: order.shippingEmail, name: order.shippingName }],
       subject: `Order Confirmed - ${order.orderNumber}`,
       htmlContent,
-      sender: { name: 'Hairotic.ng', email: process.env.BREVO_FROM_EMAIL || 'orders@hairotic.ng' },
+      sender: { name: 'Hairotic.ng', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
     });
 
     if (result.success) {
@@ -157,11 +150,11 @@ export class NotificationsService {
       </div>
     `;
 
-    await this.sendBrevoEmail({
+    await this.sendEmail({
       to: [{ email: order.shippingEmail, name: order.shippingName }],
       subject: `Order ${order.orderNumber} Update - ${status}`,
       htmlContent,
-      sender: { name: 'Hairotic.ng', email: process.env.BREVO_FROM_EMAIL || 'orders@hairotic.ng' },
+      sender: { name: 'Hairotic.ng', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
     });
 
     this.logger.log(
@@ -195,11 +188,11 @@ export class NotificationsService {
       </div>
     `;
 
-    const result = await this.sendBrevoEmail({
+    const result = await this.sendEmail({
       to: [{ email: 'support@hairotic.ng' }],
       subject: `New Contact Submission from ${name}`,
       htmlContent,
-      sender: { name: 'Hairotic.ng Contact', email: process.env.BREVO_FROM_EMAIL || 'contact@hairotic.ng' },
+      sender: { name: 'Hairotic.ng Contact', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
     });
 
     if (result.success) {
@@ -238,7 +231,7 @@ export class NotificationsService {
       </div>
     `;
 
-    const result = await this.sendBrevoEmail({
+    const result = await this.sendEmail({
       to: [{ email }],
       subject: 'Verify your Hairotic.ng email address',
       htmlContent,
@@ -280,7 +273,7 @@ export class NotificationsService {
       </div>
     `;
 
-    const result = await this.sendBrevoEmail({
+    const result = await this.sendEmail({
       to: [{ email }],
       subject: 'Reset your Hairotic.ng password',
       htmlContent,
@@ -307,7 +300,7 @@ export class NotificationsService {
           </span>
         </div>
         <p style="font-size: 13px; color: #6B7280;">
-          Expires in 10 minutes.
+          Expires in 30 minutes.
         </p>
         <p style="font-size: 13px; color: #6B7280; margin-top: 20px;">
           If this wasn't you, ignore this email.
@@ -318,14 +311,14 @@ export class NotificationsService {
       </div>
     `;
 
-    const result = await this.sendBrevoEmail({
+    const result = await this.sendEmail({
       to: [{ email, name: name || undefined }],
       subject: 'Verify your login',
       htmlContent,
     });
 
     if (result.success) {
-      this.logger.log(`OTP email sent to ${email}`);
+      this.logger.log('OTP email accepted by Resend');
     }
 
     return result;
