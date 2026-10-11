@@ -4,6 +4,7 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -471,10 +472,9 @@ export class AuthService {
     // Otherwise, generate 6-digit OTP and send verify email
     const otp = await this.otpService.createOtp(activeUser.id);
     const emailResult = await this.notificationsService.sendOtpEmail(activeUser.email, activeUser.name || '', otp);
-    
     if (!emailResult.success) {
-      this.logger.warn(`Brevo failed to deliver OTP: ${emailResult.error || 'Unknown error'}. Fallback code printed to console.`);
-      console.log(`\n--- OTP FALLBACK FOR DEV: ${activeUser.email} ---\nOTP CODE: ${otp}\n-----------------------------------\n`);
+      this.logger.error(`OTP email could not be sent: ${emailResult.error || 'Unknown email provider error'}`);
+      throw new ServiceUnavailableException('Unable to send a verification code. Please try again later.');
     }
 
     return {
@@ -496,43 +496,26 @@ export class AuthService {
   }
 
   async resendOtp(email: string) {
-    const cleanEmail = (email || 'favecollections1@gmail.com').trim().toLowerCase();
-    let user = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: cleanEmail },
-          { email: 'favecollections1@gmail.com' },
-          { role: Role.ADMIN },
-        ],
-      },
-    });
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = cleanEmail
+      ? await this.prisma.user.findUnique({ where: { email: cleanEmail } })
+      : null;
 
     if (!user) {
-      const salt = await bcrypt.genSalt(12);
-      const passwordHash = await bcrypt.hash('password123', salt);
-      user = await (this.prisma.user as any).create({
-        data: {
-          email: 'favecollections1@gmail.com',
-          phone: '+2348099998888',
-          passwordHash,
-          role: Role.ADMIN,
-          emailVerified: true,
-          mfaEnabled: false,
-        },
-      });
+      return {
+        success: true,
+        message: 'If that email is registered, a verification code has been sent.',
+      };
     }
 
-    const userAny = user as any;
-    const otp = await this.otpService.createOtp(userAny.id);
-
-    const targetEmail = 'favecollections1@gmail.com';
-    const emailResult = await this.notificationsService.sendOtpEmail(targetEmail, userAny.name || 'Admin', otp);
+    const otp = await this.otpService.createOtp(user.id);
+    const emailResult = await this.notificationsService.sendOtpEmail(user.email, user.name || '', otp);
     if (!emailResult.success) {
-      this.logger.warn(`Brevo failed to deliver OTP email to ${targetEmail}: ${emailResult.error || 'Unknown error'}. Fallback code printed to console.`);
-      console.log(`\n--- OTP RESEND FALLBACK: ${targetEmail} ---\nOTP CODE: ${otp}\n---------------------------------------\n`);
+      this.logger.error(`OTP email could not be sent: ${emailResult.error || 'Unknown email provider error'}`);
+      throw new ServiceUnavailableException('Unable to send a verification code. Please try again later.');
     }
 
-    return { success: true, message: `A new 6-digit code has been sent to ${targetEmail}.` };
+    return { success: true, message: 'If that email is registered, a verification code has been sent.' };
   }
 
   private sanitizeUser(user: User) {

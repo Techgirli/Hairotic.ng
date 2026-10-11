@@ -459,11 +459,12 @@ export class AdminService {
       status,
       price,
       compareAtPrice,
+      variants,
     } = body;
 
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { variants: true },
+      include: { variants: { include: { images: true } } },
     });
 
     if (!product) {
@@ -504,6 +505,66 @@ export class AdminService {
         }
       }
 
+      if (variants !== undefined) {
+        if (!Array.isArray(variants)) {
+          throw new BadRequestException('Variants must be an array');
+        }
+        const productVariantIds = new Set(product.variants.map((variant) => variant.id));
+        for (const variantUpdate of variants) {
+          if (!productVariantIds.has(variantUpdate.id)) {
+            throw new BadRequestException('Variant does not belong to this product');
+          }
+          if (
+            variantUpdate.attributes !== undefined &&
+            (typeof variantUpdate.attributes !== 'object' ||
+              variantUpdate.attributes === null ||
+              Array.isArray(variantUpdate.attributes))
+          ) {
+            throw new BadRequestException('Variant attributes must be an object');
+          }
+          if (
+            variantUpdate.attributes?.length !== undefined &&
+            (!/^\d+$/.test(String(variantUpdate.attributes.length)) ||
+              Number(variantUpdate.attributes.length) < 1 ||
+              Number(variantUpdate.attributes.length) > 60)
+          ) {
+            throw new BadRequestException('Variant length must be between 1 and 60 inches');
+          }
+          if (
+            variantUpdate.images !== undefined &&
+            (!Array.isArray(variantUpdate.images) ||
+              !variantUpdate.images.every((url: unknown) => typeof url === 'string'))
+          ) {
+            throw new BadRequestException('Variant images must be an array of URLs');
+          }
+
+          const variantData: Prisma.ProductVariantUpdateInput = {};
+          if (variantUpdate.attributes !== undefined) {
+            variantData.attributes = variantUpdate.attributes;
+          }
+          if (Object.keys(variantData).length > 0) {
+            await tx.productVariant.update({
+              where: { id: variantUpdate.id },
+              data: variantData,
+            });
+          }
+          if (variantUpdate.images !== undefined) {
+            await tx.productImage.deleteMany({
+              where: { productVariantId: variantUpdate.id },
+            });
+            if (variantUpdate.images.length > 0) {
+              await tx.productImage.createMany({
+                data: variantUpdate.images.map((url: string, position: number) => ({
+                  productVariantId: variantUpdate.id,
+                  url,
+                  position,
+                })),
+              });
+            }
+          }
+        }
+      }
+
       // Audit log product update
       await tx.auditLog.create({
         data: {
@@ -515,8 +576,13 @@ export class AdminService {
             name: product.name,
             status: product.status,
             categoryId: product.categoryId,
+            variants: product.variants.map((variant) => ({
+              id: variant.id,
+              attributes: variant.attributes,
+              images: variant.images.map((image) => image.url),
+            })),
           },
-          after: data,
+          after: { ...data, ...(variants !== undefined ? { variants } : {}) },
         },
       });
 

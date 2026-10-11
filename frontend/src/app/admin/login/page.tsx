@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
     try {
       await resendOtpAction(targetEmail);
       setOtpSent(true);
-      setSuccessMsg(`A 6-digit verification code has been sent to ${targetEmail}`);
+      setSuccessMsg('If that email is registered, a verification code was requested. Check your inbox and spam folder.');
     } catch {
       // Handled by store error state
     }
