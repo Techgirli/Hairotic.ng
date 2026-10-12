@@ -84,8 +84,11 @@ export default function AdminProductsPage() {
   const uploadImages = async (files: File[]) => {
     const uploadedUrls: string[] = [];
     for (const file of files) {
-      if (!file.type.startsWith('image/') || file.size > 10 * 1024 * 1024) {
-        throw new Error('Choose image files smaller than 10 MB.');
+      if (
+        !['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'].includes(file.type) ||
+        file.size > 5 * 1024 * 1024
+      ) {
+        throw new Error('Choose a JPEG, PNG, WebP, GIF, or AVIF image no larger than 5 MB.');
       }
 
       const signRes = await fetch(`${API_URL}/storage/presigned-url`, {
@@ -103,13 +106,23 @@ export default function AdminProductsPage() {
       }
 
       const { uploadUrl, fileUrl } = await signRes.json();
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      });
+      let uploadRes: Response;
+      try {
+        uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        });
+      } catch {
+        throw new Error(
+          'Could not reach image storage. Check the R2 public domain and bucket CORS permits PUT from https://www.hairotic.com.ng.',
+        );
+      }
       if (!uploadRes.ok) {
-        throw new Error('Image upload failed. Check the R2 bucket CORS settings.');
+        const details = await uploadRes.text().catch(() => '');
+        throw new Error(
+          `Image upload failed (${uploadRes.status}). Check R2 bucket CORS allows PUT from this site. ${details}`.trim(),
+        );
       }
       uploadedUrls.push(fileUrl);
     }
@@ -431,7 +444,7 @@ export default function AdminProductsPage() {
 
       {/* Add Product Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in select-none">
+        <div className="fixed inset-0 overflow-y-auto overscroll-contain bg-black/40 backdrop-blur-xs p-4 z-50 animate-fade-in">
           <div className="bg-white rounded-[24px] border border-[#222222]/5 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 space-y-6">
             <div className="flex justify-between items-center border-b border-[#222222]/5 pb-4">
               <h2 className="text-[20px] font-extrabold uppercase tracking-wide">Publish New catalog product</h2>
@@ -584,7 +597,7 @@ export default function AdminProductsPage() {
                     {uploadingImages ? 'Uploading...' : 'Upload images'}
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                       multiple
                       disabled={uploadingImages}
                       className="sr-only"
@@ -622,7 +635,8 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="h-11 px-6 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] font-bold uppercase tracking-wider rounded-[12px] shadow-sm cursor-pointer"
+                  disabled={uploadingImages}
+                  className="h-11 px-6 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] font-bold uppercase tracking-wider rounded-[12px] shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Publish Product
                 </button>
@@ -635,8 +649,8 @@ export default function AdminProductsPage() {
 
       {/* Edit Product Modal */}
       {showEditModal && editProduct && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in select-none">
-          <div className="bg-white rounded-[24px] border border-[#222222]/5 w-full max-w-lg shadow-2xl p-6 md:p-8 space-y-6">
+        <div className="fixed inset-0 overflow-y-auto overscroll-contain bg-black/40 backdrop-blur-xs p-4 z-50 animate-fade-in">
+          <div className="mx-auto my-2 bg-white rounded-[24px] border border-[#222222]/5 w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain shadow-2xl p-6 md:p-8 space-y-6">
             <div className="flex justify-between items-center border-b border-[#222222]/5 pb-4">
               <h2 className="text-[20px] font-extrabold uppercase tracking-wide">Edit Product Catalog</h2>
               <button onClick={() => setShowEditModal(false)} className="p-1 hover:bg-[#FAF7F4] rounded-[8px] cursor-pointer">
@@ -747,7 +761,7 @@ export default function AdminProductsPage() {
                         {uploadingImages ? 'Uploading...' : 'Add hair images'}
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                           multiple
                           disabled={uploadingImages}
                           className="sr-only"
@@ -797,7 +811,8 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="h-11 px-6 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] font-bold uppercase tracking-wider rounded-[12px] shadow-sm cursor-pointer"
+                  disabled={uploadingImages}
+                  className="h-11 px-6 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] font-bold uppercase tracking-wider rounded-[12px] shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save Changes
                 </button>
