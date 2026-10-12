@@ -19,7 +19,6 @@ import { Roles } from '../auth/roles.decorator';
 export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('presigned-url')
   @HttpCode(HttpStatus.OK)
   async getPresignedUrl(
