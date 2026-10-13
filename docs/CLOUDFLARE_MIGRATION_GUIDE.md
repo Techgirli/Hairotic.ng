@@ -90,7 +90,7 @@ In Cloudflare Workers Builds, connect the repository and configure:
 - **Root directory:** `frontend` (Wrangler config and package scripts live here)
 - **Build command:** `npm run cf:build`
 - **Deploy command:** `npx wrangler deploy`
-- **Build environment variable:** `NEXT_PUBLIC_API_URL=https://api.hairotic.ng/api/v1`
+- **Build environment variable:** `NEXT_PUBLIC_API_URL=https://api.hairotic.com.ng/api/v1`
 - **Build environment variable:** `NEXT_PUBLIC_SITE_URL=https://www.hairotic.com.ng`
 - **Node.js version:** `22`
 
@@ -100,10 +100,18 @@ does not find the frontend config or build output, which causes the static
 files error. Next.js image optimization is disabled to avoid requiring a
 separately billed Cloudflare Images binding.
 
-After the first deployment, attach `hairotic.com.ng` and
-`www.hairotic.com.ng` to the `hairotic-ng` Worker under **Settings > Domains &
-Routes > Add Custom Domain**. Cloudflare will configure DNS for those Worker
-domains.
+`www.hairotic.com.ng` is declared as a Worker custom domain in
+`frontend/wrangler.json`; the apex is intentionally excluded because its
+existing DNS records must be migrated separately. If deployment reports that
+`www` has an existing DNS record, remove only the conflicting `www` website
+record in Cloudflare DNS, then redeploy. Keep email MX/TXT records. Cloudflare
+manages the Worker DNS record and TLS certificate after the custom domain is
+attached.
+
+To serve `hairotic.com.ng` directly from the Worker later, first remove or
+replace its existing website A/CNAME record in Cloudflare DNS, then add the
+apex custom domain in the Worker dashboard or Wrangler config. Do not remove
+email MX/TXT records.
 
 ---
 
@@ -157,7 +165,7 @@ Deployments are automated via `.github/workflows/deploy-cloudflare.yml`.
 Ensure the following GitHub Repository Secrets are set in GitHub (`Settings` > `Secrets and variables` > `Actions`):
 - `CLOUDFLARE_API_TOKEN`: Cloudflare API Token with Pages & Workers edit access.
 - `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID.
-- `NEXT_PUBLIC_API_URL`: `https://api.hairotic.ng`
+- `NEXT_PUBLIC_API_URL`: `https://api.hairotic.com.ng/api/v1`
 
 ---
 
