@@ -1,7 +1,7 @@
 # Cloudflare Migration Guide for Hairotic.ng
 
 This guide details the complete step-by-step migration of **Hairotic.ng** to Cloudflare services:
-1. **Frontend Hosting:** Cloudflare Pages (Next.js 14+ App Router via `@cloudflare/next-on-pages` / Wrangler)
+1. **Frontend Hosting:** Cloudflare Workers (Next.js via `@opennextjs/cloudflare`)
 2. **Media Storage:** Cloudflare R2 Object Storage (Replacing Cloudinary with zero egress fees)
 3. **API & Edge Routing:** Cloudflare Workers & Proxy Routing
 4. **DNS, CDN & Security:** Cloudflare WAF, Rate Limiting, DDoS Protection & SSL/TLS
@@ -37,37 +37,73 @@ CLOUDFLARE_R2_BUCKET_NAME=hairotic-media
 CLOUDFLARE_R2_PUBLIC_URL=https://media.hairotic.ng
 ```
 
+For the backend Worker, keep credentials out of `backend/wrangler.json` and set
+them as Worker secrets instead. From `backend/`, run `npx wrangler secret put`
+for each secret (`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`,
+`PAYSTACK_SECRET_KEY`, `RESEND_API_KEY`, `REDIS_URL`, `RECONCILE_SECRET`, and
+`CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`, and
+`CLOUDFLARE_R2_SECRET_ACCESS_KEY`). Use the Cloudflare dashboard's Worker
+secrets settings if configuring them there. Set `REDIS_URL` to the production
+Upstash connection string, not the local Redis URL.
+
+`APP_URL`, `RESEND_FROM_EMAIL`, `NODE_ENV`, and `CLOUDFLARE_R2_BUCKET_NAME`
+are non-secret Worker variables and are declared in `backend/wrangler.json`.
+`CLOUDINARY_URL`, `WHATSAPP_CLOUD_API_TOKEN`, and `SENTRY_DSN` are included in
+the environment template but are not currently consumed by the backend.
+
+### Step 1.4: Deploy the Backend Worker
+In Cloudflare Workers Builds, set the repository root directory to `backend`,
+the build command to `npm ci && npm run build`, and the deploy command to
+`npx wrangler deploy`. This makes Wrangler use `backend/wrangler.json` and
+ensures `dist/main.js` exists before deployment. If the build root must remain
+the repository root, use `npm ci --prefix backend && npm run build --prefix backend`
+as the build command and `npx wrangler deploy --config backend/wrangler.json`
+as the deploy command.
+
+The current `backend/src/main.ts` starts a conventional NestJS/Express HTTP
+server with `app.listen()`. Cloudflare Workers require a module entry point that
+handles requests via a `fetch` export; `nodejs_compat` does not turn a listening
+NestJS server into a Worker handler. Adapt the backend to a Worker-compatible
+entry point before expecting the deployed API to run.
+
 ---
 
-## 2. Frontend Cloudflare Pages Deployment
+## 2. Frontend Cloudflare Workers Deployment
 
-### Step 2.1: Local Build Verification
-From the `/frontend` directory, test the Cloudflare Pages build:
+The frontend is a Next.js application deployed as a Worker with
+`@opennextjs/cloudflare`; do not use the Pages adapter or `wrangler pages`
+commands.
+
+### Step 2.1: Local Preview and Deployment
+From the `/frontend` directory, preview the app in the Workers runtime or deploy
+it directly:
 ```bash
 cd frontend
-npm install
-npm run pages:build
-```
-This generates the edge-compatible static and serverless build bundle inside `.vercel/output/static`.
-
-### Step 2.2: Wrangler Manual Deployment
-To deploy directly via Wrangler CLI:
-```bash
-npx wrangler login
-npm run pages:deploy
+npm ci
+npm run preview
+npm run deploy
 ```
 
-### Step 2.3: Connecting Cloudflare Pages to GitHub
-1. In Cloudflare Dashboard, go to **Workers & Pages** > **Create application** > **Pages** > **Connect to Git**.
-2. Select repository: `hairotic-ng`.
-3. Set build configuration:
-   - **Framework preset:** `Next.js (Static Export / @cloudflare/next-on-pages)`
-   - **Build command:** `npm run pages:build`
-   - **Build output directory:** `.vercel/output/static`
-   - **Root directory:** `frontend`
-4. Add Environment Variables under **Settings** > **Environment variables**:
-   - `NEXT_PUBLIC_API_URL`: `https://api.hairotic.ng`
-   - `NODE_VERSION`: `22`
+### Step 2.2: Connecting the Worker to Git
+In Cloudflare Workers Builds, connect the repository and configure:
+
+- **Root directory:** `frontend` (Wrangler config and package scripts live here)
+- **Build command:** `npm run cf:build`
+- **Deploy command:** `npx wrangler deploy`
+- **Build environment variable:** `NEXT_PUBLIC_API_URL=https://api.hairotic.ng/api/v1`
+- **Build environment variable:** `NEXT_PUBLIC_SITE_URL=https://www.hairotic.com.ng`
+- **Node.js version:** `22`
+
+The OpenNext build creates `.open-next/worker.js`; Wrangler deploys it using
+`frontend/wrangler.json`. Running `npx wrangler deploy` at the repository root
+does not find the frontend config or build output, which causes the static
+files error. Next.js image optimization is disabled to avoid requiring a
+separately billed Cloudflare Images binding.
+
+After the first deployment, attach `hairotic.com.ng` and
+`www.hairotic.com.ng` to the `hairotic-ng` Worker under **Settings > Domains &
+Routes > Add Custom Domain**. Cloudflare will configure DNS for those Worker
+domains.
 
 ---
 
@@ -79,12 +115,12 @@ npm run pages:deploy
 3. Update your domain registrar's Nameservers to Cloudflare's assigned nameservers (e.g., `ns1.cloudflare.com`, `ns2.cloudflare.com`).
 
 ### Step 3.2: DNS Records Setup
-Configure the following DNS records in Cloudflare DNS:
+Attach the frontend domains to the `hairotic-ng` Worker as described in
+Step 2.2; do not point them at `hairotic-ng.pages.dev`. Configure the remaining
+records in Cloudflare DNS:
 
 | Type | Name | Target / Value | Proxy status |
 |---|---|---|---|
-| CNAME | `@` (root) | `hairotic-ng.pages.dev` | Proxied (Orange Cloud) |
-| CNAME | `www` | `hairotic-ng.pages.dev` | Proxied (Orange Cloud) |
 | CNAME | `api` | `backend-host-or-worker.render.com` | Proxied (Orange Cloud) |
 | CNAME | `media` | `hairotic-media.r2.dev` | Proxied (Orange Cloud) |
 

@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
+import type {
+  CredentialResponse,
+  GsiButtonConfiguration,
+  IdConfiguration,
+} from '@react-oauth/google';
 
 interface GoogleLoginButtonProps {
   onSuccess: (credential: string) => void;
@@ -7,9 +12,21 @@ interface GoogleLoginButtonProps {
   isLoading?: boolean;
 }
 
+interface GoogleIdentityServices {
+  accounts: {
+    id: {
+      initialize: (config: IdConfiguration) => void;
+      renderButton: (
+        element: HTMLElement | null,
+        config: GsiButtonConfiguration,
+      ) => void;
+    };
+  };
+}
+
 declare global {
   interface Window {
-    google?: any;
+    google?: GoogleIdentityServices;
   }
 }
 
@@ -27,7 +44,7 @@ export default function GoogleLoginButton({ onSuccess, onError, isLoading }: Goo
 
           window.google.accounts.id.initialize({
             client_id: clientId,
-            callback: (response: any) => {
+            callback: (response: CredentialResponse) => {
               if (response.credential) {
                 onSuccess(response.credential);
               } else {
@@ -47,8 +64,12 @@ export default function GoogleLoginButton({ onSuccess, onError, isLoading }: Goo
               width: '320',
             }
           );
-        } catch (err: any) {
-          onError(err.message || 'Google OAuth button rendering failed.');
+        } catch (err: unknown) {
+          onError(
+            err instanceof Error
+              ? err.message
+              : 'Google OAuth button rendering failed.',
+          );
         }
       }
     };
