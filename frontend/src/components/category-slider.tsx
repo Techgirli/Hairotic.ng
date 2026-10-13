@@ -25,7 +25,7 @@ export default function CategorySlider({ categories }: CategorySliderProps) {
     const el = containerRef.current;
     if (!el) return;
 
-    let ctx: any = null;
+    let ctx: { revert: () => void } | undefined;
     const timer = setTimeout(() => {
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports

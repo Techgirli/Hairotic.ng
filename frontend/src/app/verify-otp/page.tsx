@@ -44,8 +44,10 @@ function VerifyOtpContent() {
       setTimeout(() => {
         router.push('/account');
       }, 1500);
-    } catch (err: any) {
-      setOtpError(err.message || 'OTP verification failed. Please try again.');
+    } catch (err: unknown) {
+      setOtpError(
+        err instanceof Error ? err.message : 'OTP verification failed. Please try again.',
+      );
     }
   };
 

@@ -117,9 +117,9 @@ export default function AdminLoginPage() {
         const d = await res.json();
         throw new Error(d.message || 'Failed to request password reset');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setResetStatus('error');
-      setResetError(err.message || 'An error occurred');
+      setResetError(err instanceof Error ? err.message : 'An error occurred');
     }
   };
 

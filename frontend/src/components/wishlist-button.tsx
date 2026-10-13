@@ -30,9 +30,9 @@ export default function WishlistButton({ variantId }: WishlistButtonProps) {
           credentials: 'include',
         });
         if (res.ok) {
-          const data = await res.json();
+          const data: { productVariantId: string }[] = await res.json();
           // Check if variantId exists in user's saved wishlist items
-          const found = data.some((item: any) => item.productVariantId === variantId);
+          const found = data.some((item) => item.productVariantId === variantId);
           setIsFavorited(found);
         }
       } catch (e) {

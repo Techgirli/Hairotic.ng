@@ -14,11 +14,9 @@
   ],
   "vars": {
     "APP_URL": "https://www.hairotic.com.ng",
+    "CLOUDFLARE_R2_BUCKET_NAME": "hairotic-media",
     "RESEND_FROM_EMAIL": "notifications@hairotic.com.ng",
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_4SsTZ_bSrXbtzc7yjC-xeg_ap_FQNZK",
-    "NODE_ENV": "production",
-    "REDIS_URL": "redis://localhost:6379",
-    "SENTRY_DSN": "https://...",
-    "WHATSAPP_CLOUD_API_TOKEN": "EAAG..."
+    "NODE_ENV": "production"
   }
 }

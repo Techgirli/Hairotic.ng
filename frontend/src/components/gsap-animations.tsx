@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function GSAPAnimations() {
   useEffect(() => {
-    let mm: any = null;
+    let mm: ReturnType<typeof gsap.matchMedia> | undefined;
 
     // Small delay so the DOM is fully painted before GSAP reads it
     const timer = setTimeout(() => {
