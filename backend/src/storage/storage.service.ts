@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import {
   S3Client,
   PutObjectCommand,
@@ -13,14 +17,17 @@ export class StorageService {
   private readonly s3Client: S3Client;
   private readonly bucketName: string;
   private readonly publicDomain: string;
+  private readonly storageConfigured: boolean;
 
   constructor() {
     const accountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID || '';
     const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || '';
     const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || '';
     this.bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME || 'hairotic-media';
-    this.publicDomain =
-      process.env.CLOUDFLARE_R2_PUBLIC_URL || `https://media.hairotic.ng`;
+    this.publicDomain = (process.env.CLOUDFLARE_R2_PUBLIC_URL || '').replace(/\/$/, '');
+    this.storageConfigured = Boolean(
+      accountId && accessKeyId && secretAccessKey && this.publicDomain,
+    );
 
     // Cloudflare R2 S3-Compatible Endpoint
     const endpoint = accountId
@@ -73,6 +80,12 @@ export class StorageService {
     fileName: string,
     mimeType: string,
   ): Promise<{ uploadUrl: string; fileUrl: string; key: string }> {
+    if (!this.storageConfigured) {
+      throw new ServiceUnavailableException(
+        'Image uploads are not configured. Configure the Cloudflare R2 account, access keys, and public URL on the backend.',
+      );
+    }
+
     const key = `uploads/${Date.now()}-${fileName}`;
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
