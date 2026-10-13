@@ -6,6 +6,16 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "routes": [
+    {
+      "pattern": "hairotic.com.ng",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.hairotic.com.ng",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "binding": "ASSETS",
     "directory": ".open-next/assets"
@@ -17,7 +27,7 @@
     }
   ],
   "vars": {
-    "NEXT_PUBLIC_API_URL": "https://api.hairotic.ng/api/v1",
+    "NEXT_PUBLIC_API_URL": "https://api.hairotic.com.ng/api/v1",
     "NEXT_PUBLIC_SITE_URL": "https://www.hairotic.com.ng",
     "NODE_ENV": "production"
   },
