@@ -2,15 +2,12 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "hairotic-ng",
   "main": ".open-next/worker.js",
+  "workers_dev": true,
   "compatibility_date": "2026-10-13",
   "compatibility_flags": [
     "nodejs_compat"
   ],
   "routes": [
-    {
-      "pattern": "hairotic.com.ng",
-      "custom_domain": true
-    },
     {
       "pattern": "www.hairotic.com.ng",
       "custom_domain": true
