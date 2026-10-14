@@ -445,8 +445,12 @@ export default function AdminOrdersPage() {
                   <span>₦{(selectedOrder.subtotal / 100).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[#6B7280]">
-                  <span>Delivery Fee (collect on delivery)</span>
-                  <span>₦{(selectedOrder.deliveryFee / 100).toLocaleString()}</span>
+                  <span>Delivery Fee</span>
+                  <span>
+                    {selectedOrder.deliveryFee > 0
+                      ? `₦${(selectedOrder.deliveryFee / 100).toLocaleString()} (collect on delivery)`
+                      : 'To be confirmed'}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center border-t border-[#222222]/5 pt-3">
                   <span className="font-bold">Total Paid Online</span>

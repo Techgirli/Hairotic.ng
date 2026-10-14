@@ -92,6 +92,29 @@ describe('CheckoutService', () => {
     );
   });
 
+  it('defaults an unspecified delivery fee to zero', async () => {
+    await service.createOrder(undefined, 'session-1', {
+      shippingAddress: {
+        name: 'Customer',
+        email: 'customer@example.com',
+        phone: '+2348000000000',
+        state: 'Lagos',
+        lga: 'Ikeja',
+        street: '1 Main Street',
+      },
+      idempotencyKey: 'checkout-no-fee',
+    });
+
+    expect(mockTransaction.order.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          deliveryFee: 0,
+          total: 12000000,
+        }),
+      }),
+    );
+  });
+
   it('rejects invalid delivery fee amounts', async () => {
     await expect(
       service.createOrder(undefined, 'session-1', {

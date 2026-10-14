@@ -310,8 +310,12 @@ export default function OrderTrackingPage() {
                       <span>₦{(order.subtotal / 100).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-[13px] text-[#6B7280]">
-                      <span>Delivery Fee (payable on delivery)</span>
-                      <span>₦{(order.deliveryFee / 100).toLocaleString()}</span>
+                      <span>Delivery Fee</span>
+                      <span>
+                        {order.deliveryFee > 0
+                          ? `₦${(order.deliveryFee / 100).toLocaleString()} (payable on delivery)`
+                          : 'To be confirmed; payable on delivery'}
+                      </span>
                     </div>
                   </div>
                 </div>

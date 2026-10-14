@@ -27,8 +27,8 @@ export class CheckoutController {
     @Body()
     body: {
       shippingAddress: ShippingAddress;
-      deliveryFeeNgn: number;
-      deliveryFeeAcknowledged: boolean;
+      deliveryFeeNgn?: number;
+      deliveryFeeAcknowledged?: boolean;
       idempotencyKey: string;
       sessionId?: string;
     },

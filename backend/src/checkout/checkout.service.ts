@@ -24,17 +24,13 @@ export class CheckoutService {
     sessionId: string | undefined,
     body: {
       shippingAddress: ShippingAddress;
-      deliveryFeeNgn: number;
-      deliveryFeeAcknowledged: boolean;
+      deliveryFeeNgn?: number;
+      deliveryFeeAcknowledged?: boolean;
       idempotencyKey: string;
     },
   ) {
-    const {
-      shippingAddress,
-      deliveryFeeNgn,
-      deliveryFeeAcknowledged,
-      idempotencyKey,
-    } = body;
+    const { shippingAddress, idempotencyKey } = body;
+    const deliveryFeeNgn = body.deliveryFeeNgn ?? 0;
 
     if (!idempotencyKey) {
       throw new BadRequestException('Idempotency key is required');
@@ -48,7 +44,7 @@ export class CheckoutService {
         'Delivery fee must be a non-negative whole-naira amount',
       );
     }
-    if (deliveryFeeAcknowledged !== true) {
+    if (deliveryFeeNgn > 0 && body.deliveryFeeAcknowledged !== true) {
       throw new BadRequestException(
         'Acknowledgement of delivery fee payment on delivery is required',
       );
@@ -178,7 +174,9 @@ export class CheckoutService {
         data: {
           orderId: order.id,
           status: OrderStatus.PENDING_PAYMENT,
-          note: 'Order placed, awaiting product payment confirmation. Delivery fee is payable on delivery.',
+          note: deliveryFee > 0
+            ? 'Order placed, awaiting product payment confirmation. Delivery fee is payable on delivery.'
+            : 'Order placed, awaiting product payment confirmation. Delivery fee to be confirmed separately and paid on delivery.',
           changedBy: customerId || 'GUEST',
         },
       });

@@ -54,12 +54,10 @@ export default function CheckoutPage() {
     state: '',
     lga: '',
     street: '',
-    deliveryFee: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deliveryFeeAcknowledged, setDeliveryFeeAcknowledged] = useState(false);
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -86,25 +84,10 @@ export default function CheckoutPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const deliveryFeeInNgn = Number(form.deliveryFee);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone || !form.state || !form.lga || !form.street) {
       setError('Please fill in all address and contact details.');
-      return;
-    }
-    if (
-      form.deliveryFee === '' ||
-      !Number.isSafeInteger(deliveryFeeInNgn) ||
-      deliveryFeeInNgn < 0 ||
-      !Number.isSafeInteger(deliveryFeeInNgn * 100)
-    ) {
-      setError('Enter a valid delivery fee in whole naira.');
-      return;
-    }
-    if (!deliveryFeeAcknowledged) {
-      setError('Please acknowledge that the delivery fee is payable on delivery.');
       return;
     }
 
@@ -128,8 +111,6 @@ export default function CheckoutPage() {
             lga: form.lga,
             street: form.street,
           },
-          deliveryFeeNgn: deliveryFeeInNgn,
-          deliveryFeeAcknowledged,
           idempotencyKey,
         }),
       });
@@ -287,39 +268,6 @@ export default function CheckoutPage() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label htmlFor="delivery-fee" className="text-[13px] font-bold text-[#222222] uppercase tracking-wider">
-                  Delivery Fee (₦)
-                </label>
-                <input
-                  id="delivery-fee"
-                  type="number"
-                  min="0"
-                  step="1"
-                  required
-                  value={form.deliveryFee}
-                  onChange={(e) => handleInputChange('deliveryFee', e.target.value)}
-                  placeholder="Enter your agreed delivery fee"
-                  className="w-full h-11 px-4 border border-[#222222]/10 rounded-[12px] bg-[#FAF7F4] text-[14px] focus:border-[#E56717] outline-none"
-                />
-                <p className="text-[12px] text-[#6B7280]">
-                  Pay this fee to the delivery courier when your order arrives; it is not included in online payment.
-                </p>
-              </div>
-
-              <label className="flex items-start gap-3 rounded-[12px] bg-[#FFF8F2] border border-[#E56717]/10 p-3 text-[13px] text-[#6B7280] cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={deliveryFeeAcknowledged}
-                  onChange={(e) => setDeliveryFeeAcknowledged(e.target.checked)}
-                  className="mt-0.5 accent-[#E56717]"
-                />
-                <span>
-                  I understand that the delivery fee is separate from my order payment and is payable on delivery.
-                </span>
-              </label>
-
               <div className="pt-4">
                 <button
                   type="submit"
@@ -378,21 +326,12 @@ export default function CheckoutPage() {
                 <span className="font-semibold">Subtotal</span>
                 <span className="font-bold">₦{subtotalInNgn.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-[14px] text-[#222222]">
-                <span className="font-semibold">Delivery Fee</span>
-                <span className="font-bold text-right">
-                  {form.deliveryFee === '' ? 'Enter fee above' : `₦${deliveryFeeInNgn.toLocaleString()} · Pay on delivery`}
-                </span>
-              </div>
               <div className="flex justify-between text-[16px] text-[#222222] border-t border-[#222222]/5 pt-3">
-                <span className="font-bold">Pay Online Now</span>
+                <span className="font-bold">Total Amount</span>
                 <span className="font-extrabold text-[#E56717] text-[18px]">
                   ₦{subtotalInNgn.toLocaleString()}
                 </span>
               </div>
-              <p className="text-right text-[12px] text-[#6B7280]">
-                Delivery fee is paid separately to the courier on delivery.
-              </p>
             </div>
 
             {/* Trust promises */}

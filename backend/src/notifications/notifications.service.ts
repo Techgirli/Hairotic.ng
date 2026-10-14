@@ -85,7 +85,7 @@ export class NotificationsService {
         
         <div style="margin-top: 20px; text-align: right; font-size: 15px; line-height: 1.6;">
           <p>Subtotal: <strong>₦${(order.subtotal / 100).toLocaleString()}</strong></p>
-          <p>Delivery Fee (payable to the courier on delivery): <strong>₦${(order.deliveryFee / 100).toLocaleString()}</strong></p>
+          <p>Delivery Fee: <strong>${order.deliveryFee > 0 ? `₦${(order.deliveryFee / 100).toLocaleString()} (payable to the courier on delivery)` : 'To be confirmed; payable to the courier on delivery'}</strong></p>
           <p style="font-size: 18px; color: #E56717; font-weight: bold;">Total Paid Online: ₦${(order.total / 100).toLocaleString()}</p>
         </div>
 

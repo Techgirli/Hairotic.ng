@@ -270,7 +270,7 @@ export default function Footer() {
         </div>
 
         <p className="mt-4 text-center text-[12px] text-gray-500">
-          Created by Velorina Digital Studios. To create your masterpiece,{' '}
+          Created by Velorina Digital Studios. To create your masterpiece, email{' '}
           <a href="mailto:velorinadigitalstudios@gmail.com" className="hover:text-[#E56717] transition-colors">
             velorinadigitalstudios@gmail.com
           </a>
