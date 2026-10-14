@@ -478,7 +478,7 @@ export default function AdminOrdersPage() {
                         <p className="text-[#6B7280] font-light leading-relaxed">{h.note}</p>
                         <p className="text-[10px] text-[#6B7280] font-semibold mt-1">
                           By: {h.changedBy} •{' '}
-                          {new Date(h.createdAt).toLocaleDateString('en-NG', {
+                          {new Date(h.createdAt).toLocaleString('en-NG', {
                             dateStyle: 'medium',
                             timeStyle: 'short',
                           })}
