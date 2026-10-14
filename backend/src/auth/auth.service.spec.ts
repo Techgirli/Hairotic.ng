@@ -5,7 +5,7 @@ import { RefreshTokenService } from './refresh-token.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { NotificationsService } from '../notifications/notifications.service';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 
 // Mock otplib to prevent Jest from crashing on its nested ESM exports
 jest.mock('otplib', () => ({
@@ -53,6 +53,8 @@ describe('AuthService & OtpService', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -81,8 +83,12 @@ describe('AuthService & OtpService', () => {
       mockPrismaService.otp.deleteMany.mockResolvedValue({ count: 0 });
       mockPrismaService.otp.create.mockResolvedValue({});
 
+      const now = Date.now();
       const code = await otpService.createOtp('user-1');
       expect(code).toHaveLength(6);
+      const [{ data }] = mockPrismaService.otp.create.mock.calls[0];
+      expect(data.expiresAt.getTime()).toBeGreaterThanOrEqual(now + 30 * 60 * 1000);
+      expect(data.expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + 30 * 60 * 1000);
     });
 
     it('should throw BadRequestException if user tries to resend in < 60 seconds', async () => {
@@ -90,6 +96,74 @@ describe('AuthService & OtpService', () => {
       mockPrismaService.otp.findFirst.mockResolvedValue(recentOtp);
 
       await expect(otpService.createOtp('user-1')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('OTP email matching', () => {
+    it('looks up the exact normalized email when verifying an OTP', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        otpService.verifyOtp(' FaveCollections1@Gmail.com ', '123456'),
+      ).rejects.toThrow('Invalid email or OTP');
+
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'favecollections1@gmail.com' },
+      });
+    });
+
+    it('sends a resend code to the exact normalized email account', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'admin-1',
+        email: 'favecollections1@gmail.com',
+        name: 'Admin',
+      });
+      mockPrismaService.otp.findFirst.mockResolvedValue(null);
+      mockPrismaService.otp.count.mockResolvedValue(0);
+      mockPrismaService.otp.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.otp.create.mockResolvedValue({});
+
+      await authService.resendOtp(' FaveCollections1@Gmail.com ');
+
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'favecollections1@gmail.com' },
+      });
+      expect(mockNotificationsService.sendOtpEmail).toHaveBeenCalledWith(
+        'favecollections1@gmail.com',
+        'Admin',
+        expect.any(String),
+      );
+      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+    });
+
+    it('does not create or email an OTP when the email is not registered', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      const result = await authService.resendOtp('missing@example.com');
+
+      expect(result.success).toBe(true);
+      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+      expect(mockNotificationsService.sendOtpEmail).not.toHaveBeenCalled();
+    });
+
+    it('returns an error when the OTP email provider rejects delivery', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'admin-1',
+        email: 'favecollections1@gmail.com',
+        name: 'Admin',
+      });
+      mockPrismaService.otp.findFirst.mockResolvedValue(null);
+      mockPrismaService.otp.count.mockResolvedValue(0);
+      mockPrismaService.otp.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.otp.create.mockResolvedValue({});
+      mockNotificationsService.sendOtpEmail.mockResolvedValue({
+        success: false,
+        error: 'domain is not verified',
+      });
+
+      await expect(
+        authService.resendOtp('favecollections1@gmail.com'),
+      ).rejects.toThrow(ServiceUnavailableException);
     });
   });
 });

@@ -36,10 +36,24 @@ async function main() {
   const salt = await bcrypt.genSalt(12);
   const passwordHash = await bcrypt.hash('password123', salt);
 
-  const admin = await prisma.user.create({
-    data: {
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@hairotic.ng' },
+    update: { role: Role.ADMIN },
+    create: {
       email: 'admin@hairotic.ng',
       phone: '+2348011112222',
+      passwordHash,
+      role: Role.ADMIN,
+      mfaEnabled: false,
+    },
+  });
+
+  const faveAdmin = await prisma.user.upsert({
+    where: { email: 'favecollections1@gmail.com' },
+    update: { role: Role.ADMIN },
+    create: {
+      email: 'favecollections1@gmail.com',
+      phone: '+2348099998888',
       passwordHash,
       role: Role.ADMIN,
       mfaEnabled: false,

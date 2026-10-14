@@ -46,6 +46,17 @@ interface Order {
   items: OrderItem[];
 }
 
+interface WishlistItem {
+  id: string;
+  productVariantId: string;
+  variant: {
+    price: number;
+    images?: { url: string }[];
+    product?: { name: string };
+    attributes?: { length?: string; texture?: string };
+  };
+}
+
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
@@ -54,7 +65,7 @@ export default function AccountPage() {
   
   const { addItem, toggleDrawer } = useCartStore();
 
-  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
 
   // Google OAuth modal states
@@ -243,8 +254,8 @@ export default function AccountPage() {
       } else {
         checkAuth();
       }
-    } catch (err: any) {
-      setAuthError(err.message || 'Google Login failed');
+    } catch (err: unknown) {
+      setAuthError(err instanceof Error ? err.message : 'Google Login failed');
     } finally {
       setIsSubmittingAuth(false);
     }

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -78,7 +77,7 @@ export default function CtaSection() {
           {/* Catchy Button */}
           <div className="cta-fade pt-2">
             <a
-              ref={btnRef as any}
+              ref={btnRef}
               href="https://chat.whatsapp.com/DrRFipkycJE6j6b2ZLApLy"
               target="_blank"
               rel="noopener noreferrer"

@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hairotic-backend-worker",
+  "main": "dist/main.js",
+  "compatibility_date": "2026-10-09",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "r2_buckets": [
+    {
+      "binding": "HAIROTIC_R2",
+      "bucket_name": "hairotic-media"
+    }
+  ],
+  "vars": {
+    "APP_URL": "https://www.hairotic.com.ng",
+    "CLOUDFLARE_R2_BUCKET_NAME": "hairotic-media",
+    "RESEND_FROM_EMAIL": "notifications@hairotic.com.ng",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_4SsTZ_bSrXbtzc7yjC-xeg_ap_FQNZK",
+    "NODE_ENV": "production"
+  }
+}

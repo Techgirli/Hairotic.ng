@@ -15,6 +15,7 @@ import { UsersModule } from './users/users.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { MarketingModule } from './marketing/marketing.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { StorageModule } from './storage/storage.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -34,6 +35,7 @@ import { APP_GUARD } from '@nestjs/core';
     ReviewsModule,
     MarketingModule,
     AnalyticsModule,
+    StorageModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,

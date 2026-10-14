@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { OrderStatus } from '@prisma/client';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -26,6 +26,15 @@ describe('AdminService', () => {
     },
     productVariant: {
       findMany: jest.fn(),
+      update: jest.fn(),
+    },
+    product: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+    productImage: {
+      deleteMany: jest.fn(),
+      createMany: jest.fn(),
     },
     user: {
       findMany: jest.fn(),
@@ -138,6 +147,68 @@ describe('AdminService', () => {
         expect.objectContaining({ data: { quantity: 20 } }),
       );
       expect(mockPrismaService.auditLog.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('updateProduct', () => {
+    it('updates variant lengths and replaces their image gallery', async () => {
+      const product = {
+        id: 'product-1',
+        name: 'Curly Wig',
+        status: 'DRAFT',
+        categoryId: 'category-1',
+        variants: [{
+          id: 'variant-1',
+          attributes: { length: '18', texture: 'curly' },
+          images: [{ url: 'https://media.example/old.jpg' }],
+        }],
+      };
+      mockPrismaService.product.findUnique.mockResolvedValue(product);
+      mockPrismaService.product.update.mockResolvedValue(product);
+
+      await service.updateProduct('product-1', {
+        variants: [{
+          id: 'variant-1',
+          attributes: { length: '24', texture: 'curly' },
+          images: ['https://media.example/new-1.jpg', 'https://media.example/new-2.jpg'],
+        }],
+      });
+
+      expect(mockPrismaService.productVariant.update).toHaveBeenCalledWith({
+        where: { id: 'variant-1' },
+        data: { attributes: { length: '24', texture: 'curly' } },
+      });
+      expect(mockPrismaService.productImage.deleteMany).toHaveBeenCalledWith({
+        where: { productVariantId: 'variant-1' },
+      });
+      expect(mockPrismaService.productImage.createMany).toHaveBeenCalledWith({
+        data: [
+          { productVariantId: 'variant-1', url: 'https://media.example/new-1.jpg', position: 0 },
+          { productVariantId: 'variant-1', url: 'https://media.example/new-2.jpg', position: 1 },
+        ],
+      });
+    });
+
+    it('rejects variants that do not belong to the product', async () => {
+      mockPrismaService.product.findUnique.mockResolvedValue({
+        id: 'product-1',
+        variants: [],
+      });
+
+      await expect(service.updateProduct('product-1', {
+        variants: [{ id: 'other-product-variant', images: [] }],
+      })).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects invalid hair lengths', async () => {
+      mockPrismaService.product.findUnique.mockResolvedValue({
+        id: 'product-1',
+        variants: [{ id: 'variant-1', attributes: {}, images: [] }],
+      });
+
+      await expect(service.updateProduct('product-1', {
+        variants: [{ id: 'variant-1', attributes: { length: '100' } }],
+      })).rejects.toThrow(BadRequestException);
     });
   });
 

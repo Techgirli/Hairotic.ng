@@ -32,8 +32,8 @@ export default function ResendOTP({ onResend, cooldownSeconds = 60, maxResends =
       await onResend();
       setResendCount((prev) => prev + 1);
       setCooldown(cooldownSeconds);
-    } catch (err: any) {
-      setError(err.message || 'Failed to resend code');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to resend code');
     } finally {
       setIsSubmitting(false);
     }

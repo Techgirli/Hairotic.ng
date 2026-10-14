@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit3, Trash2, X, AlertCircle } from 'lucide-react';
+import { Plus, Edit3, Trash2, X, AlertCircle, ImagePlus } from 'lucide-react';
+
+interface ProductImage {
+  id: string;
+  url: string;
+}
 
 interface Variant {
   id: string;
@@ -9,6 +14,7 @@ interface Variant {
   price: number;
   compareAtPrice: number | null;
   attributes: { length?: string; texture?: string };
+  images: ProductImage[];
   inventory: { quantity: number } | null;
 }
 
@@ -44,6 +50,9 @@ export default function AdminProductsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [newProductImages, setNewProductImages] = useState<string[]>([]);
+  const [variantEdits, setVariantEdits] = useState<Record<string, { length: string; images: string[] }>>({});
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   // New Product Form Data
   const [newProductForm, setNewProductForm] = useState({
@@ -71,6 +80,72 @@ export default function AdminProductsPage() {
   });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+  const uploadImages = async (files: File[]) => {
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      if (
+        !['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'].includes(file.type) ||
+        file.size > 5 * 1024 * 1024
+      ) {
+        throw new Error('Choose a JPEG, PNG, WebP, GIF, or AVIF image no larger than 5 MB.');
+      }
+
+      const signRes = await fetch(`${API_URL}/storage/presigned-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name.replace(/[^\w.-]/g, '_'),
+          mimeType: file.type,
+        }),
+        credentials: 'include',
+      });
+      if (!signRes.ok) {
+        const data = await signRes.json().catch(() => ({}));
+        throw new Error(data.message || 'Could not prepare the image upload.');
+      }
+
+      const { uploadUrl, fileUrl } = await signRes.json();
+      let uploadRes: Response;
+      try {
+        uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        });
+      } catch {
+        throw new Error(
+          'Could not reach image storage. Check the R2 public domain and bucket CORS permits PUT from https://www.hairotic.com.ng.',
+        );
+      }
+      if (!uploadRes.ok) {
+        const details = await uploadRes.text().catch(() => '');
+        throw new Error(
+          `Image upload failed (${uploadRes.status}). Check R2 bucket CORS allows PUT from this site. ${details}`.trim(),
+        );
+      }
+      uploadedUrls.push(fileUrl);
+    }
+    return uploadedUrls;
+  };
+
+  const handleImageSelection = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    onUploaded: (urls: string[]) => void,
+  ) => {
+    const files = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = '';
+    if (files.length === 0) return;
+
+    setUploadingImages(true);
+    try {
+      onUploaded(await uploadImages(files));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Image upload failed.');
+    } finally {
+      setUploadingImages(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -136,7 +211,7 @@ export default function AdminProductsPage() {
             attributes,
             quantity: parseInt(f.variantStock) || 0,
             lowStockThreshold: 5,
-            images: ['/Logo/photo_2023-09-25_16-13-56.jpg'], // default image
+            images: newProductImages,
           },
         ],
       };
@@ -154,6 +229,7 @@ export default function AdminProductsPage() {
       }
 
       setShowAddModal(false);
+      setNewProductImages([]);
       setNewProductForm({
         name: '',
         description: '',
@@ -176,6 +252,13 @@ export default function AdminProductsPage() {
   const handleEditClick = (product: Product) => {
     setEditProduct(product);
     const defaultVariant = product.variants[0];
+    setVariantEdits(Object.fromEntries(product.variants.map((variant) => [
+      variant.id,
+      {
+        length: variant.attributes.length || '',
+        images: variant.images.map((image) => image.url),
+      },
+    ])));
     setEditProductForm({
       name: product.name,
       description: product.description,
@@ -205,6 +288,14 @@ export default function AdminProductsPage() {
         status: f.status,
         price: priceInKobo,
         compareAtPrice: comparePriceInKobo,
+        variants: editProduct.variants.map((variant) => ({
+          id: variant.id,
+          attributes: {
+            ...variant.attributes,
+            length: variantEdits[variant.id]?.length ?? variant.attributes.length ?? '',
+          },
+          images: variantEdits[variant.id]?.images ?? variant.images.map((image) => image.url),
+        })),
       };
 
       const res = await fetch(`${API_URL}/admin/products/${editProduct.id}`, {
@@ -353,7 +444,7 @@ export default function AdminProductsPage() {
 
       {/* Add Product Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in select-none">
+        <div className="fixed inset-0 overflow-y-auto overscroll-contain bg-black/40 backdrop-blur-xs p-4 z-50 animate-fade-in">
           <div className="bg-white rounded-[24px] border border-[#222222]/5 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 space-y-6">
             <div className="flex justify-between items-center border-b border-[#222222]/5 pb-4">
               <h2 className="text-[20px] font-extrabold uppercase tracking-wide">Publish New catalog product</h2>
@@ -498,20 +589,54 @@ export default function AdminProductsPage() {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase tracking-wider">Hair Images</label>
+                  <label className="flex w-fit items-center gap-2 rounded-[10px] border border-[#222222]/10 px-4 py-2 text-[13px] font-semibold cursor-pointer hover:bg-[#FAF7F4]">
+                    <ImagePlus className="h-4 w-4 text-[#E56717]" />
+                    {uploadingImages ? 'Uploading...' : 'Upload images'}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                      multiple
+                      disabled={uploadingImages}
+                      className="sr-only"
+                      onChange={(event) => handleImageSelection(event, (urls) => setNewProductImages((current) => [...current, ...urls]))}
+                    />
+                  </label>
+                  {newProductImages.length > 0 && (
+                    <div className="flex flex-wrap gap-3">
+                      {newProductImages.map((url, index) => (
+                        <div key={`${url}-${index}`} className="relative">
+                          <img src={url} alt={`Hair preview ${index + 1}`} className="h-20 w-20 rounded-lg object-cover" />
+                          <button
+                            type="button"
+                            aria-label="Remove image"
+                            onClick={() => setNewProductImages((images) => images.filter((_, imageIndex) => imageIndex !== index))}
+                            className="absolute -right-2 -top-2 rounded-full bg-white p-1 shadow"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Submits */}
               <div className="pt-4 border-t border-[#222222]/5 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => { setShowAddModal(false); setNewProductImages([]); }}
                   className="h-11 px-5 border border-[#222222]/10 hover:bg-[#FAF7F4] text-[13px] font-bold uppercase tracking-wider rounded-[12px] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="h-11 px-6 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] font-bold uppercase tracking-wider rounded-[12px] shadow-sm cursor-pointer"
+                  disabled={uploadingImages}
+                  className="h-11 px-6 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] font-bold uppercase tracking-wider rounded-[12px] shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Publish Product
                 </button>
@@ -524,8 +649,8 @@ export default function AdminProductsPage() {
 
       {/* Edit Product Modal */}
       {showEditModal && editProduct && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in select-none">
-          <div className="bg-white rounded-[24px] border border-[#222222]/5 w-full max-w-lg shadow-2xl p-6 md:p-8 space-y-6">
+        <div className="fixed inset-0 overflow-y-auto overscroll-contain bg-black/40 backdrop-blur-xs p-4 z-50 animate-fade-in">
+          <div className="mx-auto my-2 bg-white rounded-[24px] border border-[#222222]/5 w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain shadow-2xl p-6 md:p-8 space-y-6">
             <div className="flex justify-between items-center border-b border-[#222222]/5 pb-4">
               <h2 className="text-[20px] font-extrabold uppercase tracking-wide">Edit Product Catalog</h2>
               <button onClick={() => setShowEditModal(false)} className="p-1 hover:bg-[#FAF7F4] rounded-[8px] cursor-pointer">
@@ -605,6 +730,77 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
+              <div className="space-y-4 border-t border-[#222222]/5 pt-4">
+                <h3 className="text-[13px] font-bold uppercase tracking-widest text-[#E56717]">Variant lengths and images</h3>
+                {editProduct.variants.map((variant) => {
+                  const variantEdit = variantEdits[variant.id] || {
+                    length: variant.attributes.length || '',
+                    images: variant.images.map((image) => image.url),
+                  };
+                  return (
+                    <section key={variant.id} className="space-y-3 rounded-[12px] bg-[#FAF7F4] p-4">
+                      <p className="text-[12px] font-bold">{variant.sku}</p>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider">Length (Inches)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="60"
+                          step="1"
+                          required
+                          value={variantEdit.length}
+                          onChange={(event) => setVariantEdits((current) => ({
+                            ...current,
+                            [variant.id]: { ...variantEdit, length: event.target.value },
+                          }))}
+                          className="h-11 w-full rounded-[12px] border border-[#222222]/10 bg-white px-4 text-[14px] outline-none focus:border-[#E56717]"
+                        />
+                      </div>
+                      <label className="flex w-fit items-center gap-2 rounded-[10px] border border-[#222222]/10 bg-white px-4 py-2 text-[13px] font-semibold cursor-pointer hover:bg-[#FAF7F4]">
+                        <ImagePlus className="h-4 w-4 text-[#E56717]" />
+                        {uploadingImages ? 'Uploading...' : 'Add hair images'}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                          multiple
+                          disabled={uploadingImages}
+                          className="sr-only"
+                          onChange={(event) => handleImageSelection(event, (urls) => setVariantEdits((current) => ({
+                            ...current,
+                            [variant.id]: { ...variantEdit, images: [...variantEdit.images, ...urls] },
+                          })))}
+                        />
+                      </label>
+                      {variantEdit.images.length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                          {variantEdit.images.map((url, index) => (
+                            <div key={`${url}-${index}`} className="relative">
+                              <img src={url} alt={`${variant.sku} image ${index + 1}`} className="h-20 w-20 rounded-lg object-cover" />
+                              <button
+                                type="button"
+                                aria-label={`Remove image ${index + 1}`}
+                                onClick={() => setVariantEdits((current) => ({
+                                  ...current,
+                                  [variant.id]: {
+                                    ...variantEdit,
+                                    images: variantEdit.images.filter((_, imageIndex) => imageIndex !== index),
+                                  },
+                                }))}
+                                className="absolute -right-2 -top-2 rounded-full bg-white p-1 shadow"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[12px] text-[#6B7280]">No images uploaded for this length.</p>
+                      )}
+                    </section>
+                  );
+                })}
+              </div>
+
               <div className="pt-4 border-t border-[#222222]/5 flex justify-end gap-3">
                 <button
                   type="button"
@@ -615,7 +811,8 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="h-11 px-6 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] font-bold uppercase tracking-wider rounded-[12px] shadow-sm cursor-pointer"
+                  disabled={uploadingImages}
+                  className="h-11 px-6 bg-[#E56717] hover:bg-[#C65A12] text-white text-[13px] font-bold uppercase tracking-wider rounded-[12px] shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save Changes
                 </button>

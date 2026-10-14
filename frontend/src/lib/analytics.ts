@@ -25,8 +25,10 @@ export const trackEvent = async (name: string, properties?: Record<string, unkno
         properties: properties ?? {},
         sessionId,
       }),
+    }).catch((err) => {
+      console.warn('Analytics event dispatch skipped:', err.message || err);
     });
-  } catch (err) {
-    console.error('Failed to log analytics event:', err);
+  } catch {
+    // Non-blocking fallback
   }
 };

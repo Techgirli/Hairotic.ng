@@ -4,8 +4,52 @@ import { Injectable, Logger } from '@nestjs/common';
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
-  async sendOrderConfirmationEmail(order: any) {
+  private async sendEmail(payload: {
+    to: { email: string; name?: string }[];
+    subject: string;
+    htmlContent: string;
+    sender?: { name: string; email: string };
+  }): Promise<{ success: boolean; error?: string }> {
     const resendApiKey = process.env.RESEND_API_KEY;
+
+    if (!resendApiKey) {
+      const error = 'RESEND_API_KEY is not configured';
+      this.logger.error(error);
+      return { success: false, error };
+    }
+
+    const from = payload.sender
+      ? `${payload.sender.name} <${payload.sender.email}>`
+      : process.env.RESEND_FROM_EMAIL || 'Hairotic.ng <notifications@hairotic.com.ng>';
+
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from,
+          to: payload.to.map((recipient) => recipient.email),
+          subject: payload.subject,
+          html: payload.htmlContent,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown email provider error';
+      this.logger.error(`Failed to send Resend email: ${message}`);
+      return { success: false, error: message };
+    }
+  }
+
+  async sendOrderConfirmationEmail(order: any) {
     const itemsHtml = order.items
       .map(
         (item: any) => `
@@ -57,47 +101,20 @@ export class NotificationsService {
       </div>
     `;
 
-    if (!resendApiKey) {
-      this.logger.warn(
-        'RESEND_API_KEY is not defined. Printing order invoice email to console fallback:',
-      );
-      this.logger.log(
-        `\n--- INVOICE EMAIL TO: ${order.shippingEmail} ---\nSubject: Order Confirmed - ${order.orderNumber}\n${htmlContent}\n------------------------`,
-      );
-      return {
-        success: true,
-        message: 'Printed invoice to console logs fallback.',
-      };
-    }
+    const result = await this.sendEmail({
+      to: [{ email: order.shippingEmail, name: order.shippingName }],
+      subject: `Order Confirmed - ${order.orderNumber}`,
+      htmlContent,
+      sender: { name: 'Hairotic.ng', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
+    });
 
-    try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${resendApiKey}`,
-        },
-        body: JSON.stringify({
-          from: 'Hairotic.ng <orders@hairotic.ng>',
-          to: [order.shippingEmail],
-          subject: `Order Confirmed - ${order.orderNumber}`,
-          html: htmlContent,
-        }),
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText);
-      }
-
+    if (result.success) {
       this.logger.log(
         `Order confirmation email sent successfully for ${order.orderNumber}`,
       );
-      return { success: true };
-    } catch (err: any) {
-      this.logger.error(`Failed to send Resend email: ${err.message}`);
-      return { success: false, error: err.message };
     }
+
+    return result;
   }
 
   sendWhatsAppNotification(phone: string, message: string) {
@@ -112,7 +129,6 @@ export class NotificationsService {
     status: string,
     note?: string,
   ) {
-    const resendApiKey = process.env.RESEND_API_KEY;
     const trackingNote = note
       ? `<p><strong>Note from courier/staff:</strong> ${note}</p>`
       : '';
@@ -134,35 +150,16 @@ export class NotificationsService {
       </div>
     `;
 
-    if (!resendApiKey) {
-      this.logger.warn(
-        'RESEND_API_KEY is not defined. Printing order status update email to console fallback:',
-      );
-      this.logger.log(
-        `\n--- STATUS UPDATE EMAIL TO: ${order.shippingEmail} ---\nSubject: Order ${order.orderNumber} Update: ${status}\n${htmlContent}\n------------------------`,
-      );
-    } else {
-      try {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${resendApiKey}`,
-          },
-          body: JSON.stringify({
-            from: 'Hairotic.ng <orders@hairotic.ng>',
-            to: [order.shippingEmail],
-            subject: `Order ${order.orderNumber} Update - ${status}`,
-            html: htmlContent,
-          }),
-        });
-        this.logger.log(
-          `Order status update email sent successfully for ${order.orderNumber}`,
-        );
-      } catch (err: any) {
-        this.logger.error(`Failed to send status update email: ${err.message}`);
-      }
-    }
+    await this.sendEmail({
+      to: [{ email: order.shippingEmail, name: order.shippingName }],
+      subject: `Order ${order.orderNumber} Update - ${status}`,
+      htmlContent,
+      sender: { name: 'Hairotic.ng', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
+    });
+
+    this.logger.log(
+      `Order status update email sent successfully for ${order.orderNumber}`,
+    );
 
     // Send WhatsApp notification
     const whatsappMsg = `Hi ${order.shippingName}! Your order ${order.orderNumber} has been updated to: ${status}.${note ? ` Note: ${note}` : ''} Track it live at http://localhost:3000/orders/track?orderNumber=${order.orderNumber}&email=${encodeURIComponent(order.shippingEmail || '')}`;
@@ -175,7 +172,6 @@ export class NotificationsService {
   }
 
   async sendContactInquiryEmail(name: string, email: string, message: string) {
-    const resendApiKey = process.env.RESEND_API_KEY;
     const htmlContent = `
       <div style="font-family: sans-serif; color: #222; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22222210; border-radius: 12px;">
         <h2 style="color: #E56717; text-transform: uppercase; letter-spacing: 1px;">Hairotic.ng</h2>
@@ -192,39 +188,21 @@ export class NotificationsService {
       </div>
     `;
 
-    if (!resendApiKey) {
-      this.logger.warn(
-        'RESEND_API_KEY is not defined. Printing contact form email to console fallback:',
-      );
+    const result = await this.sendEmail({
+      to: [{ email: 'support@hairotic.ng' }],
+      subject: `New Contact Submission from ${name}`,
+      htmlContent,
+      sender: { name: 'Hairotic.ng Contact', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
+    });
+
+    if (result.success) {
       this.logger.log(
-        `\n--- CONTACT EMAIL FROM: ${email} ---\nSubject: New Contact Submission from ${name}\n${htmlContent}\n------------------------`,
+        `Contact inquiry email sent successfully from ${email}`,
       );
-    } else {
-      try {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${resendApiKey}`,
-          },
-          body: JSON.stringify({
-            from: 'Hairotic.ng Contact <contact@hairotic.ng>',
-            to: ['support@hairotic.ng'],
-            subject: `New Contact Submission from ${name}`,
-            html: htmlContent,
-          }),
-        });
-        this.logger.log(
-          `Contact inquiry email sent successfully from ${email}`,
-        );
-      } catch (err: any) {
-        this.logger.error(`Failed to send contact email: ${err.message}`);
-      }
     }
   }
 
   async sendVerificationEmail(email: string, token: string) {
-    const resendApiKey = process.env.RESEND_API_KEY;
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
     const verifyUrl = `${appUrl}/account/verify-email?token=${token}`;
 
@@ -253,36 +231,20 @@ export class NotificationsService {
       </div>
     `;
 
-    if (!resendApiKey) {
-      this.logger.warn('RESEND_API_KEY not set — verification email console fallback:');
-      this.logger.log(`\n--- VERIFY EMAIL TO: ${email} ---\nLink: ${verifyUrl}\n------------------------`);
-      return { success: true };
-    }
+    const result = await this.sendEmail({
+      to: [{ email }],
+      subject: 'Verify your Hairotic.ng email address',
+      htmlContent,
+    });
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-
-    try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
-        body: JSON.stringify({
-          from: `Hairotic.ng <${fromEmail}>`,
-          to: [email],
-          subject: 'Verify your Hairotic.ng email address',
-          html: htmlContent,
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
+    if (result.success) {
       this.logger.log(`Verification email sent to ${email}`);
-      return { success: true };
-    } catch (err: any) {
-      this.logger.error(`Failed to send verification email: ${err.message}`);
-      return { success: false, error: err.message };
     }
+
+    return result;
   }
 
   async sendPasswordResetEmail(email: string, token: string) {
-    const resendApiKey = process.env.RESEND_API_KEY;
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
     const resetUrl = `${appUrl}/account/reset-password?token=${token}`;
 
@@ -311,37 +273,20 @@ export class NotificationsService {
       </div>
     `;
 
-    if (!resendApiKey) {
-      this.logger.warn('RESEND_API_KEY not set — password reset email console fallback:');
-      this.logger.log(`\n--- RESET EMAIL TO: ${email} ---\nLink: ${resetUrl}\n------------------------`);
-      return { success: true };
-    }
+    const result = await this.sendEmail({
+      to: [{ email }],
+      subject: 'Reset your Hairotic.ng password',
+      htmlContent,
+    });
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-
-    try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
-        body: JSON.stringify({
-          from: `Hairotic.ng <${fromEmail}>`,
-          to: [email],
-          subject: 'Reset your Hairotic.ng password',
-          html: htmlContent,
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
+    if (result.success) {
       this.logger.log(`Password reset email sent to ${email}`);
-      return { success: true };
-    } catch (err: any) {
-      this.logger.error(`Failed to send password reset email: ${err.message}`);
-      return { success: false, error: err.message };
     }
+
+    return result;
   }
 
   async sendOtpEmail(email: string, name: string, otp: string) {
-    const resendApiKey = process.env.RESEND_API_KEY;
-
     const htmlContent = `
       <div style="font-family: sans-serif; color: #222; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22222210; border-radius: 12px;">
         <h2 style="color: #E56717; text-transform: uppercase; letter-spacing: 1px;">Hairotic.ng</h2>
@@ -355,7 +300,7 @@ export class NotificationsService {
           </span>
         </div>
         <p style="font-size: 13px; color: #6B7280;">
-          Expires in 10 minutes.
+          Expires in 30 minutes.
         </p>
         <p style="font-size: 13px; color: #6B7280; margin-top: 20px;">
           If this wasn't you, ignore this email.
@@ -366,31 +311,16 @@ export class NotificationsService {
       </div>
     `;
 
-    if (!resendApiKey) {
-      this.logger.warn('RESEND_API_KEY not set — OTP email console fallback:');
-      this.logger.log(`\n--- OTP EMAIL TO: ${email} ---\nOTP: ${otp}\n------------------------`);
-      return { success: true };
+    const result = await this.sendEmail({
+      to: [{ email, name: name || undefined }],
+      subject: 'Verify your login',
+      htmlContent,
+    });
+
+    if (result.success) {
+      this.logger.log('OTP email accepted by Resend');
     }
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-
-    try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
-        body: JSON.stringify({
-          from: `Hairotic.ng <${fromEmail}>`,
-          to: [email],
-          subject: 'Verify your login',
-          html: htmlContent,
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      this.logger.log(`OTP email sent to ${email}`);
-      return { success: true };
-    } catch (err: any) {
-      this.logger.error(`Failed to send OTP email: ${err.message}`);
-      return { success: false, error: err.message };
-    }
+    return result;
   }
 }

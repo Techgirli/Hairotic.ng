@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import { Rubik_Spray_Paint, Outfit } from "next/font/google";
 import "./globals.css";
 import CartDrawer from "../components/cart-drawer";
