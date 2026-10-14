@@ -27,6 +27,8 @@ export class CheckoutController {
     @Body()
     body: {
       shippingAddress: ShippingAddress;
+      deliveryFeeNgn: number;
+      deliveryFeeAcknowledged: boolean;
       idempotencyKey: string;
       sessionId?: string;
     },
@@ -34,6 +36,8 @@ export class CheckoutController {
     const userId = this.getUserIdFromCookie(req);
     return this.checkoutService.createOrder(userId, body.sessionId, {
       shippingAddress: body.shippingAddress,
+      deliveryFeeNgn: body.deliveryFeeNgn,
+      deliveryFeeAcknowledged: body.deliveryFeeAcknowledged,
       idempotencyKey: body.idempotencyKey,
     });
   }

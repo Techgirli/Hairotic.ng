@@ -310,13 +310,13 @@ export default function OrderTrackingPage() {
                       <span>₦{(order.subtotal / 100).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-[13px] text-[#6B7280]">
-                      <span>Delivery Fee</span>
+                      <span>Delivery Fee (payable on delivery)</span>
                       <span>₦{(order.deliveryFee / 100).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
                 <div className="border-t border-[#222222]/5 pt-3 flex justify-between items-center mt-4">
-                  <span className="font-bold text-[14px]">Total Paid</span>
+                  <span className="font-bold text-[14px]">Total Paid Online</span>
                   <span className="font-extrabold text-[#E56717] text-[18px]">
                     ₦{(order.total / 100).toLocaleString()}
                   </span>

@@ -22,12 +22,36 @@ export class CheckoutService {
   async createOrder(
     customerId: string | undefined,
     sessionId: string | undefined,
-    body: { shippingAddress: ShippingAddress; idempotencyKey: string },
+    body: {
+      shippingAddress: ShippingAddress;
+      deliveryFeeNgn: number;
+      deliveryFeeAcknowledged: boolean;
+      idempotencyKey: string;
+    },
   ) {
-    const { shippingAddress, idempotencyKey } = body;
+    const {
+      shippingAddress,
+      deliveryFeeNgn,
+      deliveryFeeAcknowledged,
+      idempotencyKey,
+    } = body;
 
     if (!idempotencyKey) {
       throw new BadRequestException('Idempotency key is required');
+    }
+    if (
+      !Number.isSafeInteger(deliveryFeeNgn) ||
+      deliveryFeeNgn < 0 ||
+      !Number.isSafeInteger(deliveryFeeNgn * 100)
+    ) {
+      throw new BadRequestException(
+        'Delivery fee must be a non-negative whole-naira amount',
+      );
+    }
+    if (deliveryFeeAcknowledged !== true) {
+      throw new BadRequestException(
+        'Acknowledgement of delivery fee payment on delivery is required',
+      );
     }
 
     // 1. Check if order with this idempotency key already exists
@@ -111,13 +135,7 @@ export class CheckoutService {
         subtotal += item.variant.price * item.quantity;
       }
 
-      // Calculate delivery fee
-      // Free delivery within Lagos above 250,000 NGN (25,000,000 kobo)
-      // Otherwise 5,000 NGN (500,000 kobo) flat fee
-      const isLagosFree =
-        shippingAddress.state.toLowerCase() === 'lagos' && subtotal >= 25000000;
-      const deliveryFee = isLagosFree ? 0 : 500000;
-      const total = subtotal + deliveryFee;
+      const deliveryFee = deliveryFeeNgn * 100;
 
       // Generate readable order reference code
       const orderRef = `HR-${Date.now().toString().slice(-6)}-${Math.floor(
@@ -132,7 +150,7 @@ export class CheckoutService {
           status: OrderStatus.PENDING_PAYMENT,
           subtotal,
           deliveryFee,
-          total,
+          total: subtotal,
           idempotencyKey,
           shippingName: shippingAddress.name,
           shippingEmail: shippingAddress.email,
@@ -160,7 +178,7 @@ export class CheckoutService {
         data: {
           orderId: order.id,
           status: OrderStatus.PENDING_PAYMENT,
-          note: 'Order placed, awaiting checkout payment confirmation.',
+          note: 'Order placed, awaiting product payment confirmation. Delivery fee is payable on delivery.',
           changedBy: customerId || 'GUEST',
         },
       });
