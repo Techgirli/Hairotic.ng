@@ -780,8 +780,11 @@ export default function AccountPage() {
                       </div>
 
                       <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                        <span className="font-extrabold text-[15px] text-[#222222]">
-                          ₦{(order.total / 100).toLocaleString()}
+                        <span className="text-right">
+                          <span className="block font-extrabold text-[15px] text-[#222222]">
+                            ₦{(order.total / 100).toLocaleString()}
+                          </span>
+                          <span className="block text-[10px] text-[#6B7280]">Paid online</span>
                         </span>
                         
                         <Link

@@ -35,8 +35,8 @@ export default function ShippingDeliveryPage() {
               We offer same-day delivery for orders placed before <strong className="font-semibold text-[#222222]">10:00 AM WAT</strong>. Orders placed after 10:00 AM will be dispatched the following business day.
             </p>
             <ul className="list-disc pl-5 text-[14px] text-[#6B7280] space-y-1 font-light">
-              <li><strong className="font-semibold text-[#222222]">Free delivery</strong> for all orders above ₦250,000.</li>
-              <li>Flat delivery rate of <strong className="font-semibold text-[#222222]">₦5,000</strong> for orders under ₦250,000.</li>
+              <li>Enter the agreed delivery fee during checkout; delivery rates vary by location.</li>
+              <li>The delivery fee is paid directly to the courier when your order arrives, not as part of your online payment.</li>
             </ul>
           </div>
         </div>
@@ -55,7 +55,7 @@ export default function ShippingDeliveryPage() {
             </p>
             <ul className="list-disc pl-5 text-[14px] text-[#6B7280] space-y-1 font-light">
               <li><strong className="font-semibold text-[#222222]">Delivery timeframe</strong>: 2 to 4 business days.</li>
-              <li>Flat delivery rate of <strong className="font-semibold text-[#222222]">₦10,000</strong> applies to all nationwide shipments.</li>
+              <li>Enter the agreed delivery fee during checkout and pay it directly to the courier on delivery.</li>
             </ul>
           </div>
         </div>

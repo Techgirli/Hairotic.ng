@@ -84,20 +84,6 @@ export default function CheckoutPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Shipping calculation logic:
-  // Lagos: ₦5,000 flat, free if subtotal >= ₦250,000 (250,000,000 kobo)
-  // Other states: ₦7,500 flat
-  const isLagos = form.state.toLowerCase() === 'lagos';
-  const shippingFeeInNgn = form.state
-    ? isLagos
-      ? subtotalInNgn >= 250000
-        ? 0
-        : 5000
-      : 7500
-    : 0;
-
-  const totalInNgn = subtotalInNgn + shippingFeeInNgn;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone || !form.state || !form.lga || !form.street) {
@@ -123,7 +109,14 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId,
-          shippingAddress: form,
+          shippingAddress: {
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            state: form.state,
+            lga: form.lga,
+            street: form.street,
+          },
           idempotencyKey,
         }),
       });
@@ -341,20 +334,10 @@ export default function CheckoutPage() {
                 <span className="font-semibold">Subtotal</span>
                 <span className="font-bold">₦{subtotalInNgn.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-[14px] text-[#222222]">
-                <span className="font-semibold">Delivery Fee</span>
-                <span className="font-bold">
-                  {shippingFeeInNgn === 0
-                    ? form.state
-                      ? 'Free'
-                      : 'Calculated next'
-                    : `₦${shippingFeeInNgn.toLocaleString()}`}
-                </span>
-              </div>
               <div className="flex justify-between text-[16px] text-[#222222] border-t border-[#222222]/5 pt-3">
                 <span className="font-bold">Total Amount</span>
                 <span className="font-extrabold text-[#E56717] text-[18px]">
-                  ₦{totalInNgn.toLocaleString()}
+                  ₦{subtotalInNgn.toLocaleString()}
                 </span>
               </div>
             </div>
