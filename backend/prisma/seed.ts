@@ -9,6 +9,10 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Refusing to run the destructive development seed in production');
+  }
+
   console.log('Seeding database...');
 
   // 1. Clean existing records
@@ -33,8 +37,12 @@ async function main() {
   await prisma.user.deleteMany({});
 
   // 2. Create Users (Admin, Staff, and Customer)
+  const seedPassword = process.env.SEED_USER_PASSWORD;
+  if (!seedPassword || seedPassword.length < 12) {
+    throw new Error('SEED_USER_PASSWORD must be set to at least 12 characters');
+  }
   const salt = await bcrypt.genSalt(12);
-  const passwordHash = await bcrypt.hash('password123', salt);
+  const passwordHash = await bcrypt.hash(seedPassword, salt);
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@hairotic.ng' },

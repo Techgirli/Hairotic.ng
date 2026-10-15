@@ -7,17 +7,27 @@ import {
   Req,
   Param,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import * as crypto from 'crypto';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private paymentsService: PaymentsService) {}
 
   @Post('initialize')
-  async initialize(@Body() body: { orderId: string }) {
-    return this.paymentsService.initializeTransaction(body.orderId);
+  @UseGuards(OptionalJwtAuthGuard)
+  async initialize(
+    @Body() body: { orderId: string; sessionId?: string },
+    @Req() req: any,
+  ) {
+    return this.paymentsService.initializeTransaction(
+      body.orderId,
+      req.user?.id,
+      body.sessionId,
+    );
   }
 
   @Post('webhook')
@@ -58,4 +68,3 @@ export class PaymentsController {
     return this.paymentsService.reconcileStuckOrders();
   }
 }
-

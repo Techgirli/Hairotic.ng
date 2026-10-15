@@ -94,8 +94,14 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     setError(null);
 
-    // Generate unique idempotency key
-    const idempotencyKey = `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    // Reuse the same key across retries and tabs until Paystack initialization
+    // succeeds. The backend also derives a cart-snapshot key as the authority.
+    const storageKey = 'hairotic_checkout_idempotency_key';
+    let idempotencyKey = localStorage.getItem(storageKey);
+    if (!idempotencyKey) {
+      idempotencyKey = `idemp_${crypto.randomUUID()}`;
+      localStorage.setItem(storageKey, idempotencyKey);
+    }
 
     try {
       const res = await fetch(`${API_URL}/checkout`, {
@@ -126,7 +132,7 @@ export default function CheckoutPage() {
       const payRes = await fetch(`${API_URL}/payments/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({ orderId: order.id, sessionId }),
       });
 
       if (!payRes.ok) {
@@ -135,6 +141,8 @@ export default function CheckoutPage() {
       }
 
       const paymentDetails = await payRes.json();
+
+      localStorage.removeItem(storageKey);
 
       // Clear local store cart items
       clearCart();
@@ -151,19 +159,19 @@ export default function CheckoutPage() {
   if (items.length === 0 && !isSubmitting) return null;
 
   return (
-    <div className="min-h-screen bg-[#FAF7F4] font-sans text-[#222222] select-none py-10">
-      <div className="max-w-6xl mx-auto px-6 space-y-6">
+    <div className="min-h-screen bg-[#FAF7F4] font-sans text-[#222222] select-none py-6 sm:py-10">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
         
         {/* Header navigation bar */}
         <div className="flex items-center justify-between border-b border-[#222222]/5 pb-4">
-          <Link href="/shop" className="flex items-center gap-2 text-[14px] font-bold text-[#6B7280] hover:text-[#222222] uppercase tracking-wider transition-colors duration-150">
+          <Link href="/shop" className="flex items-center gap-1.5 sm:gap-2 text-[12px] sm:text-[14px] font-bold text-[#6B7280] hover:text-[#222222] uppercase tracking-wider transition-colors duration-150">
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Shop</span>
           </Link>
-          <span className="font-display text-[28px] tracking-wider uppercase">
+          <span className="font-display text-[22px] sm:text-[28px] tracking-wider uppercase">
             Hairotic
           </span>
-          <div className="w-20" /> {/* Spacer */}
+          <div className="w-10 sm:w-20" /> {/* Spacer */}
         </div>
 
         {error && (
@@ -175,7 +183,7 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Shipping Details Form */}
-          <div className="lg:col-span-7 bg-white rounded-[24px] border border-[#222222]/5 p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="lg:col-span-7 bg-white rounded-[24px] border border-[#222222]/5 p-4 sm:p-6 md:p-8 space-y-6 shadow-sm">
             <div>
               <h3 className="text-[20px] font-bold text-[#222222] uppercase tracking-wide">Shipping Address</h3>
               <p className="text-[13px] text-[#6B7280]">Enter contact details and delivery location.</p>
@@ -288,7 +296,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Order Summary Column */}
-          <div className="lg:col-span-5 bg-white rounded-[24px] border border-[#222222]/5 p-6 shadow-sm space-y-6">
+          <div className="lg:col-span-5 bg-white rounded-[24px] border border-[#222222]/5 p-4 sm:p-6 shadow-sm space-y-6">
             <h3 className="text-[18px] font-bold text-[#222222] uppercase tracking-wide border-b border-[#222222]/5 pb-4 flex items-center gap-2">
               <ShoppingBag className="w-4 h-4 text-[#E56717]" />
               <span>Order Summary ({items.length})</span>

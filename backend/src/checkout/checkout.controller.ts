@@ -3,6 +3,7 @@ import { CheckoutService } from './checkout.service';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import { getAuthSecret } from '../auth/auth-secrets';
 
 interface ShippingAddress {
   name: string;
@@ -47,7 +48,7 @@ export class CheckoutController {
     if (!token) return undefined;
     try {
       const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
+        secret: getAuthSecret('JWT_ACCESS_SECRET'),
       });
       return payload.sub;
     } catch {

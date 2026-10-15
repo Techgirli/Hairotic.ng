@@ -14,6 +14,7 @@ import { CartService } from './cart.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { Request } from 'express';
+import { getAuthSecret } from '../auth/auth-secrets';
 
 @Controller('cart')
 export class CartController {
@@ -74,7 +75,7 @@ export class CartController {
     if (!token) return undefined;
     try {
       const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
+        secret: getAuthSecret('JWT_ACCESS_SECRET'),
       });
       return payload.sub;
     } catch {

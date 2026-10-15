@@ -7,6 +7,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { OtpService } from './otp.service';
 import { RefreshTokenService } from './refresh-token.service';
+import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
 
 @Module({
   imports: [
@@ -15,8 +16,7 @@ import { RefreshTokenService } from './refresh-token.service';
     NotificationsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, OtpService, RefreshTokenService],
-  exports: [AuthService, PassportModule, OtpService, RefreshTokenService],
+  providers: [AuthService, JwtStrategy, OtpService, RefreshTokenService, OptionalJwtAuthGuard],
+  exports: [AuthService, PassportModule, OtpService, RefreshTokenService, OptionalJwtAuthGuard],
 })
 export class AuthModule {}
-

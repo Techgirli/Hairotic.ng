@@ -60,7 +60,7 @@ export default function Footer() {
       {/* Decorative background grid and glow */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_800px_600px_at_bottom,_rgba(229,103,23,0.1),_transparent)] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Top Section: Newsletter Card */}
         <div className="footer-col w-full bg-[#181818] border border-[#ffffff]/5 rounded-[20px] p-5 md:p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden group">
@@ -79,7 +79,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <form onSubmit={handleSubscribe} className="w-full md:w-auto flex items-center bg-[#222222] border border-white/10 focus-within:border-[#E56717] rounded-full p-2 pl-6 transition-all duration-300 md:min-w-[420px]">
+          <form onSubmit={handleSubscribe} className="w-full min-w-0 md:w-auto flex items-center bg-[#222222] border border-white/10 focus-within:border-[#E56717] rounded-full p-2 pl-4 sm:pl-6 transition-all duration-300 md:min-w-[420px]">
             <input
               ref={emailInputRef}
               type="email"
@@ -90,7 +90,7 @@ export default function Footer() {
             <button
               ref={newsletterBtnRef}
               type="submit"
-              className="w-12 h-12 rounded-full bg-[#E56717] hover:bg-[#C65A12] text-white flex items-center justify-center transition-transform active:scale-95 shadow-md shadow-[#E56717]/25 cursor-pointer"
+              className="w-12 h-12 shrink-0 rounded-full bg-[#E56717] hover:bg-[#C65A12] text-white flex items-center justify-center transition-transform active:scale-95 shadow-md shadow-[#E56717]/25 cursor-pointer"
             >
               <Send className="w-5 h-5" />
             </button>

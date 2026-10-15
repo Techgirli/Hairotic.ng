@@ -239,16 +239,8 @@ export default function AccountPage() {
     setAuthError(null);
     setIsSubmittingAuth(true);
 
-    let deviceId = typeof window !== 'undefined' ? localStorage.getItem('hairotic_device_id') : null;
-    if (!deviceId) {
-      deviceId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('hairotic_device_id', deviceId);
-      }
-    }
-
     try {
-      const result = await useAuthStore.getState().loginWithGoogleAction(idToken, deviceId);
+      const result = await useAuthStore.getState().loginWithGoogleAction(idToken);
       if (result.mfaRequired) {
         router.push(`/verify-otp?email=${encodeURIComponent(result.email || '')}`);
       } else {

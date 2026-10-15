@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
   const [authMode, setAuthMode] = useState<'password' | 'email_otp'>('password');
   const [mfaMethod, setMfaMethod] = useState<'totp' | 'email_otp'>('totp');
 
-  const [email, setEmail] = useState('favecollections1@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -43,9 +43,7 @@ export default function AdminLoginPage() {
 
   // Redirect if already logged in as Admin or Staff
   useEffect(() => {
-    console.log('[Admin Auth Check] user:', user, 'mfaRequired:', mfaRequired);
     if (user && (user.role === 'ADMIN' || user.role === 'STAFF') && !mfaRequired) {
-      console.log('[Admin Auth Check] Redirecting to dashboard...');
       router.push('/admin/dashboard');
     }
   }, [user, mfaRequired, router]);
@@ -77,7 +75,8 @@ export default function AdminLoginPage() {
   };
 
   const handleSendEmailOtp = async () => {
-    const targetEmail = (user?.email || email || 'favecollections1@gmail.com').trim();
+    const targetEmail = (user?.email || email).trim();
+    if (!targetEmail) return;
     try {
       await resendOtpAction(targetEmail);
       setOtpSent(true);
@@ -89,8 +88,8 @@ export default function AdminLoginPage() {
 
   const handleVerifyEmailOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const targetEmail = (user?.email || email || 'favecollections1@gmail.com').trim();
-    if (!otpCode) return;
+    const targetEmail = (user?.email || email).trim();
+    if (!targetEmail || !otpCode) return;
     try {
       await verifyOtpAction(targetEmail, otpCode);
       setSuccessMsg('Email authentication verified! Redirecting...');

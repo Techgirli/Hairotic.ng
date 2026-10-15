@@ -127,25 +127,25 @@ export default function OrderTrackingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F4] font-sans text-[#222222] py-10 select-none">
-      <div className="max-w-4xl mx-auto px-6 space-y-8">
+    <div className="min-h-screen bg-[#FAF7F4] font-sans text-[#222222] py-6 sm:py-10 select-none">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 space-y-8">
         
         {/* Navigation Header */}
         <div className="flex items-center justify-between border-b border-[#222222]/5 pb-4">
-          <Link href="/shop" className="flex items-center gap-2 text-[14px] font-bold text-[#6B7280] hover:text-[#222222] uppercase tracking-wider transition-colors">
+          <Link href="/shop" className="flex items-center gap-1.5 sm:gap-2 text-[12px] sm:text-[14px] font-bold text-[#6B7280] hover:text-[#222222] uppercase tracking-wider transition-colors">
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Shop</span>
           </Link>
-          <span className="font-display text-[26px] tracking-wider uppercase font-bold text-[#E56717]">
+          <span className="font-display text-[20px] sm:text-[26px] tracking-wider uppercase font-bold text-[#E56717]">
             Hairotic
           </span>
-          <div className="w-20" />
+          <div className="w-10 sm:w-20" />
         </div>
 
         {/* Info/Intro */}
         {!order && (
           <div className="text-center space-y-2 max-w-lg mx-auto">
-            <h1 className="text-[32px] font-extrabold tracking-tight uppercase">Track Your Order</h1>
+            <h1 className="text-[28px] sm:text-[32px] font-extrabold tracking-tight uppercase">Track Your Order</h1>
             <p className="text-[14px] text-[#6B7280]">
               See real-time status of your premium bundles. Enter order reference and contact info.
             </p>
@@ -153,7 +153,7 @@ export default function OrderTrackingPage() {
         )}
 
         {/* Search Panel */}
-        <div className="bg-white border border-[#222222]/5 rounded-[24px] p-6 shadow-sm max-w-xl mx-auto space-y-4">
+        <div className="w-full bg-white border border-[#222222]/5 rounded-[24px] p-4 sm:p-6 shadow-sm max-w-xl mx-auto space-y-4">
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">

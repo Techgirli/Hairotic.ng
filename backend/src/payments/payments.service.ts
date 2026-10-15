@@ -4,9 +4,10 @@ import {
   UnauthorizedException,
   Logger,
   NotFoundException,
+  ForbiddenException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 
@@ -16,10 +17,13 @@ export class PaymentsService {
 
   constructor(
     private prisma: PrismaService,
-    private notificationsService: NotificationsService,
   ) {}
 
-  async initializeTransaction(orderId: string) {
+  async initializeTransaction(
+    orderId: string,
+    customerId?: string,
+    sessionId?: string,
+  ) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { customer: true },
@@ -29,17 +33,24 @@ export class PaymentsService {
       throw new NotFoundException('Order not found');
     }
 
+    const ownsOrder = order.customerId
+      ? order.customerId === customerId
+      : Boolean(sessionId && order.checkoutSessionId === sessionId);
+    if (!ownsOrder) {
+      throw new ForbiddenException('You cannot initialize payment for this order');
+    }
+
     if (order.status !== OrderStatus.PENDING_PAYMENT) {
       throw new BadRequestException('Order is already paid or cancelled');
     }
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY?.replace(/^["']|["']$/g, '').trim();
+    const paystackSecret = this.getPaystackSecret();
 
     const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000';
 
     if (!paystackSecret) {
       this.logger.warn(
-        'PAYSTACK_SECRET_KEY is not defined. Falling back to local development mock checkout redirect.',
+        'Using explicitly enabled local mock payment flow.',
       );
 
       // Local development mock mode: return success callback instantly
@@ -111,7 +122,7 @@ export class PaymentsService {
       throw new NotFoundException('Order not found');
     }
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY?.replace(/^["']|["']$/g, '').trim();
+    const paystackSecret = this.getPaystackSecret();
 
     // Handle mock verification for local development
     if (!paystackSecret) {
@@ -138,10 +149,8 @@ export class PaymentsService {
         throw new Error(result.message || 'Verification check failed');
       }
 
-      if (
-        result.data.status === 'success' &&
-        order.status === OrderStatus.PENDING_PAYMENT
-      ) {
+      if (result.data.status === 'success') {
+        this.assertPaymentMatchesOrder(result.data, order);
         await this.fulfillOrder(order.id, reference);
       }
 
@@ -157,11 +166,11 @@ export class PaymentsService {
   }
 
   async handleWebhook(signature: string, rawBody: string) {
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY?.replace(/^["']|["']$/g, '').trim();
+    const paystackSecret = this.getPaystackSecret();
 
     if (!paystackSecret) {
       this.logger.warn(
-        'Webhook received but PAYSTACK_SECRET_KEY is missing. Skipping verification check.',
+        'Webhook ignored while explicit local mock payment mode is enabled.',
       );
       return { status: 'ignored' };
     }
@@ -173,6 +182,9 @@ export class PaymentsService {
       .digest('hex');
 
     const hashBuffer = Buffer.from(hash, 'hex');
+    if (!signature || !/^[a-f0-9]{128}$/i.test(signature)) {
+      throw new UnauthorizedException('Invalid signature');
+    }
     const sigBuffer = Buffer.from(signature, 'hex');
 
     if (
@@ -191,6 +203,7 @@ export class PaymentsService {
       });
 
       if (order && order.status === OrderStatus.PENDING_PAYMENT) {
+        this.assertPaymentMatchesOrder(payload.data, order);
         await this.fulfillOrder(order.id, reference);
         this.logger.log(
           `Webhook successfully fulfilled order reference: ${reference}`,
@@ -202,13 +215,32 @@ export class PaymentsService {
   }
 
   private async fulfillOrder(orderId: string, reference: string) {
-    return this.prisma.$transaction(async (tx) => {
-      // 1. Update Order status to PAID
-      const updatedOrder = await tx.order.update({
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Only one caller may transition the order. Concurrent webhook, callback,
+      // and reconciliation requests become successful no-ops after the winner.
+      const transition = await tx.order.updateMany({
+        where: { id: orderId, status: OrderStatus.PENDING_PAYMENT },
+        data: { status: OrderStatus.PAID },
+      });
+
+      if (transition.count === 0) {
+        const existingPayment = await tx.payment.findUnique({
+          where: { paystackReference: reference },
+        });
+        if (existingPayment?.status === PaymentStatus.SUCCESS) {
+          const existingOrder = await tx.order.findUnique({
+            where: { id: orderId },
+            include: {
+              items: { include: { variant: { include: { product: true } } } },
+            },
+          });
+          return { order: existingOrder, newlyFulfilled: false };
+        }
+        throw new BadRequestException('Order is not awaiting payment');
+      }
+
+      const updatedOrder = await tx.order.findUniqueOrThrow({
         where: { id: orderId },
-        data: {
-          status: OrderStatus.PAID,
-        },
         include: {
           items: {
             include: {
@@ -229,6 +261,7 @@ export class PaymentsService {
           paystackReference: reference,
           status: PaymentStatus.SUCCESS,
           amount: updatedOrder.total,
+          verifiedAt: new Date(),
         },
       });
 
@@ -242,28 +275,25 @@ export class PaymentsService {
         },
       });
 
-      // 4. Trigger Notifications asynchronously
-      this.notificationsService
-        .sendOrderConfirmationEmail(updatedOrder)
-        .catch((e) =>
-          this.logger.error(
-            `Async invoice email dispatch failed: ${e.message}`,
-          ),
-        );
+      await tx.outboxEvent.createMany({
+        data: [
+          {
+            eventType: 'ORDER_PAID_EMAIL',
+            aggregateId: orderId,
+            deduplicationKey: `order-paid-email:${orderId}`,
+          },
+          {
+            eventType: 'ORDER_PAID_WHATSAPP',
+            aggregateId: orderId,
+            deduplicationKey: `order-paid-whatsapp:${orderId}`,
+          },
+        ],
+        skipDuplicates: true,
+      });
 
-      this.notificationsService
-        .sendWhatsAppNotification(
-          updatedOrder.shippingPhone || '',
-          `Hi ${updatedOrder.shippingName}! Your payment for order ${updatedOrder.orderNumber} of amount ₦${(updatedOrder.total / 100).toLocaleString()} has been verified successfully. We are preparing it for delivery!`,
-        )
-        .catch((e) =>
-          this.logger.error(
-            `Async WhatsApp notification dispatch failed: ${e.message}`,
-          ),
-        );
-
-      return updatedOrder;
+      return { order: updatedOrder, newlyFulfilled: true };
     });
+    return result.order;
   }
 
   async refundTransaction(orderId: string, reason: string) {
@@ -296,11 +326,22 @@ export class PaymentsService {
       );
     }
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY?.replace(/^["']|["']$/g, '').trim();
+    const paystackSecret = this.getPaystackSecret();
+
+    const claimed = await this.prisma.payment.updateMany({
+      where: {
+        id: successfulPayment.id,
+        status: PaymentStatus.SUCCESS,
+      },
+      data: { status: PaymentStatus.PENDING },
+    });
+    if (claimed.count !== 1) {
+      throw new BadRequestException('Refund is already in progress or completed');
+    }
 
     if (!paystackSecret) {
       this.logger.warn(
-        'PAYSTACK_SECRET_KEY is not defined. Simulating mock refund.',
+        'Using explicitly enabled local mock refund flow.',
       );
       await this.processRefundFulfillment(
         order.id,
@@ -312,6 +353,7 @@ export class PaymentsService {
       };
     }
 
+    let refundAccepted = false;
     try {
       const response = await fetch('https://api.paystack.co/refund', {
         method: 'POST',
@@ -330,6 +372,7 @@ export class PaymentsService {
       if (!response.ok || !result.status) {
         throw new Error(result.message || 'Refund request failed');
       }
+      refundAccepted = true;
 
       await this.processRefundFulfillment(
         order.id,
@@ -337,6 +380,15 @@ export class PaymentsService {
       );
       return result.data;
     } catch (err: any) {
+      if (!refundAccepted) {
+        await this.prisma.payment.updateMany({
+          where: {
+            id: successfulPayment.id,
+            status: PaymentStatus.PENDING,
+          },
+          data: { status: PaymentStatus.SUCCESS },
+        });
+      }
       this.logger.error(
         `Failed to refund transaction ${successfulPayment.paystackReference}: ${err.message}`,
       );
@@ -430,5 +482,39 @@ export class PaymentsService {
       fulfilled,
       errors: errors.length > 0 ? errors : undefined,
     };
+  }
+
+  private getPaystackSecret(): string | undefined {
+    const secret = process.env.PAYSTACK_SECRET_KEY
+      ?.replace(/^["']|["']$/g, '')
+      .trim();
+    if (secret) return secret;
+
+    const mockEnabled =
+      process.env.NODE_ENV !== 'production' &&
+      process.env.PAYMENTS_MOCK_MODE === 'true';
+    if (mockEnabled) return undefined;
+
+    throw new ServiceUnavailableException(
+      'Payment processing is not configured',
+    );
+  }
+
+  private assertPaymentMatchesOrder(
+    payment: { reference?: string; amount?: number; currency?: string },
+    order: { orderNumber: string; total: number },
+  ): void {
+    const matches =
+      payment.reference === order.orderNumber &&
+      payment.amount === order.total &&
+      payment.currency === 'NGN';
+    if (!matches) {
+      this.logger.error(
+        `Rejected mismatched payment confirmation for order ${order.orderNumber}`,
+      );
+      throw new BadRequestException(
+        'Payment reference, amount, or currency does not match the order',
+      );
+    }
   }
 }

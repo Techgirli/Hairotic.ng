@@ -30,16 +30,8 @@ function VerifyOtpContent() {
     setOtpError(null);
     clearError();
 
-    let deviceId = typeof window !== 'undefined' ? localStorage.getItem('hairotic_device_id') : null;
-    if (!deviceId) {
-      deviceId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('hairotic_device_id', deviceId);
-      }
-    }
-
     try {
-      await verifyOtpAction(email, otpCode, deviceId);
+      await verifyOtpAction(email, otpCode);
       setSuccess(true);
       setTimeout(() => {
         router.push('/account');

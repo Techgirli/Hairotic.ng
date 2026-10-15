@@ -7,7 +7,9 @@ describe('CheckoutService', () => {
   let service: CheckoutService;
 
   const mockTransaction: any = {
-    $queryRaw: jest.fn().mockResolvedValue([{ id: 'inventory-1', quantity: 3 }]),
+    $queryRaw: jest
+      .fn()
+      .mockResolvedValue([{ id: 'inventory-1', quantity: 3 }]),
     inventory: { update: jest.fn() },
     order: {
       create: jest.fn().mockResolvedValue({ id: 'order-1' }),
@@ -16,6 +18,7 @@ describe('CheckoutService', () => {
     orderItem: { create: jest.fn() },
     orderStatusHistory: { create: jest.fn() },
     cartItem: { deleteMany: jest.fn() },
+    cart: { update: jest.fn() },
   };
 
   const mockPrismaService: any = {
@@ -23,6 +26,7 @@ describe('CheckoutService', () => {
     cart: {
       findFirst: jest.fn().mockResolvedValue({
         id: 'cart-1',
+        updatedAt: new Date('2026-10-15T00:00:00.000Z'),
         items: [
           {
             productVariantId: 'variant-1',
@@ -42,6 +46,7 @@ describe('CheckoutService', () => {
     mockPrismaService.order.findUnique.mockResolvedValue(null);
     mockPrismaService.cart.findFirst.mockResolvedValue({
       id: 'cart-1',
+      updatedAt: new Date('2026-10-15T00:00:00.000Z'),
       items: [
         {
           productVariantId: 'variant-1',

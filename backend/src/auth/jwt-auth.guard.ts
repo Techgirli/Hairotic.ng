@@ -22,9 +22,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     const request = context.switchToHttp().getRequest();
-    const isMfaVerifyRoute = request.url.includes('/auth/mfa/verify');
+    const isMfaRoute =
+      request.url.includes('/auth/mfa/verify') ||
+      request.url.includes('/auth/mfa/setup');
+    const isPrivileged =
+      user.role === 'ADMIN' ||
+      user.role === 'STAFF' ||
+      user.role === 'SUPER_ADMIN';
 
-    if (user.mfaEnabled && !user.mfaVerified && !isMfaVerifyRoute) {
+    if ((isPrivileged || user.mfaEnabled) && !user.mfaVerified && !isMfaRoute) {
       throw new UnauthorizedException({
         statusCode: 401,
         message: 'Multi-factor authentication check required',
