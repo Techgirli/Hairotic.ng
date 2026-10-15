@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
+import { createHash } from 'crypto';
 
 interface ShippingAddress {
   name: string;
@@ -24,33 +25,11 @@ export class CheckoutService {
     sessionId: string | undefined,
     body: { shippingAddress: ShippingAddress; idempotencyKey: string },
   ) {
-    const { shippingAddress, idempotencyKey } = body;
+    const { shippingAddress } = body;
 
-    if (!idempotencyKey) {
-      throw new BadRequestException('Idempotency key is required');
-    }
-
-    // 1. Check if order with this idempotency key already exists
-    const existingOrder = await this.prisma.order.findUnique({
-      where: { idempotencyKey },
-      include: {
-        items: {
-          include: {
-            variant: {
-              include: {
-                product: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (existingOrder) {
-      return existingOrder;
-    }
-
-    // 2. Fetch the active cart
+    // Fetch the active cart. The server derives idempotency from the exact cart
+    // snapshot so retries, multiple tabs, and different client keys converge on
+    // one order.
     const cart = await this.prisma.cart.findFirst({
       where: customerId ? { customerId } : { sessionId },
       include: {
@@ -70,8 +49,19 @@ export class CheckoutService {
       throw new BadRequestException('Cart is empty or does not exist');
     }
 
-    // 3. Process checkout transaction
-    return this.prisma.$transaction(async (tx) => {
+    const itemSnapshot = cart.items
+      .map((item) => `${item.productVariantId}:${item.quantity}`)
+      .sort()
+      .join('|');
+    const idempotencyKey = createHash('sha256')
+      .update(`${cart.id}:${cart.updatedAt.toISOString()}:${itemSnapshot}`)
+      .digest('hex');
+
+    const existingOrder = await this.findOrderByIdempotencyKey(idempotencyKey);
+    if (existingOrder) return existingOrder;
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
       let subtotal = 0;
 
       // Validate stock levels and compute subtotal.
@@ -140,6 +130,7 @@ export class CheckoutService {
           shippingState: shippingAddress.state,
           shippingLga: shippingAddress.lga,
           shippingStreet: shippingAddress.street,
+          checkoutSessionId: customerId ? null : sessionId,
         },
       });
 
@@ -169,6 +160,10 @@ export class CheckoutService {
       await tx.cartItem.deleteMany({
         where: { cartId: cart.id },
       });
+      await tx.cart.update({
+        where: { id: cart.id },
+        data: { updatedAt: new Date() },
+      });
 
       return tx.order.findUnique({
         where: { id: order.id },
@@ -185,6 +180,34 @@ export class CheckoutService {
           },
         },
       });
+      });
+    } catch (error: any) {
+      // A concurrent request can reach order.create before the first transaction
+      // commits. The unique key is the final arbiter; return the winner rather
+      // than surfacing an error or creating a second order.
+      if (error?.code === 'P2002') {
+        const winner = await this.findOrderByIdempotencyKey(idempotencyKey);
+        if (winner) return winner;
+      }
+      throw error;
+    }
+  }
+
+  private findOrderByIdempotencyKey(idempotencyKey: string) {
+    return this.prisma.order.findUnique({
+      where: { idempotencyKey },
+      include: {
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: true,
+                images: { orderBy: { position: 'asc' as const }, take: 1 },
+              },
+            },
+          },
+        },
+      },
     });
   }
 }

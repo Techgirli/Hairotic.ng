@@ -91,7 +91,7 @@ export default function FaqPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 md:px-0 space-y-8 select-none font-sans">
+    <main className="w-full min-w-0 max-w-4xl mx-auto py-8 px-4 md:px-0 space-y-8 select-none font-sans">
       
       {/* Page Header */}
       <div className="text-center space-y-3">
@@ -104,7 +104,7 @@ export default function FaqPage() {
       </div>
 
       {/* Toolbar controls: search & category pills */}
-      <div className="space-y-6">
+      <div className="min-w-0 space-y-6">
         
         {/* Search bar */}
         <div className="relative max-w-md mx-auto">
@@ -119,7 +119,7 @@ export default function FaqPage() {
         </div>
 
         {/* Category selector pills */}
-        <div className="flex gap-1.5 justify-center overflow-x-auto py-1">
+        <div className="flex max-w-full gap-1.5 justify-start sm:justify-center overflow-x-auto overscroll-x-contain py-1 pb-2 scrollbar-hide">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -187,11 +187,11 @@ export default function FaqPage() {
 
       {/* Stylist floating helper prompt */}
       <div className="bg-[#FAF7F4] border border-[#222222]/5 p-6 rounded-[24px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex gap-4 items-start">
+        <div className="flex min-w-0 gap-4 items-start">
           <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#E56717] shrink-0">
             <HelpCircle className="w-5 h-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h5 className="font-extrabold text-[#222222] uppercase tracking-wide text-[14px]">Still Have Questions?</h5>
             <p className="text-[13px] text-[#6B7280] mt-0.5 leading-relaxed">
               Our support line is open. Drop a prompt message directly to our hair experts.
@@ -201,12 +201,12 @@ export default function FaqPage() {
 
         <Link
           href="/contact"
-          className="h-10 px-5 bg-[#E56717] hover:bg-[#C65A12] text-white text-[12px] font-bold uppercase tracking-wider rounded-[12px] flex items-center justify-center cursor-pointer transition-colors shrink-0"
+          className="w-full sm:w-auto h-10 px-5 bg-[#E56717] hover:bg-[#C65A12] text-white text-[12px] font-bold uppercase tracking-wider rounded-[12px] flex items-center justify-center cursor-pointer transition-colors shrink-0"
         >
           Contact Support
         </Link>
       </div>
 
-    </div>
+    </main>
   );
 }

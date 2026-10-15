@@ -5,7 +5,7 @@ import { RefreshTokenService } from './refresh-token.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { NotificationsService } from '../notifications/notifications.service';
-import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 
 // Mock otplib to prevent Jest from crashing on its nested ESM exports
 jest.mock('otplib', () => ({
@@ -164,6 +164,22 @@ describe('AuthService & OtpService', () => {
       await expect(
         authService.resendOtp('favecollections1@gmail.com'),
       ).rejects.toThrow(ServiceUnavailableException);
+    });
+  });
+
+  describe('password login account selection', () => {
+    it('only looks up the exact normalized email and never creates an admin fallback', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        authService.login(' attacker+admin@example.com ', 'irrelevant'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'attacker+admin@example.com' },
+      });
+      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+      expect(mockJwtService.sign).not.toHaveBeenCalled();
     });
   });
 });

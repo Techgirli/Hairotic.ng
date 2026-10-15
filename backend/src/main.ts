@@ -4,8 +4,10 @@ import { RequestMethod } from '@nestjs/common';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { Request, Response, NextFunction } from 'express';
+import { assertProductionSecurityConfiguration } from './auth/auth-secrets';
 
 async function bootstrap() {
+  assertProductionSecurityConfiguration();
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Set global API prefix

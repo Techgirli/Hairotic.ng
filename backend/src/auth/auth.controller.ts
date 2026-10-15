@@ -14,6 +14,7 @@ import { Roles } from './roles.decorator';
 import { Role } from '@prisma/client';
 import type { Request, Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import { randomUUID } from 'crypto';
 
 @Controller('auth')
 export class AuthController {
@@ -99,7 +100,8 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.loginWithGoogle(body.idToken, body.deviceId);
+    const trustedDeviceId = req.cookies?.['device_id'];
+    const result = await this.authService.loginWithGoogle(body.idToken, trustedDeviceId);
 
     if (result.mfaRequired) {
       return {
@@ -115,7 +117,7 @@ export class AuthController {
     const userAgent = req.headers['user-agent'] || '';
     const session = await this.authService.generateSession(
       tokens.user,
-      body.deviceId,
+      trustedDeviceId,
       `${userAgent} (${ip})`,
       tokens.user.mfaEnabled, // Preserve MFA status if they have it enabled
     );
@@ -128,8 +130,8 @@ export class AuthController {
       30 * 24 * 60 * 60 * 1000,
     );
 
-    if (body.deviceId) {
-      this.setCookie(res, 'device_id', body.deviceId, 365 * 24 * 60 * 60 * 1000);
+    if (trustedDeviceId) {
+      this.setCookie(res, 'device_id', trustedDeviceId, 365 * 24 * 60 * 60 * 1000);
     }
 
     return {
@@ -149,10 +151,11 @@ export class AuthController {
     const ip = req.ip || (req.headers['x-forwarded-for'] as string) || '';
     const userAgent = req.headers['user-agent'] || '';
 
+    const trustedDeviceId = req.cookies?.['device_id'] || randomUUID();
     const result = await this.authService.verifyOtpAndCreateSession(
       body.email,
       body.otp,
-      body.deviceId,
+      trustedDeviceId,
       `${userAgent} (${ip})`,
     );
 
@@ -164,15 +167,11 @@ export class AuthController {
       30 * 24 * 60 * 60 * 1000,
     );
 
-    if (body.deviceId) {
-      this.setCookie(res, 'device_id', body.deviceId, 365 * 24 * 60 * 60 * 1000);
-    }
+    this.setCookie(res, 'device_id', trustedDeviceId, 365 * 24 * 60 * 60 * 1000);
 
     return {
       success: true,
       user: result.user,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
     };
   }
 
@@ -213,7 +212,6 @@ export class AuthController {
     return {
       success: true,
       user: result.user,
-      accessToken: result.accessToken,
     };
   }
 

@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { randomInt } from 'crypto';
 
 @Injectable()
 export class OtpService {
@@ -9,7 +10,7 @@ export class OtpService {
   constructor(private prisma: PrismaService) {}
 
   generateOtpCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return randomInt(100000, 1000000).toString();
   }
 
   async createOtp(userId: string): Promise<string> {

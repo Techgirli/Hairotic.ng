@@ -247,6 +247,7 @@ model Order {
   shippingState  String?             @map("shipping_state")
   shippingLga    String?             @map("shipping_lga")
   shippingStreet String?             @map("shipping_street")
+  checkoutSessionId String?           @map("checkout_session_id")
   idempotencyKey String              @unique @map("idempotency_key")
   createdAt      DateTime            @default(now()) @map("created_at")
   updatedAt      DateTime            @updatedAt @map("updated_at")
@@ -288,7 +289,7 @@ model OrderStatusHistory {
 
 model Payment {
   id                 String        @id @default(uuid())
-  orderId            String        @map("order_id")
+  orderId            String        @unique @map("order_id")
   paystackReference  String        @unique @map("paystack_reference")
   status             PaymentStatus @default(PENDING)
   amount             Int           // Stored in kobo
@@ -298,6 +299,24 @@ model Payment {
   order              Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("payments")
+}
+
+model OutboxEvent {
+  id                 String    @id @default(uuid())
+  eventType          String    @map("event_type")
+  aggregateId        String    @map("aggregate_id")
+  deduplicationKey   String    @unique @map("deduplication_key")
+  status             String    @default("PENDING")
+  attempts           Int       @default(0)
+  availableAt        DateTime  @default(now()) @map("available_at")
+  lockedAt           DateTime? @map("locked_at")
+  processedAt        DateTime? @map("processed_at")
+  lastError          String?   @map("last_error")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, availableAt])
+  @@map("outbox_events")
 }
 
 model Review {

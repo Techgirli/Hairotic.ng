@@ -86,7 +86,7 @@ export default function WishlistPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-16 select-none bg-[#FAF7F4] min-h-screen">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-16 select-none bg-[#FAF7F4] min-h-screen">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E56717]" />
       </div>
     );
@@ -95,8 +95,8 @@ export default function WishlistPage() {
   // Not logged in state
   if (!user) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-16 select-none bg-[#FAF7F4] min-h-screen text-center font-sans">
-        <div className="max-w-md space-y-6 bg-white border border-[#222222]/5 p-8 rounded-[24px] shadow-sm">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-16 select-none bg-[#FAF7F4] min-h-screen text-center font-sans">
+        <div className="w-full max-w-md space-y-6 bg-white border border-[#222222]/5 p-6 sm:p-8 rounded-[24px] shadow-sm">
           <div className="w-16 h-16 rounded-full bg-[#E56717]/10 flex items-center justify-center text-[#E56717] mx-auto">
             <Heart className="w-8 h-8 fill-[#E56717]" />
           </div>
@@ -126,7 +126,7 @@ export default function WishlistPage() {
       <Header />
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-6 py-12 flex-1 space-y-8 select-none">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-1 space-y-8 select-none">
         <div>
           <h2 className="text-[28px] font-bold text-[#222222] uppercase tracking-wide">My Wishlist</h2>
           <p className="text-[13px] text-[#6B7280]">Saved {wishlist.length} items</p>
