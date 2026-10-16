@@ -32,8 +32,8 @@ possible. Never force account creation at any step.
 | Payments | Paystack |
 | Email | Resend |
 | Customer messaging | Meta WhatsApp Cloud API |
-| Frontend hosting | Cloudflare Pages |
-| Backend hosting | Cloudflare Workers / Render |
+| Frontend hosting | Cloudflare Workers (`@opennextjs/cloudflare`) |
+| Backend hosting | Cloudflare Workers (NestJS fetch adapter; Neon via Hyperdrive) |
 | DNS/CDN/WAF | Cloudflare |
 | CI/CD | GitHub Actions |
 | Error tracking | Sentry |
@@ -44,13 +44,13 @@ possible. Never force account creation at any step.
 
 ```
 hairotic-ng/
-├── frontend/            # Next.js app (Vercel)
+├── frontend/            # Next.js app (Cloudflare Workers)
 │   ├── app/              # App Router pages — 21 screens map here
 │   ├── components/       # Shared UI (shadcn/ui + brand tokens)
 │   ├── lib/               # API client, Zod schemas, utils
 │   ├── store/             # Zustand stores
 │   └── public/
-├── backend/             # NestJS API (Render)
+├── backend/             # NestJS API (Cloudflare Workers)
 │   ├── src/
 │   │   ├── auth/ users/ catalog/ cart/ checkout/
 │   │   ├── payments/ orders/ reviews/ wishlist/

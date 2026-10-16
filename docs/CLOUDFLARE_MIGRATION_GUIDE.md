@@ -37,34 +37,47 @@ CLOUDFLARE_R2_BUCKET_NAME=hairotic-media
 CLOUDFLARE_R2_PUBLIC_URL=https://media.hairotic.ng
 ```
 
-For the backend Worker, keep credentials out of `backend/wrangler.json` and set
-them as Worker secrets instead. From `backend/`, run `npx wrangler secret put`
-for each secret (`DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`,
-`PAYSTACK_SECRET_KEY`, `RESEND_API_KEY`, `REDIS_URL`, `RECONCILE_SECRET`, and
-`CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`, and
-`CLOUDFLARE_R2_SECRET_ACCESS_KEY`). Use the Cloudflare dashboard's Worker
-secrets settings if configuring them there. Set `REDIS_URL` to the production
-Upstash connection string, not the local Redis URL.
+The NestJS API runs directly on Cloudflare Workers; it is not proxied to
+Render. Neon remains the PostgreSQL provider and is reached through Cloudflare
+Hyperdrive.
 
-`APP_URL`, `RESEND_FROM_EMAIL`, `NODE_ENV`, and `CLOUDFLARE_R2_BUCKET_NAME`
-are non-secret Worker variables and are declared in `backend/wrangler.json`.
-`CLOUDINARY_URL`, `WHATSAPP_CLOUD_API_TOKEN`, and `SENTRY_DSN` are included in
-the environment template but are not currently consumed by the backend.
+### Step 1.4: Connect Neon with Hyperdrive
+1. In Cloudflare, create a Hyperdrive configuration connected to the existing
+   Neon PostgreSQL database.
+2. Copy its ID into the `HYPERDRIVE.id` field in `backend/wrangler.json`,
+   replacing `REPLACE_WITH_HYPERDRIVE_ID`.
+3. Confirm the Hyperdrive connection can access the production schema. Continue
+   running reviewed Prisma migrations against Neon from a trusted deployment
+   environment; do not apply migrations automatically from Worker startup.
 
-### Step 1.4: Deploy the Backend Worker
-In Cloudflare Workers Builds, set the repository root directory to `backend`,
-the build command to `npm ci && npm run build`, and the deploy command to
-`npx wrangler deploy`. This makes Wrangler use `backend/wrangler.json` and
-ensures `dist/main.js` exists before deployment. If the build root must remain
-the repository root, use `npm ci --prefix backend && npm run build --prefix backend`
-as the build command and `npx wrangler deploy --config backend/wrangler.json`
-as the deploy command.
+### Step 1.5: Configure Worker secrets and deploy
+From `backend/`, set each secret using `npx wrangler secret put SECRET_NAME`.
+Use the production values for `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`,
+`PAYSTACK_SECRET_KEY`, `RECONCILE_SECRET`, `GOOGLE_CLIENT_ID`,
+`CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`,
+`CLOUDFLARE_R2_SECRET_ACCESS_KEY`, and `CLOUDFLARE_R2_PUBLIC_URL`. These
+secrets are not stored in `wrangler.json`. The Worker uses the existing
+`hairotic-media` R2 bucket and Resend integration; `APP_URL`,
+`RESEND_FROM_EMAIL`, `CLOUDFLARE_R2_BUCKET_NAME`, and `NODE_ENV` are
+non-secret variables in `backend/wrangler.json`.
 
-The current `backend/src/main.ts` starts a conventional NestJS/Express HTTP
-server with `app.listen()`. Cloudflare Workers require a module entry point that
-handles requests via a `fetch` export; `nodejs_compat` does not turn a listening
-NestJS server into a Worker handler. Adapt the backend to a Worker-compatible
-entry point before expecting the deployed API to run.
+In Cloudflare Workers Builds, set:
+- **Root directory:** `backend`
+- **Build command:** `npm ci && npm run cf:build`
+- **Deploy command:** `npx wrangler deploy`
+- **Node.js version:** `22`
+
+The same deployment can be run locally from `backend/` with `npm ci` and
+`npm run deploy`. The Worker uses the fetch-native
+NestJS adapter; the existing `main.ts` remains the local/Node server entry
+point. `api.hairotic.com.ng` is configured as a custom domain on
+`my-hairotic-backend-worker`.
+
+Set the GitHub Actions `API_URL` secret to `https://api.hairotic.com.ng` so the
+payment reconciliation workflow calls the Worker. After verifying API health,
+checkout, Paystack webhooks, authentication cookies, and media uploads on the
+Worker, disable the Render API service; keep Neon and the other external
+integrations.
 
 ---
 
@@ -124,12 +137,12 @@ email MX/TXT records.
 
 ### Step 3.2: DNS Records Setup
 Attach the frontend domains to the `hairotic-ng` Worker as described in
-Step 2.2; do not point them at `hairotic-ng.pages.dev`. Configure the remaining
-records in Cloudflare DNS:
+Step 2.2; do not point them at `hairotic-ng.pages.dev`. The API hostname is
+attached to `my-hairotic-backend-worker` by its custom-domain route. Configure
+the remaining records in Cloudflare DNS:
 
 | Type | Name | Target / Value | Proxy status |
 |---|---|---|---|
-| CNAME | `api` | `backend-host-or-worker.render.com` | Proxied (Orange Cloud) |
 | CNAME | `media` | `hairotic-media.r2.dev` | Proxied (Orange Cloud) |
 
 ### Step 3.3: SSL/TLS & Security Settings

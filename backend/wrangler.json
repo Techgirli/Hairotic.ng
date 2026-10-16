@@ -1,15 +1,33 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "hairotic-backend-worker",
-  "main": "dist/main.js",
-  "compatibility_date": "2026-10-09",
+  "name": "my-hairotic-backend-worker",
+  "main": "worker-dist/worker.js",
+  "compatibility_date": "2026-10-15",
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "alias": {
+    "@nestjs/microservices": "./src/worker-optional-modules.ts",
+    "@nestjs/microservices/microservices-module": "./src/worker-optional-modules.ts",
+    "@nestjs/websockets/socket-module": "./src/worker-optional-modules.ts"
+  },
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "api.hairotic.com.ng",
+      "custom_domain": true
+    }
   ],
   "r2_buckets": [
     {
       "binding": "HAIROTIC_R2",
       "bucket_name": "hairotic-media"
+    }
+  ],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "REPLACE_WITH_HYPERDRIVE_ID"
     }
   ],
   "vars": {
