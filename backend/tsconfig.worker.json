@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "./worker-dist",
+    "rootDir": "./src",
+    "declaration": false,
+    "incremental": false,
+    "sourceMap": false
+  },
+  "files": ["src/worker.ts"]
+}
