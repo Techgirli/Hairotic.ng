@@ -408,21 +408,3 @@ model AnalyticsEvent {
 
   @@map("analytics_events")
 }
-
-model OutboxEvent {
-  id               String    @id
-  eventType        String    @map("event_type")
-  aggregateId      String    @map("aggregate_id")
-  deduplicationKey String    @unique @map("deduplication_key")
-  status           String    @default("PENDING")
-  attempts         Int       @default(0)
-  availableAt      DateTime  @default(now()) @map("available_at")
-  lockedAt         DateTime? @map("locked_at")
-  processedAt      DateTime? @map("processed_at")
-  lastError        String?   @map("last_error")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
-
-  @@index([status, availableAt], map: "outbox_events_status_available_at_idx")
-  @@map("outbox_events")
-}
