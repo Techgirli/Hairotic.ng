@@ -16,8 +16,9 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { MarketingModule } from './marketing/marketing.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { StorageModule } from './storage/storage.module';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerWorkerGuard } from './worker-throttler.guard';
 
 @Module({
   imports: [
@@ -48,7 +49,7 @@ import { APP_GUARD } from '@nestjs/core';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: ThrottlerWorkerGuard,
     },
   ],
 })
