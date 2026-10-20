@@ -33,6 +33,7 @@
   "vars": {
     "APP_URL": "https://www.hairotic.com.ng",
     "CLOUDFLARE_R2_BUCKET_NAME": "hairotic-media",
+    "GOOGLE_CLIENT_ID": "62157000572-farfpplfh9thdqg6frg2dtjin4u9ff7v.apps.googleusercontent.com",
     "RESEND_FROM_EMAIL": "notifications@hairotic.com.ng",
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_4SsTZ_bSrXbtzc7yjC-xeg_ap_FQNZK",
     "NODE_ENV": "production"
