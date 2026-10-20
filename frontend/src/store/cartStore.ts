@@ -100,11 +100,17 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   addItem: async (variantId: string, quantity: number) => {
-    const { sessionId } = get();
-    if (!sessionId) return;
-
     set({ isLoading: true, error: null });
     try {
+      let { sessionId } = get();
+      if (!sessionId) {
+        get().initializeSession();
+        sessionId = get().sessionId;
+      }
+      if (!sessionId) {
+        throw new Error('Unable to initialize cart session');
+      }
+
       const res = await fetch(`${API_URL}/cart/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -20,9 +20,11 @@ interface AuthState {
   error: string | null;
   
   login: (email: string, password: string) => Promise<{ mfaRequired: boolean; mfaSetup: boolean }>;
-  loginWithGoogleAction: (idToken: string, deviceId?: string) => Promise<{ mfaRequired: boolean; email?: string }>;
+  loginWithGoogleAction: (idToken: string, deviceId?: string, adminOnly?: boolean) => Promise<{ mfaRequired: boolean; email?: string }>;
   verifyOtpAction: (email: string, otp: string, deviceId?: string) => Promise<void>;
   resendOtpAction: (email: string) => Promise<void>;
+  sendAdminOtpAction: () => Promise<void>;
+  verifyAdminOtpAction: (otp: string) => Promise<void>;
   verifyMfa: (code: string, isSetupFlow: boolean) => Promise<void>;
   setupMfa: () => Promise<void>;
   logout: () => Promise<void>;
@@ -46,7 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(`${API_URL}/auth/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -77,10 +79,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  loginWithGoogleAction: async (idToken, deviceId) => {
+  loginWithGoogleAction: async (idToken, deviceId, adminOnly = false) => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/auth/google`, {
+      const endpoint = adminOnly ? '/auth/admin/google' : '/auth/google';
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken, deviceId }),
@@ -93,11 +96,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       if (data.mfaRequired) {
-        set({ loading: false });
+        if (adminOnly) {
+          set({
+            user: data.user,
+            mfaRequired: true,
+            mfaSetup: !data.user?.mfaEnabled,
+            loading: false,
+          });
+        } else {
+          set({ loading: false });
+        }
         return { mfaRequired: true, email: data.email };
       }
 
-      set({ user: data.user, loading: false });
+      set({ user: data.user, mfaRequired: false, mfaSetup: false, loading: false });
       return { mfaRequired: false };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -145,6 +157,57 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       set({ loading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message, loading: false });
+      throw err;
+    }
+  },
+
+  sendAdminOtpAction: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetch(`${API_URL}/auth/mfa/email-otp/send`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to send verification code');
+      }
+
+      set({ loading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message, loading: false });
+      throw err;
+    }
+  },
+
+  verifyAdminOtpAction: async (otp) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetch(`${API_URL}/auth/mfa/email-otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp }),
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Invalid or expired OTP');
+      }
+
+      set({
+        user: data.user,
+        mfaRequired: false,
+        mfaSetup: false,
+        mfaQrCode: null,
+        mfaSecret: null,
+        loading: false,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
       set({ error: message, loading: false });

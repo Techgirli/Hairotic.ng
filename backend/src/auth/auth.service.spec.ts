@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { NotificationsService } from '../notifications/notifications.service';
 import { BadRequestException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
 // Mock otplib to prevent Jest from crashing on its nested ESM exports
 jest.mock('otplib', () => ({
@@ -17,6 +18,7 @@ jest.mock('otplib', () => ({
 describe('AuthService & OtpService', () => {
   let authService: AuthService;
   let otpService: OtpService;
+  let refreshTokenService: RefreshTokenService;
   let prisma: PrismaService;
 
   const mockPrismaService = {
@@ -68,6 +70,7 @@ describe('AuthService & OtpService', () => {
 
     authService = module.get<AuthService>(AuthService);
     otpService = module.get<OtpService>(OtpService);
+    refreshTokenService = module.get<RefreshTokenService>(RefreshTokenService);
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -117,6 +120,7 @@ describe('AuthService & OtpService', () => {
         id: 'admin-1',
         email: 'favecollections1@gmail.com',
         name: 'Admin',
+        role: Role.CUSTOMER,
       });
       mockPrismaService.otp.findFirst.mockResolvedValue(null);
       mockPrismaService.otp.count.mockResolvedValue(0);
@@ -136,6 +140,20 @@ describe('AuthService & OtpService', () => {
       expect(mockPrismaService.user.create).not.toHaveBeenCalled();
     });
 
+    it('does not send public login OTPs to admin accounts', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'admin-1',
+        email: 'admin@example.com',
+        role: Role.ADMIN,
+      });
+
+      const result = await authService.resendOtp('admin@example.com');
+
+      expect(result.success).toBe(true);
+      expect(mockNotificationsService.sendOtpEmail).not.toHaveBeenCalled();
+      expect(mockPrismaService.otp.create).not.toHaveBeenCalled();
+    });
+
     it('does not create or email an OTP when the email is not registered', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
@@ -146,11 +164,48 @@ describe('AuthService & OtpService', () => {
       expect(mockNotificationsService.sendOtpEmail).not.toHaveBeenCalled();
     });
 
+    it('does not allow public OTP verification to authenticate an admin', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'admin-1',
+        role: Role.ADMIN,
+      });
+
+      await expect(
+        otpService.verifyOtp('admin@example.com', '123456'),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.otp.findFirst).not.toHaveBeenCalled();
+    });
+
+    describe('Admin email OTP verification', () => {
+      it('only verifies an admin OTP for the authenticated user', async () => {
+        const verifyOtpForUser = jest
+          .spyOn(otpService, 'verifyOtpForUser')
+          .mockResolvedValue('admin-1');
+        const user = {
+          id: 'admin-1',
+          email: 'admin@example.com',
+          role: Role.ADMIN,
+          mfaEnabled: true,
+        };
+        mockPrismaService.user.findUnique.mockResolvedValue(user);
+        jest.spyOn(refreshTokenService, 'createRefreshToken').mockResolvedValue();
+
+        const result = await authService.verifyAdminOtpAndCreateSession(
+          'admin-1',
+          '123456',
+        );
+
+        expect(verifyOtpForUser).toHaveBeenCalledWith('admin-1', '123456');
+        expect(result.user).toEqual(user);
+      });
+    });
+
     it('returns an error when the OTP email provider rejects delivery', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: 'admin-1',
         email: 'favecollections1@gmail.com',
         name: 'Admin',
+        role: Role.CUSTOMER,
       });
       mockPrismaService.otp.findFirst.mockResolvedValue(null);
       mockPrismaService.otp.count.mockResolvedValue(0);
@@ -179,6 +234,19 @@ describe('AuthService & OtpService', () => {
         where: { email: 'attacker+admin@example.com' },
       });
       expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+      expect(mockJwtService.sign).not.toHaveBeenCalled();
+    });
+
+    it('does not allow customer credentials through the admin login flow', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'customer-1',
+        email: 'customer@example.com',
+        role: Role.CUSTOMER,
+      });
+
+      await expect(
+        authService.login('customer@example.com', 'password', true),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
       expect(mockJwtService.sign).not.toHaveBeenCalled();
     });
   });

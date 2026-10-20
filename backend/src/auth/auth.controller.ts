@@ -62,8 +62,28 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
   async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.login(body.email, body.password);
+    return this.completePasswordLogin(body, res, false);
+  }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Post('admin/login')
+  async adminLogin(
+    @Body() body: { email: string; password: string },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.completePasswordLogin(body, res, true);
+  }
+
+  private async completePasswordLogin(
+    body: { email: string; password: string },
+    res: Response,
+    adminOnly: boolean,
+  ) {
+    const result = await this.authService.login(
+      body.email,
+      body.password,
+      adminOnly,
+    );
     if (result.mfaRequired) {
       this.setCookie(res, 'access_token', result.tempToken!, 15 * 60 * 1000);
       return {
@@ -100,26 +120,51 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    return this.completeGoogleLogin(body, req, res, false);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Post('admin/google')
+  async adminGoogleLogin(
+    @Body() body: { idToken: string; deviceId?: string },
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.completeGoogleLogin(body, req, res, true);
+  }
+
+  private async completeGoogleLogin(
+    body: { idToken: string; deviceId?: string },
+    req: Request,
+    res: Response,
+    adminOnly: boolean,
+  ) {
     const trustedDeviceId = req.cookies?.['device_id'];
-    const result = await this.authService.loginWithGoogle(body.idToken, trustedDeviceId);
+    const result = await this.authService.loginWithGoogle(
+      body.idToken,
+      trustedDeviceId,
+      adminOnly,
+    );
 
     if (result.mfaRequired) {
+      if (result.tempToken) {
+        this.setCookie(res, 'access_token', result.tempToken, 15 * 60 * 1000);
+      }
       return {
         success: true,
         mfaRequired: true,
         email: result.email,
+        ...(adminOnly && { user: result.user }),
       };
     }
-
-    const tokens = result as any;
 
     const ip = req.ip || (req.headers['x-forwarded-for'] as string) || '';
     const userAgent = req.headers['user-agent'] || '';
     const session = await this.authService.generateSession(
-      tokens.user,
+      result.user,
       trustedDeviceId,
       `${userAgent} (${ip})`,
-      tokens.user.mfaEnabled, // Preserve MFA status if they have it enabled
+      result.user.mfaEnabled,
     );
 
     this.setCookie(res, 'access_token', session.accessToken, 15 * 60 * 1000);
@@ -131,13 +176,18 @@ export class AuthController {
     );
 
     if (trustedDeviceId) {
-      this.setCookie(res, 'device_id', trustedDeviceId, 365 * 24 * 60 * 60 * 1000);
+      this.setCookie(
+        res,
+        'device_id',
+        trustedDeviceId,
+        365 * 24 * 60 * 60 * 1000,
+      );
     }
 
     return {
       success: true,
       mfaRequired: false,
-      user: tokens.user,
+      user: result.user,
     };
   }
 
@@ -167,7 +217,12 @@ export class AuthController {
       30 * 24 * 60 * 60 * 1000,
     );
 
-    this.setCookie(res, 'device_id', trustedDeviceId, 365 * 24 * 60 * 60 * 1000);
+    this.setCookie(
+      res,
+      'device_id',
+      trustedDeviceId,
+      365 * 24 * 60 * 60 * 1000,
+    );
 
     return {
       success: true,
@@ -179,6 +234,46 @@ export class AuthController {
   @Post('otp/resend')
   async resendOtp(@Body('email') email: string) {
     return this.authService.resendOtp(email);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  @Post('mfa/email-otp/send')
+  async sendAdminEmailOtp(@Req() req: Request) {
+    return this.authService.sendAdminOtp((req as any).user.id);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  @Post('mfa/email-otp/verify')
+  async verifyAdminEmailOtp(
+    @Body('otp') otp: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const user = (req as any).user;
+    const ip = req.ip || (req.headers['x-forwarded-for'] as string) || '';
+    const userAgent = req.headers['user-agent'] || '';
+    const deviceId = req.cookies?.['device_id'] || randomUUID();
+    const result = await this.authService.verifyAdminOtpAndCreateSession(
+      user.id,
+      otp,
+      deviceId,
+      `${userAgent} (${ip})`,
+    );
+
+    this.setCookie(res, 'access_token', result.accessToken, 15 * 60 * 1000);
+    this.setCookie(
+      res,
+      'refresh_token',
+      result.refreshToken,
+      30 * 24 * 60 * 60 * 1000,
+    );
+    this.setCookie(res, 'device_id', deviceId, 365 * 24 * 60 * 60 * 1000);
+
+    return { success: true, user: result.user };
   }
 
   @Post('refresh')
