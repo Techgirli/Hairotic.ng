@@ -113,7 +113,8 @@ docker-compose up -d        # Postgres + Redis containers for local dev
 ```
 
 CI runs on every PR: lint → type-check → tests → Prisma migration dry-run
-against a Neon preview branch. Merge to `main` triggers Vercel + Render deploy.
+against a Neon preview branch. Merge to `main` triggers Cloudflare Workers deploy
+for both frontend and backend.
 
 ## Database Rules
 

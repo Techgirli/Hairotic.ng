@@ -425,7 +425,7 @@ export class PaymentsService {
   /**
    * Reconciliation job — called by the GitHub Actions cron every 10 minutes.
    *
-   * Finds all orders stuck in PENDING_PAYMENT for more than 10 minutes and
+   * Finds all orders stuck in PENDING_PAYMENT for more than 40 minutes and
    * re-verifies each one against Paystack. If Paystack confirms payment was
    * successful, the order is fulfilled as if the webhook arrived normally.
    *
@@ -433,15 +433,15 @@ export class PaymentsService {
    * deploy restart, or Paystack retry window exceeded).
    *
    * PRD non-negotiable: "Scheduled reconciliation job re-verifies any order
-   * stuck in pending_payment for more than 10 minutes."
+   * stuck in pending_payment for more than 40 minutes."
    */
   async reconcileStuckOrders() {
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const fortyMinutesAgo = new Date(Date.now() - 40 * 60 * 1000);
 
     const stuckOrders = await this.prisma.order.findMany({
       where: {
         status: OrderStatus.PENDING_PAYMENT,
-        createdAt: { lte: tenMinutesAgo },
+        createdAt: { lte: fortyMinutesAgo },
       },
       select: { id: true, orderNumber: true, createdAt: true },
     });

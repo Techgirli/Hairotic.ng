@@ -6,7 +6,7 @@ import { configureApi } from './api-app';
 import { assertProductionSecurityConfiguration } from './auth/auth-secrets';
 
 interface Env {
-  HYPERDRIVE?: {
+  'hairotic-ng'?: {
     connectionString: string;
   };
   APP_URL?: string;
@@ -28,7 +28,7 @@ interface Env {
 let adapterPromise: Promise<CloudflareAdapter> | undefined;
 
 async function createAdapter(env: Env): Promise<CloudflareAdapter> {
-  if (!env.HYPERDRIVE?.connectionString) {
+  if (!env['hairotic-ng']?.connectionString) {
     throw new Error('The HYPERDRIVE database binding is not configured');
   }
 
@@ -39,7 +39,7 @@ async function createAdapter(env: Env): Promise<CloudflareAdapter> {
     CLOUDFLARE_R2_SECRET_ACCESS_KEY: env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
     CLOUDFLARE_R2_BUCKET_NAME: env.CLOUDFLARE_R2_BUCKET_NAME,
     CLOUDFLARE_R2_PUBLIC_URL: env.CLOUDFLARE_R2_PUBLIC_URL,
-    DATABASE_URL: env.HYPERDRIVE.connectionString,
+    DATABASE_URL: env['hairotic-ng'].connectionString,
     GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
     JWT_ACCESS_SECRET: env.JWT_ACCESS_SECRET,
     JWT_REFRESH_SECRET: env.JWT_REFRESH_SECRET,
