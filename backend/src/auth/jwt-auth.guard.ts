@@ -24,7 +24,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest();
     const isMfaRoute =
       request.url.includes('/auth/mfa/verify') ||
-      request.url.includes('/auth/mfa/setup');
+      request.url.includes('/auth/mfa/setup') ||
+      request.url.includes('/auth/mfa/email-otp/');
     const isPrivileged =
       user.role === 'ADMIN' ||
       user.role === 'STAFF' ||

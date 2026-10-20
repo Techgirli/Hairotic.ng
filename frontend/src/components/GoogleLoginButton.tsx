@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import type {
   CredentialResponse,
@@ -32,6 +32,11 @@ declare global {
 
 export default function GoogleLoginButton({ onSuccess, onError, isLoading }: GoogleLoginButtonProps) {
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+
+  onSuccessRef.current = onSuccess;
+  onErrorRef.current = onError;
 
   useEffect(() => {
     const initGoogle = () => {
@@ -39,16 +44,17 @@ export default function GoogleLoginButton({ onSuccess, onError, isLoading }: Goo
         try {
           const clientId = (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '').replace(/^["']|["']$/g, '');
           if (!clientId) {
-            console.warn('Google client ID is missing in frontend env.');
+            onErrorRef.current('Google sign-in is not configured. Please contact an administrator.');
+            return;
           }
 
           window.google.accounts.id.initialize({
             client_id: clientId,
             callback: (response: CredentialResponse) => {
               if (response.credential) {
-                onSuccess(response.credential);
+                onSuccessRef.current(response.credential);
               } else {
-                onError('Google login response did not contain verification credential.');
+                onErrorRef.current('Google login response did not contain verification credential.');
               }
             },
             cancel_on_tap_outside: true,
@@ -65,7 +71,7 @@ export default function GoogleLoginButton({ onSuccess, onError, isLoading }: Goo
             }
           );
         } catch (err: unknown) {
-          onError(
+          onErrorRef.current(
             err instanceof Error
               ? err.message
               : 'Google OAuth button rendering failed.',
@@ -77,14 +83,14 @@ export default function GoogleLoginButton({ onSuccess, onError, isLoading }: Goo
     if (scriptLoaded) {
       initGoogle();
     }
-  }, [scriptLoaded, onSuccess, onError]);
+  }, [scriptLoaded]);
 
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-[44px]">
       <Script
         src="https://accounts.google.com/gsi/client"
         onLoad={() => setScriptLoaded(true)}
-        onError={() => onError('Failed to load Google identity authentication script.')}
+        onError={() => onErrorRef.current('Failed to load Google identity authentication script.')}
         strategy="lazyOnload"
       />
       <div 

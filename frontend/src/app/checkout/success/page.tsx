@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle2, MessageCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, CheckCircle2, MessageCircle, ArrowRight } from 'lucide-react';
 import { trackEvent } from '../../../lib/analytics';
 
 function CheckoutSuccessContent() {
@@ -14,17 +14,25 @@ function CheckoutSuccessContent() {
 
   React.useEffect(() => {
     if (orderNumber && orderNumber !== 'HR-XXXXXX') {
-      trackEvent('purchase', { orderNumber });
-
       // Call backend to verify the Paystack transaction reference
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       fetch(`${API_URL}/payments/verify/${orderNumber}`)
-        .then((res) => {
-          if (res.ok) {
-            setPaymentStatus('success');
-          } else {
+        .then(async (res) => {
+          if (!res.ok) {
             setPaymentStatus('failed');
+            return;
           }
+          const result = await res.json();
+          if (result.status === 'success') {
+            trackEvent('purchase', { orderNumber });
+          }
+          setPaymentStatus(
+            result.status === 'success'
+              ? 'success'
+              : result.status === 'failed' || result.status === 'abandoned'
+                ? 'failed'
+                : 'pending',
+          );
         })
         .catch(() => {
           setPaymentStatus('failed');
@@ -52,24 +60,48 @@ function CheckoutSuccessContent() {
           </span>
         </div>
       ) : (
-        <div className="w-16 h-16 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-[#22C55E] mx-auto animate-bounce">
-          <CheckCircle2 className="w-10 h-10" />
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${
+          paymentStatus === 'success'
+            ? 'bg-[#22C55E]/10 text-[#22C55E] animate-bounce'
+            : paymentStatus === 'failed'
+              ? 'bg-[#EF4444]/10 text-[#EF4444]'
+              : 'bg-[#E56717]/10 text-[#E56717]'
+        }`}>
+          {paymentStatus === 'success' ? (
+            <CheckCircle2 className="w-10 h-10" />
+          ) : (
+            <AlertCircle className="w-10 h-10" />
+          )}
         </div>
       )}
 
       {/* Text */}
       <div className="space-y-2">
         <span className="text-[#E56717] text-[12px] uppercase tracking-[0.2em] font-bold block">
-          {verifying ? 'Payment Verification In Progress' : 'Order Placed Successfully'}
+          {verifying
+            ? 'Payment Verification In Progress'
+            : paymentStatus === 'success'
+              ? 'Order Placed Successfully'
+              : paymentStatus === 'failed'
+                ? 'Payment Not Confirmed'
+                : 'Payment Confirmation Pending'}
         </span>
         <h2 className="text-[24px] md:text-[28px] font-bold text-[#222222] uppercase tracking-wide">
-          {verifying ? 'Verifying...' : 'Thank You!'}
+          {verifying
+            ? 'Verifying...'
+            : paymentStatus === 'success'
+              ? 'Thank You!'
+              : paymentStatus === 'failed'
+                ? 'Payment Failed'
+                : 'Payment Pending'}
         </h2>
         <p className="text-[14px] text-[#6B7280] leading-relaxed">
           {verifying ? (
             'Please hold on while we secure your payment confirmation with Paystack.'
           ) : paymentStatus === 'success' ? (
             <span>Your payment was <span className="font-extrabold text-[#22C55E] uppercase text-[12px] tracking-wider">verified successfully</span>! We are now preparing your human hair bundles for delivery.</span>
+          ) : paymentStatus === 'failed' ? (
+            <span>Paystack did not confirm this payment. Your order is still pending; contact us on WhatsApp if you need help.</span>
           ) : (
             <span>Your order has been received and is currently in status <span className="font-semibold text-[#222222]">Pending Payment Confirmation</span>.</span>
           )}

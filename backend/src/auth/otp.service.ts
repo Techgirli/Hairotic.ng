@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class OtpService {
@@ -85,13 +86,30 @@ export class OtpService {
       throw new BadRequestException('Invalid email or OTP');
     }
 
+    if (user.role !== Role.CUSTOMER) {
+      throw new BadRequestException('Admin OTP verification requires an authenticated login');
+    }
+
+    return this.verifyOtpCode(user.id, code);
+  }
+
+  async verifyOtpForUser(userId: string, code: string): Promise<string> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || (user.role !== Role.ADMIN && user.role !== Role.STAFF)) {
+      throw new BadRequestException('Invalid or expired OTP code. Please request a new one.');
+    }
+
+    return this.verifyOtpCode(user.id, code);
+  }
+
+  private async verifyOtpCode(userId: string, code: string): Promise<string> {
     const activeOtp = await (this.prisma as any).otp.findFirst({
-      where: { userId: user.id },
+      where: { userId },
     });
 
     if (!activeOtp) {
       this.logger.warn(
-        `OTP verification failed: No active OTP for user ${user.id}`,
+        `OTP verification failed: No active OTP for user ${userId}`,
       );
       throw new BadRequestException(
         'Invalid or expired OTP code. Please request a new one.',
@@ -101,7 +119,7 @@ export class OtpService {
     if (new Date() > activeOtp.expiresAt) {
       await (this.prisma as any).otp.delete({ where: { id: activeOtp.id } });
       this.logger.warn(
-        `OTP verification failed: OTP expired for user ${user.id}`,
+        `OTP verification failed: OTP expired for user ${userId}`,
       );
       throw new BadRequestException(
         'OTP code has expired. Please request a new one.',
@@ -111,7 +129,7 @@ export class OtpService {
     if (activeOtp.attempts >= 5) {
       await (this.prisma as any).otp.delete({ where: { id: activeOtp.id } });
       this.logger.warn(
-        `OTP verification failed: Max attempts exceeded for user ${user.id}`,
+        `OTP verification failed: Max attempts exceeded for user ${userId}`,
       );
       throw new BadRequestException(
         'Too many failed attempts. Please request a new OTP code.',
@@ -126,7 +144,7 @@ export class OtpService {
       });
 
       this.logger.warn(
-        `OTP verification failed: Incorrect code for user ${user.id}. Attempt ${updatedOtp.attempts}/5`,
+        `OTP verification failed: Incorrect code for user ${userId}. Attempt ${updatedOtp.attempts}/5`,
       );
 
       if (updatedOtp.attempts >= 5) {
@@ -140,7 +158,7 @@ export class OtpService {
     }
 
     await (this.prisma as any).otp.delete({ where: { id: activeOtp.id } });
-    this.logger.log(`OTP successfully verified for user ${user.id}`);
-    return user.id;
+    this.logger.log(`OTP successfully verified for user ${userId}`);
+    return userId;
   }
 }

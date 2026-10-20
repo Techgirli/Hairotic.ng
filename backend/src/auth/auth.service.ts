@@ -226,13 +226,18 @@ export class AuthService {
     };
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string, adminOnly = false) {
     const cleanEmail = (email || '').trim().toLowerCase();
     const user = cleanEmail
       ? await this.prisma.user.findUnique({ where: { email: cleanEmail } })
       : null;
 
     if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const isAdminOrStaff = user.role === Role.ADMIN || user.role === Role.STAFF;
+    if (adminOnly && !isAdminOrStaff) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -262,7 +267,6 @@ export class AuthService {
       });
     }
 
-    const isAdminOrStaff = user.role === Role.ADMIN || user.role === Role.STAFF;
     if (isAdminOrStaff) {
       const tempToken = this.jwtService.sign(
         {
@@ -428,7 +432,7 @@ export class AuthService {
     return tokens;
   }
 
-  async loginWithGoogle(idToken: string, deviceId?: string) {
+  async loginWithGoogle(idToken: string, deviceId?: string, adminOnly = false) {
     if (!idToken) {
       throw new BadRequestException('Google ID Token is required');
     }
@@ -450,6 +454,12 @@ export class AuthService {
 
     const { email, name, picture, sub: googleId } = payload;
     let user = await this.prisma.user.findUnique({ where: { email } });
+
+    const isPrivilegedUser =
+      user?.role === Role.ADMIN || user?.role === Role.STAFF;
+    if ((adminOnly && !isPrivilegedUser) || (!adminOnly && isPrivilegedUser)) {
+      throw new UnauthorizedException('Use the correct sign-in portal for this account');
+    }
 
     let isNewUser = false;
     if (!user) {
@@ -482,6 +492,25 @@ export class AuthService {
 
     const activeUser = user as any;
 
+    if (adminOnly) {
+      const tempToken = this.jwtService.sign(
+        {
+          sub: activeUser.id,
+          email: activeUser.email,
+          role: activeUser.role,
+          mfaVerified: false,
+        },
+        { secret: getAuthSecret('JWT_ACCESS_SECRET'), expiresIn: '15m' },
+      );
+
+      return {
+        mfaRequired: true,
+        email: activeUser.email,
+        tempToken,
+        user: this.sanitizeUser(activeUser),
+      };
+    }
+
     // Check device recognition strategy
     let deviceRecognized = false;
     if (deviceId) {
@@ -498,7 +527,7 @@ export class AuthService {
     }
 
     // Bypass OTP for returning users on a recognized device
-    if (!isNewUser && deviceRecognized) {
+    if (!isNewUser && deviceRecognized && !activeUser.mfaEnabled) {
       this.logger.log(
         `Bypassing OTP: user ${activeUser.id} logged in from recognized device ${deviceId}`,
       );
@@ -527,6 +556,7 @@ export class AuthService {
     return {
       mfaRequired: true,
       email: activeUser.email,
+      user: this.sanitizeUser(activeUser),
     };
   }
 
@@ -553,7 +583,7 @@ export class AuthService {
       ? await this.prisma.user.findUnique({ where: { email: cleanEmail } })
       : null;
 
-    if (!user) {
+    if (!user || user.role !== Role.CUSTOMER) {
       return {
         success: true,
         message:
@@ -580,6 +610,45 @@ export class AuthService {
       success: true,
       message:
         'If that email is registered, a verification code has been sent.',
+    };
+  }
+
+  async sendAdminOtp(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || (user.role !== Role.ADMIN && user.role !== Role.STAFF)) {
+      throw new UnauthorizedException('Admin account not found');
+    }
+
+    const otp = await this.otpService.createOtp(user.id);
+    const emailResult = await this.notificationsService.sendOtpEmail(
+      user.email,
+      user.name || '',
+      otp,
+    );
+    if (!emailResult.success) {
+      this.logger.error(`OTP email could not be sent: ${emailResult.error || 'Unknown email provider error'}`);
+      throw new ServiceUnavailableException('Unable to send a verification code. Please try again later.');
+    }
+
+    return { success: true, message: 'A verification code has been sent to your admin email.' };
+  }
+
+  async verifyAdminOtpAndCreateSession(
+    userId: string,
+    otp: string,
+    device?: string,
+    ip?: string,
+  ) {
+    await this.otpService.verifyOtpForUser(userId, otp);
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || (user.role !== Role.ADMIN && user.role !== Role.STAFF)) {
+      throw new UnauthorizedException('Admin account not found');
+    }
+
+    const tokens = await this.generateSession(user, device, ip, true);
+    return {
+      ...tokens,
+      user: this.sanitizeUser(user),
     };
   }
 
