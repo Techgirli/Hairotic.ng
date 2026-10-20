@@ -20,7 +20,8 @@ export class NotificationsService {
 
     const from = payload.sender
       ? `${payload.sender.name} <${payload.sender.email}>`
-      : process.env.RESEND_FROM_EMAIL || 'Hairotic.ng <notifications@hairotic.com.ng>';
+      : process.env.RESEND_FROM_EMAIL ||
+        'Hairotic.ng <notifications@hairotic.com.ng>';
 
     try {
       const res = await fetch('https://api.resend.com/emails', {
@@ -43,7 +44,8 @@ export class NotificationsService {
 
       return { success: true };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown email provider error';
+      const message =
+        error instanceof Error ? error.message : 'Unknown email provider error';
       this.logger.error(`Failed to send Resend email: ${message}`);
       return { success: false, error: message };
     }
@@ -105,7 +107,10 @@ export class NotificationsService {
       to: [{ email: order.shippingEmail, name: order.shippingName }],
       subject: `Order Confirmed - ${order.orderNumber}`,
       htmlContent,
-      sender: { name: 'Hairotic.ng', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
+      sender: {
+        name: 'Hairotic.ng',
+        email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng',
+      },
     });
 
     if (result.success) {
@@ -154,7 +159,10 @@ export class NotificationsService {
       to: [{ email: order.shippingEmail, name: order.shippingName }],
       subject: `Order ${order.orderNumber} Update - ${status}`,
       htmlContent,
-      sender: { name: 'Hairotic.ng', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
+      sender: {
+        name: 'Hairotic.ng',
+        email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng',
+      },
     });
 
     this.logger.log(
@@ -192,13 +200,14 @@ export class NotificationsService {
       to: [{ email: 'support@hairotic.ng' }],
       subject: `New Contact Submission from ${name}`,
       htmlContent,
-      sender: { name: 'Hairotic.ng Contact', email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng' },
+      sender: {
+        name: 'Hairotic.ng Contact',
+        email: process.env.RESEND_FROM_EMAIL || 'notifications@hairotic.com.ng',
+      },
     });
 
     if (result.success) {
-      this.logger.log(
-        `Contact inquiry email sent successfully from ${email}`,
-      );
+      this.logger.log(`Contact inquiry email sent successfully from ${email}`);
     }
   }
 

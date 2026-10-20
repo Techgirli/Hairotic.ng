@@ -60,7 +60,9 @@ export class AdminService {
     });
 
     // 4. Low stock variants count
-    const lowStockResult = await this.prisma.$queryRaw<Array<{ count: number }>>`
+    const lowStockResult = await this.prisma.$queryRaw<
+      Array<{ count: number }>
+    >`
       SELECT COUNT(*)::int as count FROM inventory WHERE quantity <= low_stock_threshold
     `;
     const lowStockVariantsCount = Number(lowStockResult[0]?.count ?? 0);
@@ -509,10 +511,14 @@ export class AdminService {
         if (!Array.isArray(variants)) {
           throw new BadRequestException('Variants must be an array');
         }
-        const productVariantIds = new Set(product.variants.map((variant) => variant.id));
+        const productVariantIds = new Set(
+          product.variants.map((variant) => variant.id),
+        );
         for (const variantUpdate of variants) {
           if (!productVariantIds.has(variantUpdate.id)) {
-            throw new BadRequestException('Variant does not belong to this product');
+            throw new BadRequestException(
+              'Variant does not belong to this product',
+            );
           }
           if (
             variantUpdate.attributes !== undefined &&
@@ -520,7 +526,9 @@ export class AdminService {
               variantUpdate.attributes === null ||
               Array.isArray(variantUpdate.attributes))
           ) {
-            throw new BadRequestException('Variant attributes must be an object');
+            throw new BadRequestException(
+              'Variant attributes must be an object',
+            );
           }
           if (
             variantUpdate.attributes?.length !== undefined &&
@@ -528,14 +536,20 @@ export class AdminService {
               Number(variantUpdate.attributes.length) < 1 ||
               Number(variantUpdate.attributes.length) > 60)
           ) {
-            throw new BadRequestException('Variant length must be between 1 and 60 inches');
+            throw new BadRequestException(
+              'Variant length must be between 1 and 60 inches',
+            );
           }
           if (
             variantUpdate.images !== undefined &&
             (!Array.isArray(variantUpdate.images) ||
-              !variantUpdate.images.every((url: unknown) => typeof url === 'string'))
+              !variantUpdate.images.every(
+                (url: unknown) => typeof url === 'string',
+              ))
           ) {
-            throw new BadRequestException('Variant images must be an array of URLs');
+            throw new BadRequestException(
+              'Variant images must be an array of URLs',
+            );
           }
 
           const variantData: Prisma.ProductVariantUpdateInput = {};
@@ -554,11 +568,13 @@ export class AdminService {
             });
             if (variantUpdate.images.length > 0) {
               await tx.productImage.createMany({
-                data: variantUpdate.images.map((url: string, position: number) => ({
-                  productVariantId: variantUpdate.id,
-                  url,
-                  position,
-                })),
+                data: variantUpdate.images.map(
+                  (url: string, position: number) => ({
+                    productVariantId: variantUpdate.id,
+                    url,
+                    position,
+                  }),
+                ),
               });
             }
           }
@@ -607,7 +623,11 @@ export class AdminService {
           action: 'PRODUCT_DELETE',
           entity: 'product',
           entityId: id,
-          before: { name: product.name, slug: product.slug, status: product.status },
+          before: {
+            name: product.name,
+            slug: product.slug,
+            status: product.status,
+          },
           after: Prisma.JsonNull,
         },
       });

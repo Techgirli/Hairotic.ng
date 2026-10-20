@@ -23,7 +23,9 @@ describe('PaymentsService hardening', () => {
   });
 
   it('does not let another customer initialize payment for an order', async () => {
-    const prisma = { order: { findUnique: jest.fn().mockResolvedValue(order) } };
+    const prisma = {
+      order: { findUnique: jest.fn().mockResolvedValue(order) },
+    };
     const service = new PaymentsService(prisma as any);
 
     await expect(
@@ -36,7 +38,11 @@ describe('PaymentsService hardening', () => {
 
     expect(() =>
       (service as any).assertPaymentMatchesOrder(
-        { reference: order.orderNumber, amount: order.total - 1, currency: 'NGN' },
+        {
+          reference: order.orderNumber,
+          amount: order.total - 1,
+          currency: 'NGN',
+        },
         order,
       ),
     ).toThrow(BadRequestException);
@@ -49,18 +55,26 @@ describe('PaymentsService hardening', () => {
           .fn()
           .mockResolvedValueOnce({ count: 1 })
           .mockResolvedValueOnce({ count: 0 }),
-        findUniqueOrThrow: jest.fn().mockResolvedValue({ ...order, status: OrderStatus.PAID }),
-        findUnique: jest.fn().mockResolvedValue({ ...order, status: OrderStatus.PAID }),
+        findUniqueOrThrow: jest
+          .fn()
+          .mockResolvedValue({ ...order, status: OrderStatus.PAID }),
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ ...order, status: OrderStatus.PAID }),
       },
       payment: {
         create: jest.fn().mockResolvedValue({}),
-        findUnique: jest.fn().mockResolvedValue({ status: PaymentStatus.SUCCESS }),
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ status: PaymentStatus.SUCCESS }),
       },
       orderStatusHistory: { create: jest.fn().mockResolvedValue({}) },
       outboxEvent: { createMany: jest.fn().mockResolvedValue({ count: 2 }) },
     };
     const prisma = {
-      $transaction: jest.fn((callback: (client: typeof tx) => unknown) => callback(tx)),
+      $transaction: jest.fn((callback: (client: typeof tx) => unknown) =>
+        callback(tx),
+      ),
     };
     const service = new PaymentsService(prisma as any);
 
@@ -91,15 +105,21 @@ describe('PaymentsService hardening', () => {
         findUnique: jest.fn().mockResolvedValue({
           ...order,
           status: OrderStatus.PAID,
-          payments: [{ id: 'payment-1', status: PaymentStatus.SUCCESS, paystackReference: order.orderNumber }],
+          payments: [
+            {
+              id: 'payment-1',
+              status: PaymentStatus.SUCCESS,
+              paystackReference: order.orderNumber,
+            },
+          ],
         }),
       },
       payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
     };
     const service = new PaymentsService(prisma as any);
 
-    await expect(service.refundTransaction(order.id, 'duplicate')).rejects.toThrow(
-      'Refund is already in progress or completed',
-    );
+    await expect(
+      service.refundTransaction(order.id, 'duplicate'),
+    ).rejects.toThrow('Refund is already in progress or completed');
   });
 });

@@ -15,9 +15,7 @@ import * as crypto from 'crypto';
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
 
-  constructor(
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async initializeTransaction(
     orderId: string,
@@ -37,7 +35,9 @@ export class PaymentsService {
       ? order.customerId === customerId
       : Boolean(sessionId && order.checkoutSessionId === sessionId);
     if (!ownsOrder) {
-      throw new ForbiddenException('You cannot initialize payment for this order');
+      throw new ForbiddenException(
+        'You cannot initialize payment for this order',
+      );
     }
 
     if (order.status !== OrderStatus.PENDING_PAYMENT) {
@@ -46,12 +46,13 @@ export class PaymentsService {
 
     const paystackSecret = this.getPaystackSecret();
 
-    const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:3000';
+    const baseUrl =
+      process.env.FRONTEND_URL ||
+      process.env.APP_URL ||
+      'http://localhost:3000';
 
     if (!paystackSecret) {
-      this.logger.warn(
-        'Using explicitly enabled local mock payment flow.',
-      );
+      this.logger.warn('Using explicitly enabled local mock payment flow.');
 
       // Local development mock mode: return success callback instantly
       return {
@@ -336,13 +337,13 @@ export class PaymentsService {
       data: { status: PaymentStatus.PENDING },
     });
     if (claimed.count !== 1) {
-      throw new BadRequestException('Refund is already in progress or completed');
+      throw new BadRequestException(
+        'Refund is already in progress or completed',
+      );
     }
 
     if (!paystackSecret) {
-      this.logger.warn(
-        'Using explicitly enabled local mock refund flow.',
-      );
+      this.logger.warn('Using explicitly enabled local mock refund flow.');
       await this.processRefundFulfillment(
         order.id,
         successfulPayment.paystackReference,
@@ -451,7 +452,9 @@ export class PaymentsService {
       return { checked: 0, fulfilled: 0 };
     }
 
-    this.logger.log(`Reconciliation: found ${stuckOrders.length} stuck order(s). Re-verifying...`);
+    this.logger.log(
+      `Reconciliation: found ${stuckOrders.length} stuck order(s). Re-verifying...`,
+    );
 
     let fulfilled = 0;
     const errors: string[] = [];
@@ -466,9 +469,13 @@ export class PaymentsService {
         });
         if (refreshed?.status === OrderStatus.PAID) {
           fulfilled++;
-          this.logger.log(`Reconciliation: fulfilled order ${order.orderNumber}`);
+          this.logger.log(
+            `Reconciliation: fulfilled order ${order.orderNumber}`,
+          );
         } else {
-          this.logger.log(`Reconciliation: order ${order.orderNumber} still pending after re-verify (payment not confirmed by Paystack)`);
+          this.logger.log(
+            `Reconciliation: order ${order.orderNumber} still pending after re-verify (payment not confirmed by Paystack)`,
+          );
         }
       } catch (err: any) {
         const msg = `Reconciliation error for ${order.orderNumber}: ${err.message}`;
@@ -485,9 +492,10 @@ export class PaymentsService {
   }
 
   private getPaystackSecret(): string | undefined {
-    const secret = process.env.PAYSTACK_SECRET_KEY
-      ?.replace(/^["']|["']$/g, '')
-      .trim();
+    const secret = process.env.PAYSTACK_SECRET_KEY?.replace(
+      /^["']|["']$/g,
+      '',
+    ).trim();
     if (secret) return secret;
 
     const mockEnabled =

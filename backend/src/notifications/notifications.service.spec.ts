@@ -27,7 +27,11 @@ describe('NotificationsService', () => {
     delete process.env.RESEND_API_KEY;
     const fetchMock = jest.spyOn(globalThis, 'fetch');
 
-    const result = await service.sendOtpEmail('admin@example.com', 'Admin', '123456');
+    const result = await service.sendOtpEmail(
+      'admin@example.com',
+      'Admin',
+      '123456',
+    );
 
     expect(result.success).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -40,7 +44,11 @@ describe('NotificationsService', () => {
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(null, { status: 201 }));
 
-    const result = await service.sendOtpEmail('admin@example.com', 'Admin', '123456');
+    const result = await service.sendOtpEmail(
+      'admin@example.com',
+      'Admin',
+      '123456',
+    );
 
     expect(result.success).toBe(true);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -62,11 +70,17 @@ describe('NotificationsService', () => {
 
   it('reports Resend API rejections as failures', async () => {
     process.env.RESEND_API_KEY = 'test-api-key';
-    jest.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response('{"message":"domain is not verified"}', { status: 403 }),
-    );
+    jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{"message":"domain is not verified"}', { status: 403 }),
+      );
 
-    const result = await service.sendOtpEmail('admin@example.com', 'Admin', '123456');
+    const result = await service.sendOtpEmail(
+      'admin@example.com',
+      'Admin',
+      '123456',
+    );
 
     expect(result).toEqual({
       success: false,

@@ -5,7 +5,11 @@ import { RefreshTokenService } from './refresh-token.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { NotificationsService } from '../notifications/notifications.service';
-import { BadRequestException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 // Mock otplib to prevent Jest from crashing on its nested ESM exports
 jest.mock('otplib', () => ({
@@ -44,7 +48,9 @@ describe('AuthService & OtpService', () => {
 
   const mockJwtService = {
     sign: jest.fn().mockReturnValue('mock-token'),
-    verify: jest.fn().mockReturnValue({ sub: 'user-1', email: 'test@example.com' }),
+    verify: jest
+      .fn()
+      .mockReturnValue({ sub: 'user-1', email: 'test@example.com' }),
   };
 
   const mockNotificationsService = {
@@ -87,15 +93,21 @@ describe('AuthService & OtpService', () => {
       const code = await otpService.createOtp('user-1');
       expect(code).toHaveLength(6);
       const [{ data }] = mockPrismaService.otp.create.mock.calls[0];
-      expect(data.expiresAt.getTime()).toBeGreaterThanOrEqual(now + 30 * 60 * 1000);
-      expect(data.expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + 30 * 60 * 1000);
+      expect(data.expiresAt.getTime()).toBeGreaterThanOrEqual(
+        now + 30 * 60 * 1000,
+      );
+      expect(data.expiresAt.getTime()).toBeLessThanOrEqual(
+        Date.now() + 30 * 60 * 1000,
+      );
     });
 
     it('should throw BadRequestException if user tries to resend in < 60 seconds', async () => {
       const recentOtp = { createdAt: new Date() };
       mockPrismaService.otp.findFirst.mockResolvedValue(recentOtp);
 
-      await expect(otpService.createOtp('user-1')).rejects.toThrow(BadRequestException);
+      await expect(otpService.createOtp('user-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

@@ -29,7 +29,13 @@ export class StorageController {
       !fileName ||
       fileName.length > 255 ||
       !/^[\w.-]+$/.test(fileName) ||
-      !['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'].includes(mimeType)
+      ![
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+        'image/avif',
+      ].includes(mimeType)
     ) {
       throw new BadRequestException('Invalid image file details');
     }

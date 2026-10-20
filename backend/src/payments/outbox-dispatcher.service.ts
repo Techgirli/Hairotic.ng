@@ -41,7 +41,8 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.processPendingEvents();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown dispatcher error';
+      const message =
+        error instanceof Error ? error.message : 'Unknown dispatcher error';
       this.logger.error(`Outbox polling failed: ${message}`);
     }
   }
@@ -70,7 +71,9 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
           processed++;
         } catch (error) {
           const message =
-            error instanceof Error ? error.message : 'Unknown outbox delivery error';
+            error instanceof Error
+              ? error.message
+              : 'Unknown outbox delivery error';
           const retryDelayMs = Math.min(
             60 * 60_000,
             5_000 * 2 ** Math.min(event.attempts, 10),

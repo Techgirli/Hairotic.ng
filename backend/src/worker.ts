@@ -63,6 +63,9 @@ async function createAdapter(env: Env): Promise<CloudflareAdapter> {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    // Keep the Nest routing graph warm. PrismaService is request-scoped, so
+    // each invocation still receives its own database client while Hyperdrive
+    // pools the underlying origin connections.
     adapterPromise ??= createAdapter(env).catch((error: unknown) => {
       adapterPromise = undefined;
       throw error;
