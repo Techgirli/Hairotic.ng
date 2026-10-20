@@ -3,7 +3,9 @@ const developmentSecrets: Record<string, string> = {
   JWT_REFRESH_SECRET: 'development-only-refresh-secret-change-me',
 };
 
-export function getAuthSecret(name: 'JWT_ACCESS_SECRET' | 'JWT_REFRESH_SECRET'): string {
+export function getAuthSecret(
+  name: 'JWT_ACCESS_SECRET' | 'JWT_REFRESH_SECRET',
+): string {
   const value = process.env[name]?.trim();
   if (value) return value;
 
@@ -26,6 +28,8 @@ export function assertProductionSecurityConfiguration(): void {
   ];
   const missing = required.filter((name) => !process.env[name]?.trim());
   if (missing.length > 0) {
-    throw new Error(`Missing required production security configuration: ${missing.join(', ')}`);
+    throw new Error(
+      `Missing required production security configuration: ${missing.join(', ')}`,
+    );
   }
 }

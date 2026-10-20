@@ -23,16 +23,23 @@ describe('OutboxDispatcherService', () => {
       outboxEvent: { update: jest.fn().mockResolvedValue({}) },
     };
     const notifications = {
-      sendOrderConfirmationEmail: jest.fn().mockResolvedValue({ success: true }),
+      sendOrderConfirmationEmail: jest
+        .fn()
+        .mockResolvedValue({ success: true }),
       sendWhatsAppNotification: jest.fn(),
     };
-    const service = new OutboxDispatcherService(prisma as any, notifications as any);
+    const service = new OutboxDispatcherService(
+      prisma as any,
+      notifications as any,
+    );
     jest
       .spyOn(service as any, 'claimNextEvent')
       .mockResolvedValueOnce(event)
       .mockResolvedValueOnce(null);
 
-    await expect(service.processPendingEvents()).resolves.toEqual({ processed: 1 });
+    await expect(service.processPendingEvents()).resolves.toEqual({
+      processed: 1,
+    });
     expect(prisma.outboxEvent.update).toHaveBeenCalledWith({
       where: { id: event.id },
       data: expect.objectContaining({ status: 'PROCESSED', lockedAt: null }),
@@ -50,13 +57,18 @@ describe('OutboxDispatcherService', () => {
         .mockResolvedValue({ success: false, error: 'provider unavailable' }),
       sendWhatsAppNotification: jest.fn(),
     };
-    const service = new OutboxDispatcherService(prisma as any, notifications as any);
+    const service = new OutboxDispatcherService(
+      prisma as any,
+      notifications as any,
+    );
     jest
       .spyOn(service as any, 'claimNextEvent')
       .mockResolvedValueOnce(event)
       .mockResolvedValueOnce(null);
 
-    await expect(service.processPendingEvents()).resolves.toEqual({ processed: 0 });
+    await expect(service.processPendingEvents()).resolves.toEqual({
+      processed: 0,
+    });
     expect(prisma.outboxEvent.update).toHaveBeenCalledWith({
       where: { id: event.id },
       data: expect.objectContaining({

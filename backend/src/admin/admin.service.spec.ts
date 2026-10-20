@@ -49,7 +49,9 @@ describe('AdminService', () => {
     orderStatusHistory: {
       create: jest.fn(),
     },
-    $transaction: jest.fn((callback: (prisma: any) => any): any => callback(mockPrismaService)),
+    $transaction: jest.fn((callback: (prisma: any) => any): any =>
+      callback(mockPrismaService),
+    ),
   };
 
   const mockPaymentsService = {
@@ -157,21 +159,28 @@ describe('AdminService', () => {
         name: 'Curly Wig',
         status: 'DRAFT',
         categoryId: 'category-1',
-        variants: [{
-          id: 'variant-1',
-          attributes: { length: '18', texture: 'curly' },
-          images: [{ url: 'https://media.example/old.jpg' }],
-        }],
+        variants: [
+          {
+            id: 'variant-1',
+            attributes: { length: '18', texture: 'curly' },
+            images: [{ url: 'https://media.example/old.jpg' }],
+          },
+        ],
       };
       mockPrismaService.product.findUnique.mockResolvedValue(product);
       mockPrismaService.product.update.mockResolvedValue(product);
 
       await service.updateProduct('product-1', {
-        variants: [{
-          id: 'variant-1',
-          attributes: { length: '24', texture: 'curly' },
-          images: ['https://media.example/new-1.jpg', 'https://media.example/new-2.jpg'],
-        }],
+        variants: [
+          {
+            id: 'variant-1',
+            attributes: { length: '24', texture: 'curly' },
+            images: [
+              'https://media.example/new-1.jpg',
+              'https://media.example/new-2.jpg',
+            ],
+          },
+        ],
       });
 
       expect(mockPrismaService.productVariant.update).toHaveBeenCalledWith({
@@ -183,8 +192,16 @@ describe('AdminService', () => {
       });
       expect(mockPrismaService.productImage.createMany).toHaveBeenCalledWith({
         data: [
-          { productVariantId: 'variant-1', url: 'https://media.example/new-1.jpg', position: 0 },
-          { productVariantId: 'variant-1', url: 'https://media.example/new-2.jpg', position: 1 },
+          {
+            productVariantId: 'variant-1',
+            url: 'https://media.example/new-1.jpg',
+            position: 0,
+          },
+          {
+            productVariantId: 'variant-1',
+            url: 'https://media.example/new-2.jpg',
+            position: 1,
+          },
         ],
       });
     });
@@ -195,9 +212,11 @@ describe('AdminService', () => {
         variants: [],
       });
 
-      await expect(service.updateProduct('product-1', {
-        variants: [{ id: 'other-product-variant', images: [] }],
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateProduct('product-1', {
+          variants: [{ id: 'other-product-variant', images: [] }],
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('rejects invalid hair lengths', async () => {
@@ -206,9 +225,11 @@ describe('AdminService', () => {
         variants: [{ id: 'variant-1', attributes: {}, images: [] }],
       });
 
-      await expect(service.updateProduct('product-1', {
-        variants: [{ id: 'variant-1', attributes: { length: '100' } }],
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateProduct('product-1', {
+          variants: [{ id: 'variant-1', attributes: { length: '100' } }],
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

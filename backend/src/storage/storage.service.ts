@@ -24,7 +24,10 @@ export class StorageService {
     const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || '';
     const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || '';
     this.bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME || 'hairotic-media';
-    this.publicDomain = (process.env.CLOUDFLARE_R2_PUBLIC_URL || '').replace(/\/$/, '');
+    this.publicDomain = (process.env.CLOUDFLARE_R2_PUBLIC_URL || '').replace(
+      /\/$/,
+      '',
+    );
     this.storageConfigured = Boolean(
       accountId && accessKeyId && secretAccessKey && this.publicDomain,
     );

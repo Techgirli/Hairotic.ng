@@ -107,7 +107,11 @@ export class AdminController {
     if (!note) {
       throw new BadRequestException('Note content is required');
     }
-    return this.adminService.addCustomerNote(id, note, req?.user?.id || 'ADMIN');
+    return this.adminService.addCustomerNote(
+      id,
+      note,
+      req?.user?.id || 'ADMIN',
+    );
   }
 
   @Get('products')
@@ -120,12 +124,22 @@ export class AdminController {
     if (!body.name || !body.categoryId) {
       throw new BadRequestException('Product name and category are required');
     }
-    return this.adminService.createProduct({ ...body, actorId: req?.user?.id || 'ADMIN' });
+    return this.adminService.createProduct({
+      ...body,
+      actorId: req?.user?.id || 'ADMIN',
+    });
   }
 
   @Patch('products/:id')
-  async updateProduct(@Param('id') id: string, @Body() body: any, @Req() req?: any) {
-    return this.adminService.updateProduct(id, { ...body, actorId: req?.user?.id || 'ADMIN' });
+  async updateProduct(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Req() req?: any,
+  ) {
+    return this.adminService.updateProduct(id, {
+      ...body,
+      actorId: req?.user?.id || 'ADMIN',
+    });
   }
 
   @Delete('products/:id')

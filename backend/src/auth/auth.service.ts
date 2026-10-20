@@ -22,7 +22,9 @@ import { getAuthSecret } from './auth-secrets';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private googleClient = new OAuth2Client((process.env.GOOGLE_CLIENT_ID || '').replace(/^["']|["']$/g, ''));
+  private googleClient = new OAuth2Client(
+    (process.env.GOOGLE_CLIENT_ID || '').replace(/^["']|["']$/g, ''),
+  );
 
   constructor(
     private prisma: PrismaService,
@@ -32,9 +34,16 @@ export class AuthService {
     private refreshTokenService: RefreshTokenService,
   ) {}
 
-  async register(email: string, phone: string, password: string, name?: string) {
+  async register(
+    email: string,
+    phone: string,
+    password: string,
+    name?: string,
+  ) {
     if (!email || !phone || !password) {
-      throw new BadRequestException('Email, phone number, and password are required');
+      throw new BadRequestException(
+        'Email, phone number, and password are required',
+      );
     }
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -44,11 +53,15 @@ export class AuthService {
 
     const phoneRegex = /^\+?[0-9]{10,15}$/;
     if (!phoneRegex.test(phone)) {
-      throw new BadRequestException('Invalid phone number format. Must be 10-15 digits.');
+      throw new BadRequestException(
+        'Invalid phone number format. Must be 10-15 digits.',
+      );
     }
 
     if (password.length < 8) {
-      throw new BadRequestException('Password must be at least 8 characters long');
+      throw new BadRequestException(
+        'Password must be at least 8 characters long',
+      );
     }
 
     const existingUser = await this.prisma.user.findFirst({
@@ -66,7 +79,7 @@ export class AuthService {
 
     const verificationToken = randomUUID();
     const isDev = process.env.NODE_ENV !== 'production';
-    
+
     const user = await (this.prisma.user as any).create({
       data: {
         email,
@@ -85,7 +98,8 @@ export class AuthService {
 
     return {
       ...this.sanitizeUser(user),
-      message: 'Registration successful. Please check your email to verify your account.',
+      message:
+        'Registration successful. Please check your email to verify your account.',
     };
   }
 
@@ -110,14 +124,22 @@ export class AuthService {
       },
     });
 
-    return { success: true, message: 'Email verified successfully. You can now log in.' };
+    return {
+      success: true,
+      message: 'Email verified successfully. You can now log in.',
+    };
   }
 
   async resendVerification(email: string) {
-    const user = await (this.prisma.user as any).findUnique({ where: { email } });
+    const user = await (this.prisma.user as any).findUnique({
+      where: { email },
+    });
 
     if (!user) {
-      return { success: true, message: 'If that email exists, a verification link has been sent.' };
+      return {
+        success: true,
+        message: 'If that email exists, a verification link has been sent.',
+      };
     }
 
     if (user.emailVerified) {
@@ -134,7 +156,10 @@ export class AuthService {
       .sendVerificationEmail(email, verificationToken)
       .catch(() => {});
 
-    return { success: true, message: 'If that email exists, a verification link has been sent.' };
+    return {
+      success: true,
+      message: 'If that email exists, a verification link has been sent.',
+    };
   }
 
   async requestPasswordReset(email: string) {
@@ -195,7 +220,10 @@ export class AuthService {
 
     await this.refreshTokenService.revokeAllForUser(user.id);
 
-    return { success: true, message: 'Password reset successfully. You can now log in.' };
+    return {
+      success: true,
+      message: 'Password reset successfully. You can now log in.',
+    };
   }
 
   async login(email: string, password: string, adminOnly = false) {
@@ -214,7 +242,9 @@ export class AuthService {
     }
 
     if (!user.passwordHash) {
-      throw new BadRequestException('This account uses Google login. Please sign in with Google.');
+      throw new BadRequestException(
+        'This account uses Google login. Please sign in with Google.',
+      );
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
@@ -224,17 +254,27 @@ export class AuthService {
 
     const isCustomer = user.role === Role.CUSTOMER;
     const userAny = user as any;
-    if (isCustomer && !userAny.emailVerified && process.env.NODE_ENV === 'production') {
+    if (
+      isCustomer &&
+      !userAny.emailVerified &&
+      process.env.NODE_ENV === 'production'
+    ) {
       throw new UnauthorizedException({
         statusCode: 401,
-        message: 'Please verify your email address before logging in. Check your inbox for the verification link.',
+        message:
+          'Please verify your email address before logging in. Check your inbox for the verification link.',
         error: 'EMAIL_NOT_VERIFIED',
       });
     }
 
     if (isAdminOrStaff) {
       const tempToken = this.jwtService.sign(
-        { sub: user.id, email: user.email, role: user.role, mfaVerified: false },
+        {
+          sub: user.id,
+          email: user.email,
+          role: user.role,
+          mfaVerified: false,
+        },
         { secret: getAuthSecret('JWT_ACCESS_SECRET'), expiresIn: '15m' },
       );
       return {
@@ -253,7 +293,12 @@ export class AuthService {
     };
   }
 
-  async generateSession(user: User, device?: string, ip?: string, mfaVerified = false) {
+  async generateSession(
+    user: User,
+    device?: string,
+    ip?: string,
+    mfaVerified = false,
+  ) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -272,7 +317,13 @@ export class AuthService {
     });
 
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    await this.refreshTokenService.createRefreshToken(user.id, refreshToken, expiresAt, device, ip);
+    await this.refreshTokenService.createRefreshToken(
+      user.id,
+      refreshToken,
+      expiresAt,
+      device,
+      ip,
+    );
 
     return { accessToken, refreshToken };
   }
@@ -282,7 +333,9 @@ export class AuthService {
       const payload = this.jwtService.verify(token, {
         secret: getAuthSecret('JWT_REFRESH_SECRET'),
       });
-      const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
       if (!user) throw new UnauthorizedException('User not found');
       return { user, mfaVerified: payload.mfaVerified };
     } catch {
@@ -336,7 +389,11 @@ export class AuthService {
     if (!user) throw new BadRequestException('User not found');
 
     const secret = generateSecret();
-    const otpauthUrl = generateURI({ secret, label: user.email, issuer: 'Hairotic.ng' });
+    const otpauthUrl = generateURI({
+      secret,
+      label: user.email,
+      issuer: 'Hairotic.ng',
+    });
     const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
     await (this.prisma.user as any).update({
@@ -353,10 +410,15 @@ export class AuthService {
 
     const userWithMfa = user as any;
     if (!userWithMfa.mfaSecret) {
-      throw new BadRequestException('MFA configuration missing. Please restart setup.');
+      throw new BadRequestException(
+        'MFA configuration missing. Please restart setup.',
+      );
     }
 
-    const isValid = await verify({ token: code, secret: userWithMfa.mfaSecret });
+    const isValid = await verify({
+      token: code,
+      secret: userWithMfa.mfaSecret,
+    });
     if (!isValid) throw new BadRequestException('Invalid authentication code');
 
     if (isSetupFlow) {
@@ -466,7 +528,9 @@ export class AuthService {
 
     // Bypass OTP for returning users on a recognized device
     if (!isNewUser && deviceRecognized && !activeUser.mfaEnabled) {
-      this.logger.log(`Bypassing OTP: user ${activeUser.id} logged in from recognized device ${deviceId}`);
+      this.logger.log(
+        `Bypassing OTP: user ${activeUser.id} logged in from recognized device ${deviceId}`,
+      );
       return {
         mfaRequired: false,
         user: this.sanitizeUser(activeUser),
@@ -475,10 +539,18 @@ export class AuthService {
 
     // Otherwise, generate 6-digit OTP and send verify email
     const otp = await this.otpService.createOtp(activeUser.id);
-    const emailResult = await this.notificationsService.sendOtpEmail(activeUser.email, activeUser.name || '', otp);
+    const emailResult = await this.notificationsService.sendOtpEmail(
+      activeUser.email,
+      activeUser.name || '',
+      otp,
+    );
     if (!emailResult.success) {
-      this.logger.error(`OTP email could not be sent: ${emailResult.error || 'Unknown email provider error'}`);
-      throw new ServiceUnavailableException('Unable to send a verification code. Please try again later.');
+      this.logger.error(
+        `OTP email could not be sent: ${emailResult.error || 'Unknown email provider error'}`,
+      );
+      throw new ServiceUnavailableException(
+        'Unable to send a verification code. Please try again later.',
+      );
     }
 
     return {
@@ -488,7 +560,12 @@ export class AuthService {
     };
   }
 
-  async verifyOtpAndCreateSession(email: string, otp: string, device?: string, ip?: string) {
+  async verifyOtpAndCreateSession(
+    email: string,
+    otp: string,
+    device?: string,
+    ip?: string,
+  ) {
     const userId = await this.otpService.verifyOtp(email, otp);
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -509,18 +586,31 @@ export class AuthService {
     if (!user || user.role !== Role.CUSTOMER) {
       return {
         success: true,
-        message: 'If that email is registered, a verification code has been sent.',
+        message:
+          'If that email is registered, a verification code has been sent.',
       };
     }
 
     const otp = await this.otpService.createOtp(user.id);
-    const emailResult = await this.notificationsService.sendOtpEmail(user.email, user.name || '', otp);
+    const emailResult = await this.notificationsService.sendOtpEmail(
+      user.email,
+      user.name || '',
+      otp,
+    );
     if (!emailResult.success) {
-      this.logger.error(`OTP email could not be sent: ${emailResult.error || 'Unknown email provider error'}`);
-      throw new ServiceUnavailableException('Unable to send a verification code. Please try again later.');
+      this.logger.error(
+        `OTP email could not be sent: ${emailResult.error || 'Unknown email provider error'}`,
+      );
+      throw new ServiceUnavailableException(
+        'Unable to send a verification code. Please try again later.',
+      );
     }
 
-    return { success: true, message: 'If that email is registered, a verification code has been sent.' };
+    return {
+      success: true,
+      message:
+        'If that email is registered, a verification code has been sent.',
+    };
   }
 
   async sendAdminOtp(userId: string) {

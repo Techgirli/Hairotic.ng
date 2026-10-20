@@ -1,24 +1,13 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Scope } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-@Injectable()
-export class PrismaService
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+@Injectable({ scope: Scope.REQUEST })
+export class PrismaService extends PrismaClient {
   constructor() {
     const connectionString =
       process.env.DATABASE_URL ||
       'postgresql://postgres:postgres@localhost:5432/hairotic?schema=public';
     super({ adapter: new PrismaPg({ connectionString }) });
-  }
-
-  async onModuleInit() {
-    await this.$connect();
-  }
-
-  async onModuleDestroy() {
-    await this.$disconnect();
   }
 }

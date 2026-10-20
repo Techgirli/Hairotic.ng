@@ -311,10 +311,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies?.['refresh_token'];
     if (refreshToken) {
       try {
@@ -376,14 +373,15 @@ export class AuthController {
     const req = res.req as any;
     const host = req?.headers?.host || '';
     const origin = req?.headers?.origin || '';
-    
+
     // Force production settings if running on the live domain
     const isProd =
       process.env.NODE_ENV === 'production' ||
       host.includes('hairotic.com.ng') ||
       origin.includes('hairotic.com.ng');
 
-    const useSharedDomain = isProd && !origin.includes('localhost') && !host.includes('localhost');
+    const useSharedDomain =
+      isProd && !origin.includes('localhost') && !host.includes('localhost');
 
     res.cookie(name, token, {
       httpOnly: true,
@@ -399,13 +397,14 @@ export class AuthController {
     const req = res.req as any;
     const host = req?.headers?.host || '';
     const origin = req?.headers?.origin || '';
-    
+
     const isProd =
       process.env.NODE_ENV === 'production' ||
       host.includes('hairotic.com.ng') ||
       origin.includes('hairotic.com.ng');
 
-    const useSharedDomain = isProd && !origin.includes('localhost') && !host.includes('localhost');
+    const useSharedDomain =
+      isProd && !origin.includes('localhost') && !host.includes('localhost');
 
     res.cookie(name, '', {
       httpOnly: true,

@@ -21,10 +21,16 @@ export class OtpService {
     });
 
     if (lastOtp) {
-      const secondsSinceLast = Math.floor((Date.now() - lastOtp.createdAt.getTime()) / 1000);
+      const secondsSinceLast = Math.floor(
+        (Date.now() - lastOtp.createdAt.getTime()) / 1000,
+      );
       if (secondsSinceLast < 60) {
-        this.logger.warn(`OTP resend rate limited: User ${userId} requested code after ${secondsSinceLast}s`);
-        throw new BadRequestException(`Please wait ${60 - secondsSinceLast} seconds before requesting a new code.`);
+        this.logger.warn(
+          `OTP resend rate limited: User ${userId} requested code after ${secondsSinceLast}s`,
+        );
+        throw new BadRequestException(
+          `Please wait ${60 - secondsSinceLast} seconds before requesting a new code.`,
+        );
       }
     }
 
@@ -37,8 +43,12 @@ export class OtpService {
     });
 
     if (recentOtps >= 5) {
-      this.logger.warn(`User ${userId} exceeded maximum OTP resends limit (5 requests in 10 minutes)`);
-      throw new BadRequestException('Too many OTP requests. Please wait 10 minutes before trying again.');
+      this.logger.warn(
+        `User ${userId} exceeded maximum OTP resends limit (5 requests in 10 minutes)`,
+      );
+      throw new BadRequestException(
+        'Too many OTP requests. Please wait 10 minutes before trying again.',
+      );
     }
 
     await (this.prisma as any).otp.deleteMany({
@@ -70,7 +80,9 @@ export class OtpService {
       : null;
 
     if (!user) {
-      this.logger.warn(`OTP verification failed: User not found for email ${email}`);
+      this.logger.warn(
+        `OTP verification failed: User not found for email ${email}`,
+      );
       throw new BadRequestException('Invalid email or OTP');
     }
 
@@ -96,20 +108,32 @@ export class OtpService {
     });
 
     if (!activeOtp) {
-      this.logger.warn(`OTP verification failed: No active OTP for user ${userId}`);
-      throw new BadRequestException('Invalid or expired OTP code. Please request a new one.');
+      this.logger.warn(
+        `OTP verification failed: No active OTP for user ${userId}`,
+      );
+      throw new BadRequestException(
+        'Invalid or expired OTP code. Please request a new one.',
+      );
     }
 
     if (new Date() > activeOtp.expiresAt) {
       await (this.prisma as any).otp.delete({ where: { id: activeOtp.id } });
-      this.logger.warn(`OTP verification failed: OTP expired for user ${userId}`);
-      throw new BadRequestException('OTP code has expired. Please request a new one.');
+      this.logger.warn(
+        `OTP verification failed: OTP expired for user ${userId}`,
+      );
+      throw new BadRequestException(
+        'OTP code has expired. Please request a new one.',
+      );
     }
 
     if (activeOtp.attempts >= 5) {
       await (this.prisma as any).otp.delete({ where: { id: activeOtp.id } });
-      this.logger.warn(`OTP verification failed: Max attempts exceeded for user ${userId}`);
-      throw new BadRequestException('Too many failed attempts. Please request a new OTP code.');
+      this.logger.warn(
+        `OTP verification failed: Max attempts exceeded for user ${userId}`,
+      );
+      throw new BadRequestException(
+        'Too many failed attempts. Please request a new OTP code.',
+      );
     }
 
     const isCodeValid = await bcrypt.compare(code, activeOtp.codeHash);
@@ -119,11 +143,15 @@ export class OtpService {
         data: { attempts: activeOtp.attempts + 1 },
       });
 
-      this.logger.warn(`OTP verification failed: Incorrect code for user ${userId}. Attempt ${updatedOtp.attempts}/5`);
+      this.logger.warn(
+        `OTP verification failed: Incorrect code for user ${userId}. Attempt ${updatedOtp.attempts}/5`,
+      );
 
       if (updatedOtp.attempts >= 5) {
         await (this.prisma as any).otp.delete({ where: { id: activeOtp.id } });
-        throw new BadRequestException('Too many failed attempts. Please request a new OTP code.');
+        throw new BadRequestException(
+          'Too many failed attempts. Please request a new OTP code.',
+        );
       }
 
       throw new BadRequestException('Incorrect OTP code');
