@@ -29,6 +29,9 @@
     "NODE_ENV": "production"
   },
   "observability": {
-    "enabled": true
+    "logs": {
+      "enabled": false,
+      "invocation_logs": true
+    }
   }
 }

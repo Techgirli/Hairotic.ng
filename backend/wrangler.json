@@ -37,5 +37,11 @@
     "RESEND_FROM_EMAIL": "notifications@hairotic.com.ng",
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_4SsTZ_bSrXbtzc7yjC-xeg_ap_FQNZK",
     "NODE_ENV": "production"
+  },
+  "observability": {
+    "logs": {
+      "enabled": false,
+      "invocation_logs": true
+    }
   }
 }
