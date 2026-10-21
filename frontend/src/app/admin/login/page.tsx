@@ -2,38 +2,27 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { KeyRound, Mail, Lock, ShieldAlert, CheckCircle2, QrCode, Smartphone, Send } from 'lucide-react';
+import { KeyRound, Mail, Lock, ShieldAlert, CheckCircle2, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import GoogleLoginButton from '@/components/GoogleLoginButton';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const {
     login,
-    loginWithGoogleAction,
-    verifyMfa,
-    setupMfa,
     sendAdminOtpAction,
     verifyAdminOtpAction,
     mfaRequired,
-    mfaSetup,
-    mfaQrCode,
-    mfaSecret,
     loading,
     error,
     user,
     clearError,
   } = useAuthStore();
 
-  const [mfaMethod, setMfaMethod] = useState<'totp' | 'email_otp'>('totp');
-
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('favecollections1@gmail.com');
   const [password, setPassword] = useState('');
-  const [mfaCode, setMfaCode] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [googleError, setGoogleError] = useState('');
 
   // Password reset request states
   const [showReset, setShowReset] = useState(false);
@@ -55,19 +44,16 @@ export default function AdminLoginPage() {
     clearError();
   }, [clearError]);
 
-  // Load MFA Setup details when required
-  useEffect(() => {
-    if (mfaRequired && mfaSetup && !mfaQrCode && mfaMethod === 'totp') {
-      setupMfa().catch(() => console.error('MFA setup error'));
-    }
-  }, [mfaRequired, mfaSetup, mfaQrCode, mfaMethod, setupMfa]);
-
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
     try {
       const result = await login(email, password);
-      if (!result.mfaRequired) {
+      if (result.mfaRequired) {
+        setOtpCode('');
+        setOtpSent(false);
+        await handleSendEmailOtp();
+      } else {
         setSuccessMsg('Login successful! Redirecting...');
         setTimeout(() => router.push('/admin/dashboard'), 500);
       }
@@ -99,25 +85,6 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleGoogleLoginSuccess = async (idToken: string) => {
-    setGoogleError('');
-    clearError();
-    try {
-      const result = await loginWithGoogleAction(idToken, undefined, true);
-      if (result.mfaRequired) {
-        setEmail(result.email || '');
-        setMfaMethod('email_otp');
-        setOtpCode('');
-        setOtpSent(false);
-        await handleSendEmailOtp();
-      } else {
-        router.push('/admin/dashboard');
-      }
-    } catch {
-      // Handled by the auth store error state.
-    }
-  };
-
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetEmail) return;
@@ -138,18 +105,6 @@ export default function AdminLoginPage() {
     } catch (err: unknown) {
       setResetStatus('error');
       setResetError(err instanceof Error ? err.message : 'An error occurred');
-    }
-  };
-
-  const handleMfaSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!mfaCode) return;
-    try {
-      await verifyMfa(mfaCode, mfaSetup);
-      setSuccessMsg('Authentication verified successfully! Redirecting...');
-      setTimeout(() => router.push('/admin/dashboard'), 500);
-    } catch {
-      // Handled by store error state
     }
   };
 
@@ -174,10 +129,10 @@ export default function AdminLoginPage() {
         <div className="bg-[#FFFFFF] border border-[#222222]/5 rounded-[20px] shadow-[0_10px_30px_rgba(34,34,34,0.03)] hover:shadow-[0_15px_35px_rgba(34,34,34,0.05)] hover:-translate-y-[2px] transition-all duration-300 p-8 md:p-10 relative">
           
           {/* Error alert banner */}
-          {(error || googleError) && (
+          {error && (
             <div className="mb-6 flex items-start gap-3 bg-[#EF4444]/5 border border-[#EF4444]/20 rounded-[12px] p-4 text-[14px] text-[#EF4444] animate-fadeIn">
               <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
-              <span>{error || googleError}</span>
+              <span>{error}</span>
             </div>
           )}
 
@@ -326,159 +281,66 @@ export default function AdminLoginPage() {
                 )}
               </button>
             </form>
-            <div className="space-y-4 mt-6">
-                <div className="flex items-center gap-3 text-[12px] text-[#6B7280]">
-                  <span className="h-px flex-1 bg-[#222222]/10" />
-                  <span>OR</span>
-                  <span className="h-px flex-1 bg-[#222222]/10" />
-                </div>
-                <GoogleLoginButton
-                  onSuccess={handleGoogleLoginSuccess}
-                  onError={setGoogleError}
-                  isLoading={loading}
-                />
-            </div>
             </>
           ) : (
-            /* Multi-Factor Authentication Section with Authenticator App & Email OTP Options */
+            /* Admin email verification */
             <div className="space-y-6">
               <div className="text-center mb-4">
                 <ShieldAlert className="w-12 h-12 text-[#E56717] mx-auto mb-2" />
                 <h3 className="text-[18px] font-bold text-[#222222]">
-                  Two-Factor Verification
+                  Email Verification
                 </h3>
                 <p className="text-[14px] text-[#6B7280] mt-1">
-                  Choose your preferred authentication factor to continue.
+                  Enter the verification code sent to your admin email.
                 </p>
               </div>
 
-              {/* MFA Method Toggle */}
-              <div className="flex bg-[#F8F8F8] p-1 rounded-[12px] border border-[#222222]/5">
-                <button
-                  type="button"
-                  onClick={() => { setMfaMethod('totp'); clearError(); }}
-                  className={`flex-1 py-2 text-[12px] font-semibold rounded-[8px] flex items-center justify-center gap-1 transition-all ${
-                    mfaMethod === 'totp'
-                      ? 'bg-white text-[#222222] shadow-sm'
-                      : 'text-[#6B7280] hover:text-[#222222]'
-                  }`}
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>Authenticator App</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setMfaMethod('email_otp'); clearError(); }}
-                  className={`flex-1 py-2 text-[12px] font-semibold rounded-[8px] flex items-center justify-center gap-1 transition-all ${
-                    mfaMethod === 'email_otp'
-                      ? 'bg-white text-[#222222] shadow-sm'
-                      : 'text-[#6B7280] hover:text-[#222222]'
-                  }`}
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Email Verification Code</span>
-                </button>
-              </div>
+              <form onSubmit={handleVerifyEmailOtpSubmit} className="space-y-6">
+                <div className="space-y-3">
+                  <p className="text-[13px] text-[#6B7280] text-center">
+                    Send a 6-digit verification code to <strong>{user?.email || email}</strong>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSendEmailOtp}
+                    disabled={loading}
+                    className="w-full h-[44px] bg-[#FAF7F4] border border-[#222222]/10 hover:bg-[#F0ECE7] text-[#222222] text-[14px] font-semibold rounded-[12px] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4 text-[#E56717]" />
+                    <span>{otpSent ? 'Resend Code to Email' : 'Send Code to Email'}</span>
+                  </button>
+                </div>
 
-              {mfaMethod === 'totp' ? (
-                <form onSubmit={handleMfaSubmit} className="space-y-6">
-                  {/* MFA Setup QR Code Container */}
-                  {mfaSetup && mfaQrCode && (
-                    <div className="bg-[#FAF7F4] border border-[#222222]/5 rounded-[16px] p-4 text-center space-y-4 animate-fadeIn">
-                      <div className="bg-white p-2 w-[180px] h-[180px] rounded-[12px] shadow-sm mx-auto flex items-center justify-center border border-[#222222]/10">
-                        <img src={mfaQrCode} alt="TOTP QR Code" className="w-[164px] h-[164px]" />
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider block">
-                          Manual Secret Key
-                        </span>
-                        <code className="text-[14px] font-mono font-bold text-[#222222] bg-[#222222]/5 px-2 py-1 rounded">
-                          {mfaSecret}
-                        </code>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
+                {otpSent && (
+                  <div className="space-y-2 animate-fadeIn">
                     <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
-                      6-Digit App Security Code
+                      6-Digit Email Code
                     </label>
-                    <div className="relative">
-                      <QrCode className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
-                      <input
-                        type="text"
-                        required
-                        maxLength={6}
-                        placeholder="000 000"
-                        value={mfaCode}
-                        onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
-                        className="w-full h-[52px] pl-12 pr-4 bg-[#F8F8F8] border border-[#222222]/10 rounded-[12px] text-[18px] tracking-[0.25em] text-center font-mono text-[#222222] focus:outline-none focus:border-[#E56717] focus:ring-1 focus:ring-[#E56717] transition-all duration-200"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      required
+                      maxLength={6}
+                      placeholder="000 000"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      className="w-full h-[52px] px-4 bg-[#F8F8F8] border border-[#222222]/10 rounded-[12px] text-[18px] tracking-[0.25em] text-center font-mono text-[#222222] focus:outline-none focus:border-[#E56717] focus:ring-1 focus:ring-[#E56717] transition-all duration-200"
+                    />
                   </div>
+                )}
 
-                  <button
-                    type="submit"
-                    disabled={loading || mfaCode.length < 6}
-                    className="w-full h-[52px] bg-[#222222] hover:bg-[#111111] text-[#FFFFFF] text-[16px] font-semibold rounded-[12px] shadow-sm active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <span>Verify and Login</span>
-                    )}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyEmailOtpSubmit} className="space-y-6">
-                  <div className="space-y-3">
-                    <p className="text-[13px] text-[#6B7280] text-center">
-                      Send a 6-digit verification code to <strong>{user?.email || email}</strong>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleSendEmailOtp}
-                      disabled={loading}
-                      className="w-full h-[44px] bg-[#FAF7F4] border border-[#222222]/10 hover:bg-[#F0ECE7] text-[#222222] text-[14px] font-semibold rounded-[12px] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                    >
-                      <Send className="w-4 h-4 text-[#E56717]" />
-                      <span>{otpSent ? 'Resend Code to Email' : 'Send Code to Email'}</span>
-                    </button>
-                  </div>
-
-                  {otpSent && (
-                    <div className="space-y-2 animate-fadeIn">
-                      <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
-                        6-Digit Email Code
-                      </label>
-                      <div className="relative">
-                        <QrCode className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
-                        <input
-                          type="text"
-                          required
-                          maxLength={6}
-                          placeholder="000 000"
-                          value={otpCode}
-                          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                          className="w-full h-[52px] pl-12 pr-4 bg-[#F8F8F8] border border-[#222222]/10 rounded-[12px] text-[18px] tracking-[0.25em] text-center font-mono text-[#222222] focus:outline-none focus:border-[#E56717] focus:ring-1 focus:ring-[#E56717] transition-all duration-200"
-                        />
-                      </div>
-                    </div>
+                <button
+                  type="submit"
+                  disabled={loading || !otpSent || otpCode.length < 6}
+                  className="w-full h-[52px] bg-[#222222] hover:bg-[#111111] text-[#FFFFFF] text-[16px] font-semibold rounded-[12px] shadow-sm active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <span>Verify Email Code</span>
                   )}
-
-                  <button
-                    type="submit"
-                    disabled={loading || !otpSent || otpCode.length < 6}
-                    className="w-full h-[52px] bg-[#222222] hover:bg-[#111111] text-[#FFFFFF] text-[16px] font-semibold rounded-[12px] shadow-sm active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <span>Verify Email Code</span>
-                    )}
-                  </button>
-                </form>
-              )}
+                </button>
+              </form>
             </div>
           )}
         </div>

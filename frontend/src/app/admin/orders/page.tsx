@@ -39,6 +39,7 @@ interface Order {
   shippingState: string;
   shippingLga: string;
   shippingStreet: string;
+  shippingInstructions: string | null;
   createdAt: string;
   items: OrderItem[];
   statusHistory: StatusHistory[];
@@ -400,6 +401,12 @@ export default function AdminOrdersPage() {
                   <div>
                     <p className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider">Destination</p>
                     <p className="text-[#6B7280] mt-0.5">{selectedOrder.shippingStreet}</p>
+                    {selectedOrder.shippingInstructions && (
+                      <p className="text-[#6B7280] mt-1">
+                        <span className="font-semibold">Delivery instructions:</span>{' '}
+                        {selectedOrder.shippingInstructions}
+                      </p>
+                    )}
                     <p className="text-[#6B7280] font-semibold">
                       LGA: {selectedOrder.shippingLga}, {selectedOrder.shippingState} State
                     </p>
