@@ -247,6 +247,7 @@ model Order {
   shippingState  String?             @map("shipping_state")
   shippingLga    String?             @map("shipping_lga")
   shippingStreet String?             @map("shipping_street")
+  shippingInstructions String?       @map("shipping_instructions")
   checkoutSessionId String?           @map("checkout_session_id")
   idempotencyKey String              @unique @map("idempotency_key")
   createdAt      DateTime            @default(now()) @map("created_at")

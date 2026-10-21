@@ -80,6 +80,7 @@ describe('CheckoutService', () => {
         state: 'Lagos',
         lga: 'Ikeja',
         street: '1 Main Street',
+        deliveryInstructions: 'Blue gate beside the pharmacy',
       },
       deliveryFeeNgn: 12000,
       deliveryFeeAcknowledged: true,
@@ -92,6 +93,7 @@ describe('CheckoutService', () => {
           subtotal: 12000000,
           deliveryFee: 1200000,
           total: 12000000,
+          shippingInstructions: 'Blue gate beside the pharmacy',
         }),
       }),
     );

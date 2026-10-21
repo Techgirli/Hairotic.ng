@@ -54,6 +54,7 @@ export default function CheckoutPage() {
     state: '',
     lga: '',
     street: '',
+    deliveryInstructions: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,6 +117,7 @@ export default function CheckoutPage() {
             state: form.state,
             lga: form.lga,
             street: form.street,
+            deliveryInstructions: form.deliveryInstructions,
           },
           idempotencyKey,
         }),
@@ -273,6 +275,17 @@ export default function CheckoutPage() {
                   onChange={(e) => handleInputChange('street', e.target.value)}
                   placeholder="Street name, estate name, building details..."
                   className="w-full h-11 px-4 border border-[#222222]/10 rounded-[12px] bg-[#FAF7F4] text-[14px] focus:border-[#E56717] outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#222222] uppercase tracking-wider">Delivery Instructions (Optional)</label>
+                <textarea
+                  value={form.deliveryInstructions}
+                  onChange={(e) => handleInputChange('deliveryInstructions', e.target.value)}
+                  placeholder="Add landmarks or instructions to help us find your address..."
+                  rows={3}
+                  className="w-full px-4 py-3 border border-[#222222]/10 rounded-[12px] bg-[#FAF7F4] text-[14px] focus:border-[#E56717] outline-none resize-y"
                 />
               </div>
 

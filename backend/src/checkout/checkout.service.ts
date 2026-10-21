@@ -14,6 +14,7 @@ interface ShippingAddress {
   state: string;
   lga: string;
   street: string;
+  deliveryInstructions?: string;
 }
 
 @Injectable()
@@ -32,6 +33,15 @@ export class CheckoutService {
   ) {
     const { shippingAddress } = body;
     const deliveryFeeNgn = body.deliveryFeeNgn ?? 0;
+    const deliveryInstructions = shippingAddress.deliveryInstructions;
+
+    if (
+      deliveryInstructions !== undefined &&
+      typeof deliveryInstructions !== 'string'
+    ) {
+      throw new BadRequestException('Delivery instructions must be text');
+    }
+    const shippingInstructions = deliveryInstructions?.trim() || null;
 
     if (!body.idempotencyKey) {
       throw new BadRequestException('Idempotency key is required');
@@ -148,6 +158,7 @@ export class CheckoutService {
             shippingState: shippingAddress.state,
             shippingLga: shippingAddress.lga,
             shippingStreet: shippingAddress.street,
+            shippingInstructions,
             checkoutSessionId: customerId ? null : sessionId,
           },
         });

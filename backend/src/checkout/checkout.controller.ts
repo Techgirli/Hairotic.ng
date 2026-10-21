@@ -12,6 +12,7 @@ interface ShippingAddress {
   state: string;
   lga: string;
   street: string;
+  deliveryInstructions?: string;
 }
 
 @Controller('checkout')
