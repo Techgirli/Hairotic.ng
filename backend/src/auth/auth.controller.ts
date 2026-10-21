@@ -237,6 +237,42 @@ export class AuthController {
   }
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('admin/otp/send')
+  async sendAdminLoginOtp(@Body('email') email: string) {
+    return this.authService.sendAdminLoginOtp(email);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('admin/otp/verify')
+  async verifyAdminLoginOtp(
+    @Body() body: { email: string; otp: string },
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const ip = req.ip || (req.headers['x-forwarded-for'] as string) || '';
+    const userAgent = req.headers['user-agent'] || '';
+    const deviceId = req.cookies?.['device_id'] || randomUUID();
+
+    const result = await this.authService.verifyAdminLoginOtp(
+      body.email,
+      body.otp,
+      deviceId,
+      `${userAgent} (${ip})`,
+    );
+
+    this.setCookie(res, 'access_token', result.accessToken, 15 * 60 * 1000);
+    this.setCookie(
+      res,
+      'refresh_token',
+      result.refreshToken,
+      30 * 24 * 60 * 60 * 1000,
+    );
+    this.setCookie(res, 'device_id', deviceId, 365 * 24 * 60 * 60 * 1000);
+
+    return { success: true, user: result.user };
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
   @Post('mfa/email-otp/send')

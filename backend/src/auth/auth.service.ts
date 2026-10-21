@@ -633,6 +633,76 @@ export class AuthService {
     return { success: true, message: 'A verification code has been sent to your admin email.' };
   }
 
+  /**
+   * Passwordless admin login — sends a one-time code to the email address
+   * registered on the admin/staff account.
+   */
+  async sendAdminLoginOtp(email: string) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const genericResponse = {
+      success: true,
+      message:
+        'If that email belongs to an administrator, a verification code has been sent.',
+    };
+
+    const user = cleanEmail
+      ? await this.prisma.user.findUnique({ where: { email: cleanEmail } })
+      : null;
+
+    if (
+      !user ||
+      (user.role !== Role.ADMIN && user.role !== Role.STAFF)
+    ) {
+      this.logger.warn(
+        `Admin login OTP rejected: no admin account for ${email}`,
+      );
+      return genericResponse;
+    }
+
+    const otp = await this.otpService.createOtp(user.id);
+    const emailResult = await this.notificationsService.sendOtpEmail(
+      user.email,
+      user.name || '',
+      otp,
+    );
+    if (!emailResult.success) {
+      this.logger.error(
+        `OTP email could not be sent: ${emailResult.error || 'Unknown email provider error'}`,
+      );
+      throw new ServiceUnavailableException(
+        'Unable to send a verification code. Please try again later.',
+      );
+    }
+
+    return genericResponse;
+  }
+
+  async verifyAdminLoginOtp(
+    email: string,
+    otp: string,
+    device?: string,
+    ip?: string,
+  ) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = cleanEmail
+      ? await this.prisma.user.findUnique({ where: { email: cleanEmail } })
+      : null;
+
+    if (!user || (user.role !== Role.ADMIN && user.role !== Role.STAFF)) {
+      throw new BadRequestException(
+        'Invalid or expired OTP code. Please request a new one.',
+      );
+    }
+
+    await this.otpService.verifyOtpForUser(user.id, otp);
+
+    const tokens = await this.generateSession(user, device, ip, true);
+    return {
+      ...tokens,
+      user: this.sanitizeUser(user),
+    };
+  }
+
   async verifyAdminOtpAndCreateSession(
     userId: string,
     otp: string,

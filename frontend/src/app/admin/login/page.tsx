@@ -7,6 +7,7 @@ import {
   Mail,
   Lock,
   ShieldAlert,
+  ShieldCheck,
   CheckCircle2,
   QrCode,
   Smartphone,
@@ -22,6 +23,8 @@ export default function AdminLoginPage() {
     setupMfa,
     sendAdminOtpAction,
     verifyAdminOtpAction,
+    sendAdminLoginOtpAction,
+    verifyAdminLoginOtpAction,
     mfaRequired,
     mfaSetup,
     mfaQrCode,
@@ -34,10 +37,13 @@ export default function AdminLoginPage() {
 
   const [email, setEmail] = useState('favecollections1@gmail.com');
   const [password, setPassword] = useState('');
+  const [loginMode, setLoginMode] = useState<'password' | 'email_otp'>('password');
   const [mfaMethod, setMfaMethod] = useState<'totp' | 'email_otp'>('totp');
   const [mfaCode, setMfaCode] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [loginOtpCode, setLoginOtpCode] = useState('');
+  const [loginOtpSent, setLoginOtpSent] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
   // Password reset request states
@@ -115,6 +121,29 @@ export default function AdminLoginPage() {
     if (!targetEmail || !otpCode) return;
     try {
       await verifyAdminOtpAction(otpCode);
+      setSuccessMsg('Email authentication verified! Redirecting...');
+      setTimeout(() => router.push('/admin/dashboard'), 500);
+    } catch {
+      // Handled by store error state
+    }
+  };
+
+  const handleSendLoginOtp = async () => {
+    if (!email) return;
+    try {
+      await sendAdminLoginOtpAction(email);
+      setLoginOtpSent(true);
+      setSuccessMsg('A verification code was sent to your admin email. Check your inbox and spam folder.');
+    } catch {
+      // Handled by store error state
+    }
+  };
+
+  const handleVerifyLoginOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !loginOtpCode) return;
+    try {
+      await verifyAdminLoginOtpAction(email, loginOtpCode);
       setSuccessMsg('Email authentication verified! Redirecting...');
       setTimeout(() => router.push('/admin/dashboard'), 500);
     } catch {
@@ -259,6 +288,40 @@ export default function AdminLoginPage() {
             </form>
           ) : !mfaRequired ? (
             <>
+            <div className="flex bg-[#F8F8F8] p-1 rounded-[12px] border border-[#222222]/5 mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMode('password');
+                  clearError();
+                }}
+                className={`flex-1 py-2 text-[12px] font-semibold rounded-[8px] flex items-center justify-center gap-1 transition-all ${
+                  loginMode === 'password'
+                    ? 'bg-white text-[#222222] shadow-sm'
+                    : 'text-[#6B7280] hover:text-[#222222]'
+                }`}
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Password</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMode('email_otp');
+                  clearError();
+                }}
+                className={`flex-1 py-2 text-[12px] font-semibold rounded-[8px] flex items-center justify-center gap-1 transition-all ${
+                  loginMode === 'email_otp'
+                    ? 'bg-white text-[#222222] shadow-sm'
+                    : 'text-[#6B7280] hover:text-[#222222]'
+                }`}
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Email Verification Code</span>
+              </button>
+            </div>
+
+            {loginMode === 'password' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
@@ -318,6 +381,78 @@ export default function AdminLoginPage() {
                 )}
               </button>
             </form>
+            ) : (
+            <form onSubmit={handleVerifyLoginOtpSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
+                  Admin Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="Enter your admin email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setLoginOtpSent(false);
+                      setLoginOtpCode('');
+                    }}
+                    className="w-full h-[52px] pl-12 pr-4 bg-[#F8F8F8] border border-[#222222]/10 rounded-[12px] text-[16px] text-[#222222] placeholder-[#6B7280] focus:outline-none focus:border-[#E56717] focus:ring-1 focus:ring-[#E56717] transition-all duration-200"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[13px] text-[#6B7280] text-center">
+                  Send a 6-digit verification code to <strong>{email}</strong>
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSendLoginOtp}
+                  disabled={loading}
+                  className="w-full h-[44px] bg-[#FAF7F4] border border-[#222222]/10 hover:bg-[#F0ECE7] text-[#222222] text-[14px] font-semibold rounded-[12px] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4 text-[#E56717]" />
+                  <span>{loginOtpSent ? 'Resend Code to Email' : 'Send Code to Email'}</span>
+                </button>
+              </div>
+
+              {loginOtpSent && (
+                <div className="space-y-2">
+                  <label className="text-[14px] font-semibold text-[#222222] tracking-wide block">
+                    6-Digit Email Code
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    maxLength={6}
+                    placeholder="000 000"
+                    value={loginOtpCode}
+                    onChange={(e) => setLoginOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full h-[52px] px-4 bg-[#F8F8F8] border border-[#222222]/10 rounded-[12px] text-[18px] tracking-[0.25em] text-center font-mono text-[#222222] focus:outline-none focus:border-[#E56717] focus:ring-1 focus:ring-[#E56717] transition-all duration-200"
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !loginOtpSent || loginOtpCode.length < 6}
+                className="w-full h-[52px] bg-[#E56717] hover:bg-[#C65A12] text-[#FFFFFF] text-[16px] font-semibold rounded-[12px] shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <ShieldCheck className="w-5 h-5" />
+                    <span>Verify Code and Login</span>
+                  </>
+                )}
+              </button>
+            </form>
+            )}
             </>
           ) : (
             /* Admin multi-factor verification */

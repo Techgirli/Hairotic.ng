@@ -25,6 +25,8 @@ interface AuthState {
   resendOtpAction: (email: string) => Promise<void>;
   sendAdminOtpAction: () => Promise<void>;
   verifyAdminOtpAction: (otp: string) => Promise<void>;
+  sendAdminLoginOtpAction: (email: string) => Promise<void>;
+  verifyAdminLoginOtpAction: (email: string, otp: string) => Promise<void>;
   verifyMfa: (code: string, isSetupFlow: boolean) => Promise<void>;
   setupMfa: () => Promise<void>;
   logout: () => Promise<void>;
@@ -192,6 +194,59 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ otp }),
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Invalid or expired OTP');
+      }
+
+      set({
+        user: data.user,
+        mfaRequired: false,
+        mfaSetup: false,
+        mfaQrCode: null,
+        mfaSecret: null,
+        loading: false,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message, loading: false });
+      throw err;
+    }
+  },
+
+  sendAdminLoginOtpAction: async (email) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetch(`${API_URL}/auth/admin/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to send verification code');
+      }
+
+      set({ loading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unknown error occurred';
+      set({ error: message, loading: false });
+      throw err;
+    }
+  },
+
+  verifyAdminLoginOtpAction: async (email, otp) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetch(`${API_URL}/auth/admin/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp }),
         credentials: 'include',
       });
 
