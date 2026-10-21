@@ -35,8 +35,10 @@ export default function GoogleLoginButton({ onSuccess, onError, isLoading }: Goo
   const onSuccessRef = useRef(onSuccess);
   const onErrorRef = useRef(onError);
 
-  onSuccessRef.current = onSuccess;
-  onErrorRef.current = onError;
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+  }, [onSuccess, onError]);
 
   useEffect(() => {
     const initGoogle = () => {

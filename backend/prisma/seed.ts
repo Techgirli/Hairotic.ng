@@ -1,7 +1,7 @@
 import { PrismaClient, Role, ProductStatus, OrderStatus } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/hairotic?schema=public';
 const pool = new Pool({ connectionString });

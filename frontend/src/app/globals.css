@@ -85,10 +85,12 @@ body > div {
   display: inline-block;
 }
 
+.styling-hero-image {
+  background-image: url("/styling/wig_install.jpg");
+}
 
 /* Prevent layout shift while GSAP animates */
 .hero-title-word {
   display: inline-block;
   will-change: transform, opacity;
 }
-

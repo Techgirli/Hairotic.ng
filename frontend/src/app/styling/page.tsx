@@ -73,7 +73,9 @@ export default function StylingPage() {
         
         {/* Hero Section */}
         <section className="relative h-[60vh] flex items-center justify-center bg-[#222222] text-[#FFFFFF] overflow-hidden select-none">
-          <div className="absolute inset-0 bg-cover bg-center opacity-40 bg-[url('/styling/wig_install.jpg')]" />
+          <div
+            className="styling-hero-image absolute inset-0 bg-cover bg-center opacity-40"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-[#222222] via-[#222222]/40 to-transparent" />
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center z-10 space-y-6">
             <span className="text-[#E56717] text-[13px] sm:text-[14px] uppercase tracking-[0.3em] font-bold block">
