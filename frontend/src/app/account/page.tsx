@@ -152,6 +152,25 @@ export default function AccountPage() {
     }
   };
 
+  const fetchWishlist = async () => {
+    setLoadingWishlist(true);
+    try {
+      const res = await fetch(`${API_URL}/wishlist`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWishlist(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingWishlist(false);
+    }
+  };
+
   useEffect(() => {
     checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -367,25 +386,6 @@ export default function AccountPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred';
       useToastStore.getState().showToast(message, 'error');
-    }
-  };
-
-  const fetchWishlist = async () => {
-    setLoadingWishlist(true);
-    try {
-      const res = await fetch(`${API_URL}/wishlist`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setWishlist(data);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingWishlist(false);
     }
   };
 
